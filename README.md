@@ -35,3 +35,11 @@ pip install pre-commit
 pre-commit install
 pre-commit run
 ```
+
+По умолчанию, pre-commit работает только для файлов на стадии "staged" в git. Чтобы запустить
+pre-commit для всех файлов (и сразу отформатировать их под требования pre-commit хуков),
+можно использовать следующую команду:
+
+```bash
+pre-commit run --all-files
+```
