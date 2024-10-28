@@ -3,3 +3,8 @@ services:
     build: bot
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
+
+  worker:
+    build: worker
+    volumes:
+      - ./volumes/worker_cache:/cache:rw
