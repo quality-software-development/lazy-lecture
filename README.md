@@ -17,11 +17,29 @@ BOT_TOKEN=<your_bot_token_here>
 2. Поднять сервисы с помощью Docker Compose:
 
 ```bash
-docker compose --env-file .env up -d 
+docker compose --env-file .env up -d
 ```
 
 Или если требуется запустить отдельный сервис:
 
 ```bash
 docker compose --env-file .env up <service_name>
+```
+
+## pre-commit
+
+Для CI в репозитории используется pre-commit хук. Перед коммитом, пожалуйста, прогоните его.
+
+```bash
+pip install pre-commit
+pre-commit install
+pre-commit run
+```
+
+По умолчанию, pre-commit работает только для файлов на стадии "staged" в git. Чтобы запустить
+pre-commit для всех файлов (и сразу отформатировать их под требования pre-commit хуков),
+можно использовать следующую команду:
+
+```bash
+pre-commit run --all-files
 ```
