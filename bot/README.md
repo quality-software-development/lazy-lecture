@@ -17,7 +17,7 @@ Standalone:
 
 add `BOT_TOKEN` to your enviroment variables
 
-for example: 
+for example:
 ```
 export BOT_TOKEN=your_token
 ```

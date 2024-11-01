@@ -64,9 +64,7 @@ async def process_login_name(message: Message, state: FSMContext) -> None:
     username = message.text
     match username:
         case None:
-            await message.answer(
-                "You must write your name as a text message broooo\nTry again"
-            )
+            await message.answer("You must write your name as a text message broooo\nTry again")
         case str():
             # TODO: Handle cases when name doesn't pass requirements
             await state.update_data(name=username)
@@ -79,9 +77,7 @@ async def process_login_password(message: Message, state: FSMContext) -> None:
     user_password = message.text
     match user_password:
         case None:
-            await message.answer(
-                "You must write your password as a text message broooo\nTry again"
-            )
+            await message.answer("You must write your password as a text message broooo\nTry again")
         case str():
             # TODO: Handle cases when password doesn't pass requirements
             await state.update_data(password=user_password)
@@ -92,9 +88,7 @@ async def process_login_password(message: Message, state: FSMContext) -> None:
 
 @dp.message(Command("logout"))
 async def logout(message: Message) -> None:
-    await message.answer(
-        f"Got you! You are logged out", reply_markup=ReplyKeyboardRemove()
-    )
+    await message.answer(f"Got you! You are logged out", reply_markup=ReplyKeyboardRemove())
 
 
 @dp.message()
