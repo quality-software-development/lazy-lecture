@@ -97,7 +97,7 @@ async def process_login_password(message: Message, state: FSMContext) -> None:
             )
             state_data = await state.get_data()
             await state.clear()
-            await message.answer(f"Good. You are logged in as {state_data.get("name")}")
+            await message.answer(f"Good. You are logged in as {state_data.get('name')}")
             user = message.from_user
             if user is None:
                 # TODO: some handling
