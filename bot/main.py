@@ -133,7 +133,10 @@ async def logout(message: Message, state: FSMContext) -> None:
 async def confirms_logout(message: Message, state: FSMContext) -> None:
     if message.text not in ["Yes", "yes", "Y", "y"]:
         await state.clear()
-        await message.answer(f"Ok ok. You are not gonna be logged out")
+        await message.answer(
+            f"Ok ok. You are not gonna be logged out",
+            reply_markup=ReplyKeyboardRemove(),
+        )
     else:
         user = message.from_user
         if user is None:
