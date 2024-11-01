@@ -74,9 +74,7 @@ async def process_login_name(message: Message, state: FSMContext) -> None:
     username = message.text
     match username:
         case None:
-            await message.answer(
-                "You must write your name as a text message broooo\nTry again"
-            )
+            await message.answer("You must write your name as a text message broooo\nTry again")
         case str():
             await state.set_state(LoginForm.password)
             await state.update_data(name=username, name_message_id=message.message_id)
@@ -88,13 +86,9 @@ async def process_login_password(message: Message, state: FSMContext) -> None:
     user_password = message.text
     match user_password:
         case None:
-            await message.answer(
-                "You must write your password as a text message broooo\nTry again"
-            )
+            await message.answer("You must write your password as a text message broooo\nTry again")
         case str():
-            await state.update_data(
-                password=user_password, password_message_id=message.message_id
-            )
+            await state.update_data(password=user_password, password_message_id=message.message_id)
             state_data = await state.get_data()
             await state.clear()
             await message.answer(f"Good. You are logged in as {state_data.get('name')}")
@@ -127,9 +121,7 @@ async def logout(message: Message, state: FSMContext) -> None:
         user_id = user.id
         user_data = users.get(user_id)
         if user_data is None:
-            await message.answer(
-                f"You weren't logged in", reply_markup=ReplyKeyboardRemove()
-            )
+            await message.answer(f"You weren't logged in", reply_markup=ReplyKeyboardRemove())
         else:
             await state.set_state(LogoutForm.confirms)
             await state.update_data(user_id=user_id)
