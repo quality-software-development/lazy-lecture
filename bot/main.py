@@ -21,6 +21,9 @@ TOKEN = getenv("BOT_TOKEN") or "Token was not found in the environment"
 
 dp = Dispatcher()
 
+# { id: { name: string, password: string } }
+users: dict[int, dict[str, str]] = {}
+
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
@@ -30,7 +33,11 @@ async def command_start_handler(message: Message) -> None:
         case None:
             reply_text = f"Привет, студент!"
         case User():
-            reply_text = f"Привет, студент {html.bold(user.full_name)}!"
+            user_data = users.get(user.id)
+            if user_data is None:
+                reply_text = f"Привет, студент {html.bold(user.full_name)}!"
+            else:
+                reply_text = f"Привет, {html.bold(user_data['name'])}!"
 
     await message.answer(
         reply_text,
@@ -66,7 +73,6 @@ async def process_login_name(message: Message, state: FSMContext) -> None:
         case None:
             await message.answer("You must write your name as a text message broooo\nTry again")
         case str():
-            # TODO: Handle cases when name doesn't pass requirements
             await state.update_data(name=username)
             await state.set_state(LoginForm.password)
             await message.answer("Good. What is your password?")
@@ -79,16 +85,73 @@ async def process_login_password(message: Message, state: FSMContext) -> None:
         case None:
             await message.answer("You must write your password as a text message broooo\nTry again")
         case str():
-            # TODO: Handle cases when password doesn't pass requirements
             await state.update_data(password=user_password)
             user_data = await state.get_data()
             await state.clear()
             await message.answer(f"Good. You are logged in as {user_data}")
+            user = message.from_user
+            if user is None:
+                # TODO: some handling
+                # but seems like this arm is never gonna be reached
+                pass
+            else:
+                users[user.id] = user_data
+
+
+class LogoutForm(StatesGroup):
+    confirms = State()
 
 
 @dp.message(Command("logout"))
-async def logout(message: Message) -> None:
-    await message.answer(f"Got you! You are logged out", reply_markup=ReplyKeyboardRemove())
+async def logout(message: Message, state: FSMContext) -> None:
+    user = message.from_user
+    if user is None:
+        # TODO: some handling
+        pass
+    else:
+        user_data = users.get(user.id)
+        if user_data is None:
+            await state.clear()
+            await message.answer(f"You weren't logged in", reply_markup=ReplyKeyboardRemove())
+        else:
+            await state.set_state(LogoutForm.confirms)
+            await message.answer(
+                f"Do you really want to logout?",
+                reply_markup=ReplyKeyboardMarkup(
+                    keyboard=[
+                        [
+                            KeyboardButton(text="Yes"),
+                            KeyboardButton(text="No"),
+                        ]
+                    ],
+                    resize_keyboard=True,
+                ),
+            )
+
+
+@dp.message(LogoutForm.confirms)
+async def confirms_logout(message: Message, state: FSMContext) -> None:
+    if message.text not in ["Yes", "yes", "Y", "y"]:
+        await state.clear()
+        await message.answer(f"Ok ok. You are not gonna be logged out")
+    else:
+        user = message.from_user
+        if user is None:
+            # TODO: Impossible arm.
+            # Find the way to pass user_id throught state machine
+            pass
+        else:
+            user_data = users.get(user.id)
+            if user_data is None:
+                # Impossible arm
+                pass
+            else:
+                await state.clear()
+                await message.answer(
+                    f"Got you! You are no longer a {user_data['name']}\nYou are logged out",
+                    reply_markup=ReplyKeyboardRemove(),
+                )
+                del users[user.id]
 
 
 @dp.message()
