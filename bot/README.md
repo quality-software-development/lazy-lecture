@@ -2,9 +2,12 @@ Prerequirements:
 
 - venv
 
+Python 3.12.0, aiogram
+
 ```
 pip install -r requirements.txt
 ```
+
 - env
 
 add `BOT_TOKEN` to your enviroment variables
