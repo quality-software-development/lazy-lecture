@@ -2,17 +2,7 @@ import requests
 import pika
 
 from .settings import worker_config, WorkerConfig
-
-
-def callback(ch, method, properties, body):
-    try:
-        message = body.decode()
-        print("[x] Received message: ", str(message))
-        ch.basic_ack(delivery_tag=method.delivery_tag)
-        print("[x] Done")
-    except Exception as e:
-        print(f"[x] Error! {e}")
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+from .worker_callback import process_transcription_job_messages
 
 
 def start_worker(worker_config: WorkerConfig):
@@ -33,7 +23,7 @@ def start_worker(worker_config: WorkerConfig):
     print("[*] Waiting for messages. To exit press CTRL+C")
 
     channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(queue=worker_config.PIKA_QUEUE, on_message_callback=callback)
+    channel.basic_consume(queue=worker_config.PIKA_QUEUE, on_message_callback=process_transcription_job_messages)
     channel.start_consuming()
 
 

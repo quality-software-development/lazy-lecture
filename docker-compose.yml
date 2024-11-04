@@ -18,6 +18,7 @@ services:
       - PIKA_USER=${RMQ_USER:-user}
       - PIKA_PASS=${RMQ_PASS:-pass}
       - PIKA_QUEUE=task_queue
+      - OBJECT_STORAGE_PATH=/object_storage
     depends_on:
       - rabbitmq
 

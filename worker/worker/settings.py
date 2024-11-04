@@ -15,4 +15,10 @@ class WorkerConfig:
     PIKA_QUEUE = os.getenv("PIKA_QUEUE", "task_queue")
 
 
+@dataclass(frozen=True)
+class ObjectStorageConfig:
+    PATH: str = os.getenv("OBJECT_STORAGE_PATH", "/object_storage")
+
+
 worker_config = WorkerConfig()
+object_storage_config = ObjectStorageConfig()
