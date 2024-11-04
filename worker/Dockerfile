@@ -9,3 +9,5 @@ COPY ./requirements_fast.txt /code/requirements_fast.txt
 RUN pip install --no-cache-dir --upgrade -r /code/requirements_fast.txt
 
 COPY . /code/
+
+CMD ["python", "-u", "-m", "worker.worker"]

@@ -7,4 +7,44 @@ services:
   worker:
     build: worker
     volumes:
-      - ./volumes/worker_cache:/cache:rw
+      - worker_cache:/cache:rw
+      - object_storage:/object_storage:ro
+    environment:
+      - DEVICE=${DEVICE:-cpu}
+      - WHISPER_MODEL_NAME=${WHISPER_MODEL_NAME:-tiny}
+      - DOWNLOAD_ROOT=${DOWNLOAD_ROOT:-/cache}
+      - PIKA_HOST=rabbitmq
+      - PIKA_PORT=5672
+      - PIKA_USER=${RMQ_USER:-user}
+      - PIKA_PASS=${RMQ_PASS:-pass}
+      - PIKA_QUEUE=task_queue
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:4.0.3-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+      - 15692:15692
+    environment:
+      - RMQ_USER=${RMQ_USER:-user}
+      - RMQ_PASS=${RMQ_PASS:-pass}
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2Gb
+        reservations:
+          cpus: '0.5'
+          memory: 1Gb
+
+
+volumes:
+  # stored at /var/lib/docker/volumes
+  object_storage:
+  worker_cache:
+  rabbitmq:
