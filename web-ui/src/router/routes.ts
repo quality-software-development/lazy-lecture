@@ -3,14 +3,17 @@ import { RouteRecordRaw } from 'vue-router';
 const routes: RouteRecordRaw[] = [
     {
         path: '',
-        redirect: '/transcripts'
+        redirect: '/transcripts',
     },
     {
         path: '/transcripts',
         component: () => import('layouts/MainLayout.vue'),
         children: [
             { path: '', component: () => import('pages/UploadAudioPage.vue') },
-            { path: ':taskId', component: () => import('pages/TranscriptPage.vue')}
+            {
+                path: ':taskId',
+                component: () => import('pages/TranscriptPage.vue'),
+            },
         ],
     },
     {

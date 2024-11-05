@@ -14,7 +14,20 @@
             </q-item-section>
             <q-item-section class="text-grey-6">{{
                 date.formatDate(timeStamp, 'D MMM HH:mm', {
-                    monthsShort: ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"]
+                    monthsShort: [
+                        'янв',
+                        'фев',
+                        'мар',
+                        'апр',
+                        'мая',
+                        'июн',
+                        'июл',
+                        'авг',
+                        'сен',
+                        'окт',
+                        'ноя',
+                        'дек',
+                    ],
                 })
             }}</q-item-section>
         </div>
