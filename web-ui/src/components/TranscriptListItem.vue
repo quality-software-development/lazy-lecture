@@ -3,14 +3,19 @@
         class="column items-end q-pt-md"
         clickable
         v-ripple
+        :active="+route.params.taskId === taskId"
+        active-class="ui-transcript-history-item-active"
         style="height: 90px"
+        @click="router.push(`/transcripts/${taskId}`)"
     >
         <div class="row">
             <q-item-section style="margin-right: -20px" avatar>
                 <q-icon :name="statusIconName" :color="statusIconColor" />
             </q-item-section>
             <q-item-section class="text-grey-6">{{
-                date.formatDate(timeStamp, 'D MMM HH:mm')
+                date.formatDate(timeStamp, 'D MMM HH:mm', {
+                    monthsShort: ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"]
+                })
             }}</q-item-section>
         </div>
 
@@ -29,10 +34,15 @@
 </template>
 
 <script setup lang="ts">
+import { useRoute, useRouter } from 'vue-router';
 import { TranscriptStatus } from 'src/models/transcripts';
 import { date } from 'quasar';
 
+const route = useRoute();
+const router = useRouter();
+
 interface TranscriptListItemProps {
+    taskId: number;
     text: string;
     timeStamp: Date;
     status: TranscriptStatus;
@@ -63,3 +73,10 @@ switch (props.status) {
         statusIconColor = 'negative';
 }
 </script>
+
+<style scoped>
+.ui-transcript-history-item-active {
+    background-color: #ebebeb;
+    color: grey;
+}
+</style>

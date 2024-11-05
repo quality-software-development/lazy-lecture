@@ -16,7 +16,7 @@
 
         <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
             <q-list>
-                <q-item-label header> Транскрипции </q-item-label>
+                <q-item-label header> История </q-item-label>
                 <q-separator />
                 <TranscriptListItem
                     v-for="transcript in transcriptStore.transcripts"

@@ -6,7 +6,7 @@
             <div style="font-size: 30vh">404</div>
 
             <div class="text-h2" style="opacity: 0.4">
-                Oops. Nothing here...
+                Страница не найдена
             </div>
 
             <q-btn
@@ -14,8 +14,8 @@
                 color="white"
                 text-color="blue"
                 unelevated
-                to="/"
-                label="Go Home"
+                to="/transcripts"
+                label="На главную"
                 no-caps
             />
         </div>
