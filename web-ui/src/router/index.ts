@@ -8,6 +8,8 @@ import {
 
 import routes from './routes';
 
+import { verifyToken } from 'src/api/auth';
+
 /*
  * If not building with SSR mode, you can
  * directly export the Router instantiation;
@@ -37,7 +39,7 @@ export default route(function (/* { store, ssrContext } */) {
     Router.beforeEach(async (to) => {
         if (
             // make sure the user is authenticated
-            true /*isAuthenticated*/ &&
+            /*!(await verifyToken())*/ false &&
             // ❗️ Avoid an infinite redirect
             to.path !== '/log_in' &&
             to.path !== '/sign_up'
