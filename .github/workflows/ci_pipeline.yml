@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feature/ci_cd_integration
   pull_request:
     branches:
       - main
@@ -21,8 +20,14 @@ jobs:
         with:
           python-version: '3.8'
 
-      - name: Install Python dependencies
+      - name: Install Python dependencies for bot
         run: |
+          cd bot
+          pip install -r requirements.txt
+
+      - name: Install Python dependencies for worker
+        run: |
+          cd worker
           pip install -r requirements.txt
 
       - name: Set up Node.js
@@ -30,7 +35,7 @@ jobs:
         with:
           node-version: '14'
 
-      - name: Install NPM dependencies
+      - name: Install NPM dependencies for web-ui
         run: |
           cd web-ui
           npm install
@@ -41,13 +46,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Run ESLint
+      - name: Run ESLint for web-ui
         run: |
           cd web-ui
           npm run lint
 
-      - name: Run Python Linter
+      - name: Run Python Linter for bot
         run: |
+          cd bot
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Run Python Linter for worker
+        run: |
+          cd worker
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
   tests:
@@ -56,8 +67,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Run Unit and Integration Tests
+      - name: Run Unit and Integration Tests for worker
         run: |
+          cd worker
           chmod +x run_tests.sh
           ./run_tests.sh
 
@@ -67,7 +79,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Run ML Tests
+      - name: Run ML Tests for worker
         run: |
+          cd worker
           chmod +x run_ml_tests.sh
           ./run_ml_tests.sh
