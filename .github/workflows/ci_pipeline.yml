@@ -89,19 +89,3 @@ jobs:
       - name: Run ML Tests for worker
         run: |
           docker compose run --build -T worker python -m pytest -m ml
-
-  docker:
-    runs-on: ubuntu-latest
-    env:
-      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Set up Docker Compose
-        uses: docker/compose@v2
-        with:
-          command: up -d
