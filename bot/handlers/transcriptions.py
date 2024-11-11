@@ -157,7 +157,7 @@ async def send_txt_file(callback: CallbackQuery) -> None:
     # Here you would generate or retrieve the .txt file based on the task_id
     # file_path = f"{task_id}.txt"  # Example file path
 
-    file_path = r"bot/handlers/transcriptions/mock.txt"
+    file_path = r"handlers/transcriptions/mock.txt"
     input_file = FSInputFile(file_path)
 
     await callback.message.answer_document(input_file, caption="Here is your .txt file.")  # type: ignore
@@ -174,7 +174,7 @@ async def send_docx_file(callback: CallbackQuery) -> None:
     # Here you would generate or retrieve the .docx file based on the task_id
     # file_path = f"{task_id}.docx"  # Example file path
 
-    file_path = r"bot/handlers/transcriptions/mock.docx"
+    file_path = r"handlers/transcriptions/mock.docx"
     input_file = FSInputFile(file_path)
 
     await callback.message.answer_document(input_file, caption="Here is your .docx file.")  # type: ignore
