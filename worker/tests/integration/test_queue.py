@@ -4,8 +4,8 @@ import random
 from worker.task_queue import send_transcription_job_to_queue
 
 
-def test_send_receive_hello_world(clean_rabbitmq_queue):
-    connection, channel, queue = clean_rabbitmq_queue
+def test_send_receive_hello_world(clean_queue):
+    connection, channel, queue = clean_queue
     body_sent = "Hello World!"
 
     channel.basic_publish(exchange="", routing_key=queue, body=body_sent)
@@ -17,8 +17,8 @@ def test_send_receive_hello_world(clean_rabbitmq_queue):
     assert body_received == body_sent, f"{body_received=} != {body_sent=}"
 
 
-def test_send_receive_single_job(clean_rabbitmq_queue):
-    connection, channel, queue = clean_rabbitmq_queue
+def test_send_receive_single_job(clean_queue):
+    connection, channel, queue = clean_queue
     job_sent = send_transcription_job_to_queue(
         channel, queue, random.randint(10**4, 10**6), random.randint(10**4, 10**6)
     )
