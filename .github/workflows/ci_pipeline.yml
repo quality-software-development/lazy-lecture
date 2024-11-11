@@ -19,7 +19,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.13'
 
       - name: Install Python dependencies for bot
         run: |
@@ -40,6 +40,7 @@ jobs:
         run: |
           cd web-ui
           npm install
+          npm install eslint
 
   lint:
     runs-on: ubuntu-latest
@@ -47,19 +48,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Install NPM dependencies for linting
+        run: |
+          cd web-ui
+          npm install eslint
+
       - name: Run ESLint for web-ui
         run: |
           cd web-ui
-          npm run lint
+          npx eslint --ext .js,.ts,.vue ./ 
 
       - name: Run Python Linter for bot
         run: |
           cd bot
+          pip install flake8 
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
       - name: Run Python Linter for worker
         run: |
           cd worker
+          pip install flake8
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
   tests:
@@ -85,3 +93,15 @@ jobs:
           cd worker
           chmod +x run_ml_tests.sh
           ./run_ml_tests.sh
+
+  docker:
+    runs-on: ubuntu-latest
+    env:
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker
+        run: |
+          docker-compose up -d 
