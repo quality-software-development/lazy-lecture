@@ -17,11 +17,12 @@ from aiogram.types import (
 
 from handlers.auth import auth_router, users
 from handlers.echo import echo_router
+from handlers.transcriptions import transcriptions_router
 
 TOKEN = getenv("BOT_TOKEN") or "Token was not found in the environment"
 
 dp = Dispatcher()
-dp.include_routers(auth_router, echo_router)
+dp.include_routers(auth_router, transcriptions_router, echo_router)
 
 
 async def get_username(message: Message) -> str:
