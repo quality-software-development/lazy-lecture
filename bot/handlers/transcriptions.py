@@ -5,6 +5,7 @@ from aiogram.types.input_file import FSInputFile
 from aiogram.filters import Command
 from aiogram.types.callback_query import CallbackQuery
 import json
+from datetime import datetime
 
 transcriptions_router = Router()
 
@@ -92,9 +93,12 @@ async def send_transcriptions(message, transcriptions: list, page: int, from_cal
     keyboard = []
 
     for transcription in transcriptions[start_index:end_index]:
+        date_string = transcription["timestamp"]
+        formatted_date_time = datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%SZ").strftime("%Y.%m.%d %H:%M:%S")
         # Create buttons for transcription, .txt, and .doc
         transcription_button = InlineKeyboardButton(
-            text=f"{transcription['transcription']}", callback_data=f"transcription_{transcription['task_id']}"
+            text=f"{formatted_date_time} | {transcription['transcription']}",
+            callback_data=f"transcription_{transcription['task_id']}",
         )
         # txt_button = InlineKeyboardButton(text=".txt", callback_data=f"download_txt_{
         #                                   transcription['task_id']}")
@@ -144,7 +148,8 @@ async def transcription_handler(callback: CallbackQuery) -> None:
         ]
     )
 
-    await callback.message.answer("Choose a file format:", reply_markup=format_keyboard)  # type: ignore
+    # type: ignore
+    await callback.message.answer("Choose a file format:", reply_markup=format_keyboard)
     await callback.answer()
 
 
@@ -160,7 +165,8 @@ async def send_txt_file(callback: CallbackQuery) -> None:
     file_path = r"handlers/transcriptions/mock.txt"
     input_file = FSInputFile(file_path)
 
-    await callback.message.answer_document(input_file, caption="Here is your .txt file.")  # type: ignore
+    # type: ignore
+    await callback.message.answer_document(input_file, caption="Here is your .txt file.")
     await callback.answer()
 
 
@@ -177,5 +183,6 @@ async def send_docx_file(callback: CallbackQuery) -> None:
     file_path = r"handlers/transcriptions/mock.docx"
     input_file = FSInputFile(file_path)
 
-    await callback.message.answer_document(input_file, caption="Here is your .docx file.")  # type: ignore
+    # type: ignore
+    await callback.message.answer_document(input_file, caption="Here is your .docx file.")
     await callback.answer()
