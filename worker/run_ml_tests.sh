@@ -1,1 +1,1 @@
-docker compose run --build -it worker python -m pytest -m ml
+docker compose run --build --remove-orphans -it worker python -m pytest -m ml -s

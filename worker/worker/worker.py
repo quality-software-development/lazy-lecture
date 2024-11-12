@@ -23,7 +23,10 @@ def start_worker(worker_config: WorkerConfig):
     print("[*] Waiting for messages. To exit press CTRL+C")
 
     channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(queue=worker_config.PIKA_QUEUE, on_message_callback=process_transcription_job_messages)
+    channel.basic_consume(
+        queue=worker_config.PIKA_QUEUE,
+        on_message_callback=lambda ch, method, properties, body: process_transcription_job_messages(ch, method, body),
+    )
     channel.start_consuming()
 
 
