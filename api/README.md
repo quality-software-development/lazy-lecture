@@ -57,8 +57,8 @@ Body:
 #### Response:
 ```json
 {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJwYXNzd29yZF90aW1lc3RhbXAiOjE3MDAyMjc0MTguNTYxMjExLCJleHAiOjE3MDAyMjk3OTAsInRva2VuX3R5cGUiOiJhY2Nlc3MifQ.dQPryffcPZ0Yj2niYp72CukEzbRz-M7_j6WgieiXWHA",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJwYXNzd29yZF90aW1lc3RhbXAiOjE3MDAyMjc0MTguNTYxMjExLCJleHAiOjE3MDI4MTk5OTAsInRva2VuX3R5cGUiOiJyZWZyZXNoIn0.5Dxog4Tl02rOe5ksf4xsU1u8waISGsZTvOGZx1fwltI",
+    "access_token": "<access_token_string>",
+    "refresh_token": "<refresh_token_string>",
     "token_type": "bearer"
 }
 ```
@@ -67,7 +67,7 @@ Body:
 ```http request
 GET /users
 Headers:
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJwYXNzd29yZF90aW1lc3RhbXAiOjE3MDAyMjc0MTguNTYxMjExLCJleHAiOjE3MDAyMjk3OTAsInRva2VuX3R5cGUiOiJhY2Nlc3MifQ.dQPryffcPZ0Yj2niYp72CukEzbRz-M7_j6WgieiXWHA
+Authorization: Bearer <access_token_string>
 ```
 
 #### Response:
@@ -90,15 +90,15 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJwY
 POST /auth/refresh
 
 {
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJwYXNzd29yZF90aW1lc3RhbXAiOjE3MDAyMjc0MTguNTYxMjExLCJleHAiOjE3MDI4MTk5OTAsInRva2VuX3R5cGUiOiJyZWZyZXNoIn0.5Dxog4Tl02rOe5ksf4xsU1u8waISGsZTvOGZx1fwltI"
+    "refresh_token": "<refresh_token_string>"
 }
 ```
 
 #### Response:
 ```json
 {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJwYXNzd29yZF90aW1lc3RhbXAiOjE3MDAyMjc0MTguNTYxMjExLCJleHAiOjE3MDAyMzAwOTIsInRva2VuX3R5cGUiOiJhY2Nlc3MifQ.EU2XcjLGw6imlCl3rLYs9pqu0t7q5qYRW4kxrP6yF0c",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJwYXNzd29yZF90aW1lc3RhbXAiOjE3MDAyMjc0MTguNTYxMjExLCJleHAiOjE3MDI4MjAyOTIsInRva2VuX3R5cGUiOiJyZWZyZXNoIn0.hWzB5PKfRbK-g419Gwqi3ulwGkReRcRK796XEIpUXAI",
+    "access_token": "<access_token_string>",
+    "refresh_token": "<refresh_token_string>",
     "token_type": "bearer"
 }
 ```
@@ -114,13 +114,13 @@ POST /auth/refresh
   },
   "User": {
     "username": "str",
-    "password": "str",
+    "password": "str", // pragma: allowlist-secret
     "email": "str",
     "first_name": "str",
     "last_name": "str",
     "active": "bool",
     "role": "enum(str)",
-    "password_timestamp": "float"
+    "password_timestamp": "float" // pragma: allowlist-secret
   }
 }
 ```
