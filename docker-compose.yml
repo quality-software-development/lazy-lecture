@@ -43,9 +43,37 @@ services:
           cpus: '0.5'
           memory: 1Gb
 
+  api:
+    container_name: api
+    build:
+      context: ./api
+      dockerfile: ./config/dockerfile
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./api/config/.env
+    volumes:
+      - ./api/source:/app/source
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    container_name: postgres
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./api/config/.env
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 3s
+      timeout: 3s
+      retries: 3
 
 volumes:
-  # stored at /var/lib/docker/volumes
   object_storage:
   worker_cache:
   rabbitmq:
