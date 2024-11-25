@@ -96,47 +96,116 @@ jobs:
       - name: Run ML Tests for worker
         run: |
           docker compose run --build -T worker python -m pytest -m ml
-  deploy:
+  deploy-bot:
     runs-on: ubuntu-latest
-    needs: build
     steps:
-      # 1. Checkout репозитория
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Логин в Docker реестр
-      - name: Log in to Registry
+      - name: Log in to Docker registry
         uses: docker/login-action@v2
         with:
           registry: ${{ secrets.REGISTRY_URL }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 3. Сборка и пуш Docker-образа
-      - name: Build and push Docker image
+      - name: Build and push bot Docker image
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./bot
+          file: ./bot/Dockerfile
           push: true
           tags: |
-            ${{ secrets.REGISTRY_URL }}/${{ secrets.IMAGE_NAME }}:latest
-            ${{ secrets.REGISTRY_URL }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}
+            ${{ secrets.REGISTRY_URL }}/bot:latest
+            ${{ secrets.REGISTRY_URL }}/bot:${{ github.sha }}
 
-      # 4. Установка kubectl
       - name: Install kubectl
         uses: azure/setup-kubectl@v3
         with:
           version: 'latest'
 
-      # 5. Настройка Kubeconfig
       - name: Set up Kubeconfig
         run: |
           echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
           export KUBECONFIG=$PWD/kubeconfig
 
-      # 6. Применение манифестов Kubernetes
-      - name: Deploy to Kubernetes
+      - name: Deploy bot to Kubernetes
         run: |
-          kubectl set image deployment/<DEPLOYMENT_NAME> <CONTAINER_NAME>=${{ secrets.REGISTRY_URL }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}
-          kubectl rollout status deployment/<DEPLOYMENT_NAME>
+          kubectl set image deployment/bot bot=${{ secrets.REGISTRY_URL }}/bot:${{ github.sha }}
+          kubectl rollout status deployment/bot
+
+  deploy-worker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.REGISTRY_URL }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push worker Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./worker
+          file: ./worker/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.REGISTRY_URL }}/worker:latest
+            ${{ secrets.REGISTRY_URL }}/worker:${{ github.sha }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Set up Kubeconfig
+        run: |
+          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
+
+      - name: Deploy worker to Kubernetes
+        run: |
+          kubectl set image deployment/worker worker=${{ secrets.REGISTRY_URL }}/worker:${{ github.sha }}
+          kubectl rollout status deployment/worker
+
+  deploy-web-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.REGISTRY_URL }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push web-ui Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./web-ui
+          file: ./web-ui/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.REGISTRY_URL }}/web-ui:latest
+            ${{ secrets.REGISTRY_URL }}/web-ui:${{ github.sha }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Set up Kubeconfig
+        run: |
+          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
+
+      - name: Deploy web-ui to Kubernetes
+        run: |
+          kubectl set image deployment/web-ui web-ui=${{ secrets.REGISTRY_URL }}/web-ui:${{ github.sha }}
+          kubectl rollout status deployment/web-ui
