@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "description": "A Quasar Project",
     "productName": "Lazy Lecture",
-    "author": "Сергей Головатюков <sergey.golovatiukov@infoguild.ru>",
+    "author": "Сергей Головатюков <2003gsa20152@gmail.com>",
     "private": true,
     "scripts": {
         "lint": "eslint --ext .js,.ts,.vue ./",

@@ -19,8 +19,8 @@
                 <q-item-label header> История </q-item-label>
                 <q-separator />
                 <TranscriptListItem
-                    v-for="transcript in transcriptStore.transcripts"
-                    :key="transcript.text"
+                    v-for="transcript in transcriptStore.transcriptsMap.values()"
+                    :key="transcript.taskId"
                     v-bind="transcript"
                 />
             </q-list>
@@ -42,7 +42,7 @@ defineOptions({
 });
 
 const transcriptStore = useTranscriptStore();
-transcriptStore.loadTranscripts(0, 100);
+await transcriptStore.loadTranscripts(0, 100);
 
 const leftDrawerOpen = ref(false);
 
