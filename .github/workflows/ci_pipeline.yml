@@ -96,7 +96,6 @@ jobs:
       - name: Run ML Tests for worker
         run: |
           docker compose run --build -T worker python -m pytest -m ml
-  name: Deploy to Kubernetes
 
   # 5. Deploy
   deploy-bot:
