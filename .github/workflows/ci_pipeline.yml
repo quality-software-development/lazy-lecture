@@ -96,6 +96,9 @@ jobs:
       - name: Run ML Tests for worker
         run: |
           docker compose run --build -T worker python -m pytest -m ml
+  name: Deploy to Kubernetes
+
+  # 5. Deploy
   deploy-bot:
     runs-on: ubuntu-latest
     steps:
@@ -116,23 +119,22 @@ jobs:
           file: ./bot/Dockerfile
           push: true
           tags: |
-            ${{ secrets.REGISTRY_URL }}/bot:latest
-            ${{ secrets.REGISTRY_URL }}/bot:${{ github.sha }}
+            ${{ secrets.REGISTRY_URL }}/lazy-lecture-bot:latest
+            ${{ secrets.REGISTRY_URL }}/lazy-lecture-bot:${{ github.sha }}
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'latest'
+      - name: Install Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
       - name: Set up Kubeconfig
         run: |
           echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
           export KUBECONFIG=$PWD/kubeconfig
 
-      - name: Deploy bot to Kubernetes
+      - name: Deploy bot with Helm
         run: |
-          kubectl set image deployment/bot bot=${{ secrets.REGISTRY_URL }}/bot:${{ github.sha }}
-          kubectl rollout status deployment/bot
+          helm upgrade --install lazy-lecture ./lazy-lecture \
+            --set bot.image=${{ secrets.REGISTRY_URL }}/lazy-lecture-bot:${{ github.sha }}
 
   deploy-worker:
     runs-on: ubuntu-latest
@@ -154,23 +156,22 @@ jobs:
           file: ./worker/Dockerfile
           push: true
           tags: |
-            ${{ secrets.REGISTRY_URL }}/worker:latest
-            ${{ secrets.REGISTRY_URL }}/worker:${{ github.sha }}
+            ${{ secrets.REGISTRY_URL }}/lazy-lecture-worker:latest
+            ${{ secrets.REGISTRY_URL }}/lazy-lecture-worker:${{ github.sha }}
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'latest'
+      - name: Install Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
       - name: Set up Kubeconfig
         run: |
           echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
           export KUBECONFIG=$PWD/kubeconfig
 
-      - name: Deploy worker to Kubernetes
+      - name: Deploy worker with Helm
         run: |
-          kubectl set image deployment/worker worker=${{ secrets.REGISTRY_URL }}/worker:${{ github.sha }}
-          kubectl rollout status deployment/worker
+          helm upgrade --install lazy-lecture ./lazy-lecture \
+            --set worker.image=${{ secrets.REGISTRY_URL }}/lazy-lecture-worker:${{ github.sha }}
 
   deploy-web-ui:
     runs-on: ubuntu-latest
@@ -192,20 +193,19 @@ jobs:
           file: ./web-ui/Dockerfile
           push: true
           tags: |
-            ${{ secrets.REGISTRY_URL }}/web-ui:latest
-            ${{ secrets.REGISTRY_URL }}/web-ui:${{ github.sha }}
+            ${{ secrets.REGISTRY_URL }}/lazy-lecture-web:latest
+            ${{ secrets.REGISTRY_URL }}/lazy-lecture-web:${{ github.sha }}
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'latest'
+      - name: Install Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
       - name: Set up Kubeconfig
         run: |
           echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
           export KUBECONFIG=$PWD/kubeconfig
 
-      - name: Deploy web-ui to Kubernetes
+      - name: Deploy web-ui with Helm
         run: |
-          kubectl set image deployment/web-ui web-ui=${{ secrets.REGISTRY_URL }}/web-ui:${{ github.sha }}
-          kubectl rollout status deployment/web-ui
+          helm upgrade --install lazy-lecture ./lazy-lecture \
+            --set web.image=${{ secrets.REGISTRY_URL }}/lazy-lecture-web:${{ github.sha }}
