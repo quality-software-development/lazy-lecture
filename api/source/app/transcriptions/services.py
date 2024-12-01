@@ -1,3 +1,4 @@
+from datetime import datetime
 from math import ceil
 import random
 
@@ -31,6 +32,9 @@ async def list_user_transcriptions(page: int, size: int, user_id: int, db: Async
                 audio_len_secs=random.randint(60, 60 * 120),
                 chunk_size_secs=60 * 15,
                 current_state=random.choice(list(TranscriptionState)),
+                create_date=datetime.now(),
+                update_date=datetime.now(),
+                description="Enim in consequatur est commodi illum sint repellat. Recusandae dolores sint a quod deserunt est voluptatibus. Impedit vero recusandae enim. Et id qui eos cum vel veritatis.",
             )
             for _ in range(mock_count)
         ]
