@@ -48,7 +48,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router';
-import { TranscriptStatus } from 'src/models/transcripts';
+import { IChunk, TranscriptStatus } from 'src/models/transcripts';
 import { date } from 'quasar';
 
 const route = useRoute();
@@ -58,7 +58,12 @@ interface TranscriptListItemProps {
     taskId: number;
     text: string;
     timeStamp: Date;
+    duration: number;
     status: TranscriptStatus;
+    chunks: IChunk[];
+    markXPositions: number[];
+    timeStampViews: string[];
+    chunksDurationArray: number[];
 }
 
 const props = defineProps<TranscriptListItemProps>();

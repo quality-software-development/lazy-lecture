@@ -12,6 +12,7 @@ const routes: RouteRecordRaw[] = [
             { path: '', component: () => import('pages/UploadAudioPage.vue') },
             {
                 path: ':taskId',
+                name: 'transcriptPage',
                 component: () => import('pages/TranscriptPage.vue'),
             },
         ],

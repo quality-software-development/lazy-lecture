@@ -43,6 +43,14 @@ services:
           cpus: '0.5'
           memory: 1Gb
 
+  web-ui:
+    build: web-ui
+    expose:
+      - 9000
+    ports:
+      - 9000:80
+    environment:
+      - NODE_ENV=production
   api:
     container_name: api
     build:
