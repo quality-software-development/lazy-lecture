@@ -26,6 +26,7 @@ class UserCreate(UserRequest):
 class UserResponse(ResponseSchema):
     username: str
     active: bool
+    can_interact: bool
     role: Roles
     create_date: datetime
     update_date: datetime
