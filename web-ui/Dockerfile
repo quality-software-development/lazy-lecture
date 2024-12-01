@@ -9,4 +9,4 @@ FROM nginx:alpine
 COPY --from=build /web-ui/dist/spa /web-ui-statics
 COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"];
+CMD ["nginx", "-g", "daemon off;"]
