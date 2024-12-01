@@ -72,7 +72,9 @@ async def decode_token(token: str) -> dict:
         return {}
 
 
-async def authenticate_access_token(token: str, db: AsyncSession, roles: list | None = None) -> User | None:
+async def authenticate_access_token(
+    token: str, db: AsyncSession, roles: list | None = None, can_interact: bool | None = None
+) -> User | None:
     payload = await decode_token(token)
     if payload and payload.get("token_type") == TokenType.ACCESS:
         if user := await authenticate_token(
@@ -80,9 +82,13 @@ async def authenticate_access_token(token: str, db: AsyncSession, roles: list | 
             password_timestamp=payload["password_timestamp"],
             db=db,
         ):
-            if not roles or user.role in roles:
+            correct_role = not roles or user.role in roles
+            correct_can_interact = not can_interact or user.can_interact == can_interact
+            is_good = correct_role and correct_can_interact
+            if is_good:
                 return user
-            return forbidden(f"Access restricted. Only {roles} are allowed to access this endpoint.")
+            else:
+                return forbidden(f"Access restricted. Either your role or can_interact is invalid for the action.")
     return None
 
 
@@ -101,8 +107,10 @@ async def authenticate_refresh_token(token: str, db: AsyncSession) -> dict | Non
     return None
 
 
-async def authenticate(token: str, db: AsyncSession, roles: list | None = None) -> User:
-    if user := await authenticate_access_token(token=token, roles=roles, db=db):
+async def authenticate(
+    token: str, db: AsyncSession, roles: list | None = None, can_interact: bool | None = None
+) -> User:
+    if user := await authenticate_access_token(token=token, roles=roles, db=db, can_interact=can_interact):
         return user
     return unauthorized("Invalid or expired token")
 
@@ -123,3 +131,12 @@ async def auth_admin(
     if not token:
         return unauthorized("Invalid Authorization Header")
     return await authenticate(token=token.credentials, db=db, roles=[Roles.ADMIN.value])
+
+
+async def auth_can_interact(
+    token: HTTPAuthorizationCredentials = Security(HTTPBearer(auto_error=False)),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    if not token:
+        return unauthorized("Invalid Authorization Header")
+    return await authenticate(token=token.credentials, db=db, can_interact=True)
