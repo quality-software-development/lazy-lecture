@@ -39,23 +39,22 @@ async def user_get(user: CurrentUser) -> User:
     return user
 
 
-# @users_router.patch(
-#     "/",
-#     response_model=UserResponse,
-#     responses={
-#         status.HTTP_401_UNAUTHORIZED: {"model": ExceptionSchema},
-#         status.HTTP_409_CONFLICT: {"model": ExceptionSchema},
-#     },
-#     tags=["users"],
-# )
-# async def user_update(
-#     user: CurrentUser,
-#     request: UserUpdateRequest,
-#     db: AsyncSession = Depends(get_db),
-# ) -> User:
-#     if updated_user := await update_user(user=user, request=request, db=db):
-#         return updated_user
-#     return conflict(f"User '{request.username}' already exists")
+@users_router.patch(
+    "/patch",
+    response_model=UserResponse,
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": ExceptionSchema},
+        status.HTTP_409_CONFLICT: {"model": ExceptionSchema},
+    },
+)
+async def user_update(
+    user: CurrentUser,
+    request: UserUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    if updated_user := await update_user(user=user, request=request, db=db):
+        return updated_user
+    return conflict(f"User '{request.username}' already exists")
 
 
 # @users_router.delete(

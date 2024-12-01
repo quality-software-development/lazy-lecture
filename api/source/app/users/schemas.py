@@ -33,8 +33,9 @@ class UserResponse(ResponseSchema):
 
 
 class UserUpdateRequest(BaseModel):
-    username: str | None = None
+    # username: str | None = None is not alterable
     password: str | None = None
+    can_interact: bool | None = None
 
 
 class UserUpdateRequestAdmin(UserUpdateRequest):
