@@ -15,7 +15,7 @@ auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @auth_router.post(
-    "/token",
+    "/login",
     response_model=Token,
     responses={status.HTTP_401_UNAUTHORIZED: {"model": ExceptionSchema}},
 )

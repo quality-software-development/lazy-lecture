@@ -22,7 +22,8 @@ async def create_user(user: UserRequest, db: AsyncSession) -> User | None:
         await db.commit()
         await db.refresh(user)
         return user
-    except IntegrityError:
+    except IntegrityError as e:
+        print(e)
         return None
 
 

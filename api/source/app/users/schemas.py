@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from pydantic import BaseModel, EmailStr, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from source.app.auth.utils import get_password_hash
 from source.app.users.enums import Order, Roles, Sort
@@ -10,15 +10,12 @@ from source.core.schemas import PageSchema, PaginationSchema, ResponseSchema
 class UserRequest(BaseModel):
     username: str
     password: str
-    email: EmailStr
-    first_name: str | None = None
-    last_name: str | None = None
 
 
 class UserCreate(UserRequest):
     active: bool = True
     role: Roles = Roles.USER
-    password_timestamp: float = Field(default_factory=datetime.utcnow().timestamp)
+    password_timestamp: float = Field(default_factory=lambda: datetime.now(timezone.utc).timestamp())
 
     @model_validator(mode="after")
     def validator(cls, values: "UserCreate") -> "UserCreate":
@@ -28,10 +25,8 @@ class UserCreate(UserRequest):
 
 class UserResponse(ResponseSchema):
     username: str
-    email: EmailStr
-    first_name: str | None
-    last_name: str | None
     active: bool
+    can_interact: bool
     role: Roles
     create_date: datetime
     update_date: datetime
@@ -40,9 +35,6 @@ class UserResponse(ResponseSchema):
 class UserUpdateRequest(BaseModel):
     username: str | None = None
     password: str | None = None
-    email: EmailStr | None = None
-    first_name: str | None = None
-    last_name: str | None = None
 
 
 class UserUpdateRequestAdmin(UserUpdateRequest):
@@ -57,7 +49,7 @@ class UserUpdate(UserUpdateRequestAdmin):
     def validator(cls, values: "UserUpdate") -> "UserUpdate":
         if password := values.password:
             values.password = get_password_hash(password)
-            values.password_timestamp = datetime.utcnow().timestamp()
+            values.password_timestamp = datetime.now(timezone.utc).timestamp()
         return values
 
 
