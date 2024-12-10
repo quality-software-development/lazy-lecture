@@ -18,8 +18,13 @@ Standalone:
 add `BOT_TOKEN` to your enviroment variables
 
 for example:
+(Linux)
 ```
 export BOT_TOKEN=your_token
+```
+(Windows)
+```
+set BOT_TOKEN=yourtoken
 ```
 
 Running:
