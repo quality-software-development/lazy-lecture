@@ -15,10 +15,25 @@ class TranscriptionResponse(ResponseSchema):
     description: str
 
 
+class SingleTranscriptionResponse(ResponseSchema):
+    chunk_order: int
+    chunk_size_secs: int
+    transcription: str
+
+
 # Pagination
 class TranscriptionPagination(PaginationSchema):
     pass
 
 
+class SingleTranscriptionPagination(PaginationSchema):
+    task_id: int
+    pass
+
+
 class TranscriptionPage(PageSchema):
     transcriptions: list[TranscriptionResponse]
+
+
+class SingleTranscriptionPage(PageSchema):
+    transcriptions: list[SingleTranscriptionResponse]
