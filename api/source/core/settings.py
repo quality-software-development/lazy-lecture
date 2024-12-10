@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = 5432
     POSTGRES_URI: str | None = None
 
+    OBJECT_STORAGE_PATH: str = "object_storage"
+
     @model_validator(mode="after")
     def validator(cls, values: "Settings") -> "Settings":
         values.POSTGRES_URI = (
