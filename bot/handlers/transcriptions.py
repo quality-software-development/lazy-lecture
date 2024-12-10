@@ -85,9 +85,7 @@ TRANSCRIPTIONS_PER_PAGE = 5
 
 
 async def send_history_request(url, bearer_token):
-    headers = {
-        "Authorization": f"Bearer {bearer_token}"
-    }
+    headers = {"Authorization": f"Bearer {bearer_token}"}
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as response:
             return await response.json()  # or response.text() if you expect plain text
@@ -99,7 +97,7 @@ async def get_history(message: Message) -> None:
     user_id = user.id  # type: ignore
     await refresh_token(user_id)
     url = "http://localhost:8000/transcriptions?page=1"
-    access_token = users.get(user_id).get('access_token')  # type: ignore
+    access_token = users.get(user_id).get("access_token")  # type: ignore
     # print("Sending history request:", access_token)
     data = await send_history_request(url, access_token)
     # print(data)
@@ -114,8 +112,7 @@ async def send_transcriptions(message, transcriptions: list, page: int, from_cal
 
     for transcription in transcriptions[start_index:end_index]:
         date_string = transcription["create_date"]
-        formatted_date_time = datetime.strptime(
-            date_string, "%Y-%m-%dT%H:%M:%S.%f").strftime("%Y.%m.%d %H:%M:%S")
+        formatted_date_time = datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S.%f").strftime("%Y.%m.%d %H:%M:%S")
         # Create buttons for transcription, .txt, and .doc
         transcription_button = InlineKeyboardButton(
             text=f"{formatted_date_time} | {transcription['description']}",
@@ -127,10 +124,8 @@ async def send_transcriptions(message, transcriptions: list, page: int, from_cal
     # Pagination buttons
     pagination_buttons = []
     if page > 0:
-        pagination_buttons.append(InlineKeyboardButton(
-            text="Previous", callback_data=f"page_{page - 1}"))
-    pagination_buttons.append(InlineKeyboardButton(
-        text="Next", callback_data=f"page_{page + 1}"))
+        pagination_buttons.append(InlineKeyboardButton(text="Previous", callback_data=f"page_{page - 1}"))
+    pagination_buttons.append(InlineKeyboardButton(text="Next", callback_data=f"page_{page + 1}"))
 
     keyboard.append(pagination_buttons)
 
@@ -149,7 +144,7 @@ async def pagination_handler(callback: CallbackQuery) -> None:
     user_id = callback.from_user.id
     url = f"http://localhost:8000/transcriptions?page={page+1}"
     print(f"URL: {url}")
-    access_token = users.get(user_id).get('access_token')  # type: ignore
+    access_token = users.get(user_id).get("access_token")  # type: ignore
     data = await send_history_request(url, access_token)
     transcriptions = data["transcriptions"]
     print(f"Data: {transcriptions}")
@@ -172,8 +167,7 @@ async def transcription_handler(callback: CallbackQuery) -> None:
         ]
     )
 
-    await callback.message.answer(  # type: ignore
-        "Choose a file format:", reply_markup=format_keyboard)
+    await callback.message.answer("Choose a file format:", reply_markup=format_keyboard)  # type: ignore
     await callback.answer()
 
 
@@ -189,8 +183,7 @@ async def send_txt_file(callback: CallbackQuery) -> None:
     file_path = r"handlers/transcriptions/mock.txt"
     input_file = FSInputFile(file_path)
 
-    await callback.message.answer_document(  # type: ignore
-        input_file, caption="Here is your .txt file.")
+    await callback.message.answer_document(input_file, caption="Here is your .txt file.")  # type: ignore
     await callback.answer()
 
 
@@ -208,6 +201,5 @@ async def send_docx_file(callback: CallbackQuery) -> None:
     input_file = FSInputFile(file_path)
 
     # type: ignore
-    await callback.message.answer_document(  # type: ignore
-        input_file, caption="Here is your .docx file.")
+    await callback.message.answer_document(input_file, caption="Here is your .docx file.")  # type: ignore
     await callback.answer()

@@ -29,14 +29,14 @@ async def send_refresh_request(url, body):
 
 async def refresh_token(user_id: int):
     user_data = users.get(user_id)
-    refresh_token = user_data.get('refresh_token')  # type: ignore
+    refresh_token = user_data.get("refresh_token")  # type: ignore
     url = f"http://localhost:8000/auth/refresh"  # Replace with your internal server URL
     body = {"refresh_token": refresh_token}
     resp = await send_refresh_request(url, body)
     # TODO обратотать момент, когда refresh_token Не сработает - взять новый новый
     # access и refresh через send_login_request
-    access_token = resp.get('access_token')
-    refresh_token = resp.get('refresh_token')
+    access_token = resp.get("access_token")
+    refresh_token = resp.get("refresh_token")
     users[user_id]["access_token"] = access_token
     users[user_id]["refresh_token"] = refresh_token
 
@@ -72,10 +72,7 @@ async def process_login_name(message: Message, state: FSMContext) -> None:
 async def send_login_request(username: str, password: str):
     url = f"http://localhost:8000/auth/login"  # Replace with your internal server URL
 
-    body = {
-        "username": username,
-        "password": password
-    }
+    body = {"username": username, "password": password}
 
     async with aiohttp.ClientSession() as session:
         async with session.post(url, json=body) as response:
@@ -95,21 +92,21 @@ async def process_login_password(message: Message, state: FSMContext) -> None:
 
             # Проверить, есть ли есть такой пользователь+пароль в API
             print(f"SENDING REQUEST WITH\nNAME: {state_data.get('name')}\nPASS: {user_password}")
-            resp = await send_login_request(state_data.get('name'), user_password)  # type: ignore
+            resp = await send_login_request(state_data.get("name"), user_password)  # type: ignore
             print(resp)
 
             # Если пользователя нет, сказать что неверные данные
             # {'detail': 'Incorrect username or password'}
-            resp_detail = resp.get('detail', None)
-            if resp_detail == 'Incorrect username or password':
+            resp_detail = resp.get("detail", None)
+            if resp_detail == "Incorrect username or password":
                 await message.answer(f"Incorrect Username or Password")
             else:
                 # Если есть, то вытащить из полученного ответа "access_token" и "refresh_token"
                 #  и записать их вместе с именем в мапу
                 # {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJwYXNzd29yZF90aW1lc3RhbXAiOjE3MzM3NzE2NjguOTEzNjIyLCJleHAiOjE3MzM3NzUzMTcsInRva2VuX3R5cGUiOiJhY2Nlc3MifQ.B3jEi3Huc_dKi78EHmWRzSl9fJ6EfNd8eRga70iMDYI', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJwYXNzd29yZF90aW1lc3RhbXAiOjE3MzM3NzE2NjguOTEzNjIyLCJleHAiOjE3MzYzNjU1MTcsInRva2VuX3R5cGUiOiJyZWZyZXNoIn0.HtkWNfssUt9kOPHorjDX4KW6mAQ7jnnKunriunVKomg', 'token_type': 'bearer'}
-                access_token = resp['access_token']
-                refresh_token = resp['refresh_token']
-                name = state_data.get('name')
+                access_token = resp["access_token"]
+                refresh_token = resp["refresh_token"]
+                name = state_data.get("name")
 
                 await message.answer(f"Good. You are logged in as {name}")
                 user = message.from_user
