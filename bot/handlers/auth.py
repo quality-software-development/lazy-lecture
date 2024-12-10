@@ -21,6 +21,26 @@ auth_router = Router()
 users: dict[int, dict[str, str]] = {}
 
 
+async def send_refresh_request(url, body):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=body) as response:
+            return await response.json()  # or response.text() if you expect plain text
+
+
+async def refresh_token(user_id: int):
+    user_data = users.get(user_id)
+    refresh_token = user_data.get('refresh_token')  # type: ignore
+    url = f"http://localhost:8000/auth/refresh"  # Replace with your internal server URL
+    body = {"refresh_token": refresh_token}
+    resp = await send_refresh_request(url, body)
+    # TODO обратотать момент, когда refresh_token Не сработает - взять новый новый
+    # access и refresh через send_login_request
+    access_token = resp.get('access_token')
+    refresh_token = resp.get('refresh_token')
+    users[user_id]["access_token"] = access_token
+    users[user_id]["refresh_token"] = refresh_token
+
+
 class LoginForm(StatesGroup):
     name = State()
     password = State()
