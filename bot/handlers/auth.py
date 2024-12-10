@@ -9,10 +9,15 @@ from aiogram.types import (
 )
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
+import aiohttp
 
 auth_router = Router()
 
-# { id: { name: string } }
+# { id: { name: string
+#         access_token: string
+#         refresh_token: string
+#       }
+# }
 users: dict[int, dict[str, str]] = {}
 
 
@@ -44,6 +49,19 @@ async def process_login_name(message: Message, state: FSMContext) -> None:
             await message.answer("Good. What is your password?")
 
 
+async def send_login_request(username: str, password: str):
+    url = f"http://localhost:8000/auth/login"  # Replace with your internal server URL
+
+    body = {
+        "username": username,
+        "password": password
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=body) as response:
+            return await response.json()  # or response.text() if you expect plain text
+
+
 @auth_router.message(LoginForm.password)
 async def process_login_password(message: Message, state: FSMContext) -> None:
     user_password = message.text
@@ -54,19 +72,42 @@ async def process_login_password(message: Message, state: FSMContext) -> None:
             await state.update_data(password=user_password, password_message_id=message.message_id)
             state_data = await state.get_data()
             await state.clear()
-            await message.answer(f"Good. You are logged in as {state_data.get('name')}")
-            user = message.from_user
-            if user is None:
-                # TODO: some handling
-                # but seems like this arm is never gonna be reached
-                pass
+
+            # Проверить, есть ли есть такой пользователь+пароль в API
+            print(f"SENDING REQUEST WITH\nNAME: {state_data.get('name')}\nPASS: {user_password}")
+            resp = await send_login_request(state_data.get('name'), user_password)  # type: ignore
+            print(resp)
+
+            # Если пользователя нет, сказать что неверные данные
+            # {'detail': 'Incorrect username or password'}
+            resp_detail = resp.get('detail', None)
+            if resp_detail == 'Incorrect username or password':
+                await message.answer(f"Incorrect Username or Password")
             else:
-                # get keys we want to store
-                users[user.id] = {"name": state_data.get("name")}  # type: ignore
-                name_message_id = state_data.get("name_message_id")
-                password_message_id = state_data.get("password_message_id")
-                await message.chat.delete_message(message_id=name_message_id or 0)
-                await message.chat.delete_message(message_id=password_message_id or 0)
+                # Если есть, то вытащить из полученного ответа "access_token" и "refresh_token"
+                #  и записать их вместе с именем в мапу
+                # {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJwYXNzd29yZF90aW1lc3RhbXAiOjE3MzM3NzE2NjguOTEzNjIyLCJleHAiOjE3MzM3NzUzMTcsInRva2VuX3R5cGUiOiJhY2Nlc3MifQ.B3jEi3Huc_dKi78EHmWRzSl9fJ6EfNd8eRga70iMDYI', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJwYXNzd29yZF90aW1lc3RhbXAiOjE3MzM3NzE2NjguOTEzNjIyLCJleHAiOjE3MzYzNjU1MTcsInRva2VuX3R5cGUiOiJyZWZyZXNoIn0.HtkWNfssUt9kOPHorjDX4KW6mAQ7jnnKunriunVKomg', 'token_type': 'bearer'}
+                access_token = resp['access_token']
+                refresh_token = resp['refresh_token']
+                name = state_data.get('name')
+
+                await message.answer(f"Good. You are logged in as {name}")
+                user = message.from_user
+                if user is None:
+                    # TODO: some handling
+                    # but seems like this arm is never gonna be reached
+                    pass
+                else:
+                    # get keys we want to store
+                    users[user.id] = {  # type: ignore
+                        "name": name,
+                        "access_token": access_token,
+                        "refresh_token": refresh_token,
+                    }
+                    name_message_id = state_data.get("name_message_id")
+                    password_message_id = state_data.get("password_message_id")
+                    await message.chat.delete_message(message_id=name_message_id or 0)
+                    await message.chat.delete_message(message_id=password_message_id or 0)
 
 
 class LogoutForm(StatesGroup):
