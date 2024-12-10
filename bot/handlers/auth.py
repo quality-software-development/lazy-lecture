@@ -103,7 +103,6 @@ async def process_login_password(message: Message, state: FSMContext) -> None:
             else:
                 # Если есть, то вытащить из полученного ответа "access_token" и "refresh_token"
                 #  и записать их вместе с именем в мапу
-                # {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJwYXNzd29yZF90aW1lc3RhbXAiOjE3MzM3NzE2NjguOTEzNjIyLCJleHAiOjE3MzM3NzUzMTcsInRva2VuX3R5cGUiOiJhY2Nlc3MifQ.B3jEi3Huc_dKi78EHmWRzSl9fJ6EfNd8eRga70iMDYI', 'refresh_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJwYXNzd29yZF90aW1lc3RhbXAiOjE3MzM3NzE2NjguOTEzNjIyLCJleHAiOjE3MzYzNjU1MTcsInRva2VuX3R5cGUiOiJyZWZyZXNoIn0.HtkWNfssUt9kOPHorjDX4KW6mAQ7jnnKunriunVKomg', 'token_type': 'bearer'}
                 access_token = resp["access_token"]
                 refresh_token = resp["refresh_token"]
                 name = state_data.get("name")
