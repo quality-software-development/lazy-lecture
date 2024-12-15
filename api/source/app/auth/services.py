@@ -82,8 +82,8 @@ async def authenticate_access_token(
             password_timestamp=payload["password_timestamp"],
             db=db,
         ):
-            correct_role = not roles or user.role in roles
-            correct_can_interact = not can_interact or user.can_interact == can_interact
+            correct_role = roles is None or user.role in roles
+            correct_can_interact = can_interact is None or user.can_interact == can_interact
             is_good = correct_role and correct_can_interact
             if is_good:
                 return user

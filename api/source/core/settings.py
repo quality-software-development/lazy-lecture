@@ -24,6 +24,14 @@ class Settings(BaseSettings):
 
     OBJECT_STORAGE_PATH: str = "object_storage"
 
+    PIKA_HOST: str = "localhost"
+    PIKA_PORT: int = 5672
+    PIKA_USER: str = "rmuser"
+    PIKA_PASS: str = "rmpassword"
+    PIKA_QUEUE: str = "task_queue"
+
+    DEFAULT_CHUNK_SIZE: float = 60 * 15
+
     @model_validator(mode="after")
     def validator(cls, values: "Settings") -> "Settings":
         values.POSTGRES_URI = (

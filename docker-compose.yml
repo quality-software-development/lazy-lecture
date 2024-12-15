@@ -19,7 +19,7 @@ services:
       - PIKA_USER=${RMQ_USER:-user}
       - PIKA_PASS=${RMQ_PASS:-pass}
       - PIKA_QUEUE=task_queue
-      - OBJECT_STORAGE_PATH=/object_storage
+      - OBJECT_STORAGE_PATH=${OBJECT_STORAGE_PATH:-/object_storage}
     depends_on:
       - rabbitmq
 
@@ -68,8 +68,8 @@ services:
       - ./api/mock:/app/mock
       - ./volumes/object_storage:/app/object_storage:rw
     depends_on:
-      postgres:
-        condition: service_healthy
+      - rabbitmq
+      - postgres
 
   postgres:
     container_name: postgres
