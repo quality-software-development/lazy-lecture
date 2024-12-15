@@ -1,9 +1,16 @@
 from datetime import datetime
 from math import ceil
 import random
+import json
+from typing import Any, Mapping, Union
+import pika
+import pika.channel
+from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import asc, desc, func, select
+from sqlalchemy.exc import IntegrityError, MissingGreenlet
+from mutagen.mp3 import MP3
 
 from source.app.transcriptions.enums import TranscriptionState
 from source.app.transcriptions.models import Transcription
@@ -12,6 +19,7 @@ from source.app.transcriptions.schemas import (
     SingleTranscriptionPage,
     SingleTranscriptionResponse,
     TranscriptionPage,
+    TranscriptionRequest,
     TranscriptionResponse,
 )
 
@@ -75,3 +83,38 @@ async def list_user_transcript(page: int, size: int, task_id: int, db: AsyncSess
             total=total,
             pages=(ceil(total / size)),
         )
+
+
+def send_transcription_job_to_queue(
+    channel: pika.channel.Channel,
+    queue_name: str,
+    transcription_id: int,
+    user_id: int,
+) -> Mapping[str, Any]:
+    job_dict = {
+        "transcription_id": transcription_id,
+        "user_id": user_id,
+    }
+    channel.basic_publish(exchange="", routing_key=queue_name, body=json.dumps(job_dict))
+    return job_dict
+
+
+def get_audio_len(fpath: Union[str, Path]) -> float:
+    p = Path(fpath)
+    if not p.exists():
+        raise FileNotFoundError(str(p))
+    return MP3(str(p)).info.length
+
+
+async def create_transcription(create_transcription: TranscriptionRequest, db: AsyncSession) -> Transcription | None:
+    try:
+        print("im here 1")
+        transcription = Transcription(**create_transcription.model_dump())
+        db.add(transcription)
+        await db.commit()
+        await db.refresh(transcription)
+        return transcription
+    except IntegrityError as e:
+        await db.rollback()  # Rollback transaction on failure
+        print(f"IntegrityError occurred: {e}")
+        return None
