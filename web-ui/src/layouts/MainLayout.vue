@@ -11,6 +11,24 @@
                     @click="toggleLeftDrawer"
                 />
                 <q-toolbar-title> Lazy Lecture </q-toolbar-title>
+                <q-item v-if="userInfoStore.userInfo" clickable v-ripple>
+                    <q-item-section avatar class="q-pr-none">
+                        <q-icon name="account_circle" />
+                    </q-item-section>
+                    <q-item-section>
+                        {{ userInfoStore.userInfo.username }}
+                    </q-item-section>
+                    <q-menu>
+                        <q-list>
+                            <q-item clickable v-close-popup @click="logOut">
+                                <q-item-section avatar class="q-pr-none">
+                                    <q-icon name="logout" />
+                                </q-item-section>
+                                <q-item-section> Выход </q-item-section>
+                            </q-item>
+                        </q-list>
+                    </q-menu>
+                </q-item>
             </q-toolbar>
         </q-header>
 
@@ -36,17 +54,33 @@
 import { ref } from 'vue';
 import TranscriptListItem from 'src/components/TranscriptListItem.vue';
 import { useTranscriptStore } from 'src/stores/transcriptStore';
+import { useUserInfoStore } from 'src/stores/userInfoStore';
+import { useRouter } from 'vue-router';
+const router = useRouter();
 
 defineOptions({
     name: 'MainLayout',
 });
+
+const userInfoStore = useUserInfoStore();
 
 const transcriptStore = useTranscriptStore();
 await transcriptStore.loadTranscripts(0, 100);
 
 const leftDrawerOpen = ref(false);
 
-function toggleLeftDrawer() {
+const toggleLeftDrawer = () => {
     leftDrawerOpen.value = !leftDrawerOpen.value;
-}
+};
+
+const logOut = () => {
+    userInfoStore.clearUserInfo();
+    router.push({ path: '/log_in' });
+};
 </script>
+
+<style scoped>
+.q-item__section--avatar {
+    margin-right: -20px;
+}
+</style>

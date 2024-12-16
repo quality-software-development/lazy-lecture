@@ -7,8 +7,7 @@ import {
 } from 'vue-router';
 
 import routes from './routes';
-
-import { verifyToken } from 'src/api/auth';
+import { useUserInfoStore } from 'src/stores/userInfoStore';
 
 /*
  * If not building with SSR mode, you can
@@ -44,16 +43,19 @@ export default route(function (/* { store, ssrContext } */) {
         history: createHistory(process.env.VUE_ROUTER_BASE),
     });
 
-    Router.beforeEach(async (to) => {
-        if (
-            // make sure the user is authenticated
-            /*!(await verifyToken())*/ false &&
-            // ❗️ Avoid an infinite redirect
-            to.path !== '/log_in' &&
-            to.path !== '/sign_up'
-        ) {
-            // redirect the user to the login page
+    Router.beforeEach(async (to, from) => {
+        const userInfoStore = useUserInfoStore();
+        const userInfo = await userInfoStore.updateUserInfo();
+        const isAuthorized = userInfo.successful;
+
+        if (!isAuthorized && to.path !== '/log_in' && to.path !== '/sign_up') {
             return { path: 'log_in' };
+        } else if (
+            isAuthorized &&
+            ((to.path === '/log_in' && from.path !== '/log_in') ||
+                (to.path === '/sign_up' && from.path !== '/sign_up'))
+        ) {
+            return { path: from.path };
         }
     });
 

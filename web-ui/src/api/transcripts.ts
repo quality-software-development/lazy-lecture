@@ -10,15 +10,7 @@ export async function getTranscripts(
     skip = 0,
     limit = 100
 ): Promise<ITranscriptGeneral[]> {
-    // const accessToken = localStorage.getItem('accessToken');
-    // if (!accessToken) {
-    //     throw new Error('Вы не авторизованы.');
-    // }
-    // const res = await api.get<TranscriptDTO[]>(`/transcriptions?skip=${skip}&limit=${limit}`, {
-    //     headers: {
-    //         Authorization: `Bearer ${accessToken}`,
-    //     },
-    // });
+    // const res = await api.get<TranscriptDTO[]>(`/transcriptions?skip=${skip}&limit=${limit}`);
     // if (res.status === 200) {
     //     return res.data.map((transcript) => {
     //         return {
@@ -55,17 +47,8 @@ export async function getTranscriptChunked(
     skip: number,
     limit: number
 ): Promise<ITranscriptChunked> {
-    // const accessToken = localStorage.getItem('accessToken');
-    // if (!accessToken) {
-    //     throw new Error('Вы не авторизованы.');
-    // }
     // const res = await api.get<TranscriptChunkedDTO>(
-    //     `/transcript?task_id=${taskId}&skip=${skip}&limit=${limit}`,
-    //     {
-    //         headers: {
-    //             Authorization: `Bearer ${accessToken}`,
-    //         },
-    //     }
+    //     `/transcript?task_id=${taskId}&skip=${skip}&limit=${limit}`
     // );
     // if (res.status === 200) {
     //     return {
