@@ -34,6 +34,7 @@ module.exports = configure(function (/* ctx */) {
             // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
 
             'material-icons', // optional, you are not bound to it
+            'material-symbols-outlined',
         ],
 
         // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
@@ -106,6 +107,7 @@ module.exports = configure(function (/* ctx */) {
 
             // Quasar plugins
             plugins: ['Notify'],
+            iconSet: 'material-symbols-outlined',
         },
 
         // animations: 'all', // --- includes all animations
