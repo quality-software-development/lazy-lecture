@@ -7,8 +7,7 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
 
     ADMIN_USERNAME: str = "admin"
-    ADMIN_PASSWORD: str = "123456"
-    ADMIN_EMAIL: str = "admin@admin.admin"
+    ADMIN_PASSWORD: str = "Shkibidi_to1let!"
 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30

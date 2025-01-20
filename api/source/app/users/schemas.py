@@ -5,11 +5,13 @@ from pydantic import BaseModel, Field, model_validator
 from source.app.auth.utils import get_password_hash
 from source.app.users.enums import Order, Roles, Sort
 from source.core.schemas import PageSchema, PaginationSchema, ResponseSchema
+from source.app.auth.schemas import Credentials, UsernameStr, PasswordStr
 
 
-class UserRequest(BaseModel):
-    username: str
-    password: str
+# class UserRequest(BaseModel):
+#     username: str
+#     password: str
+UserRequest = Credentials
 
 
 class UserCreate(UserRequest):
@@ -24,7 +26,7 @@ class UserCreate(UserRequest):
 
 
 class UserResponse(ResponseSchema):
-    username: str
+    username: UsernameStr
     active: bool
     can_interact: bool
     role: Roles
@@ -34,7 +36,7 @@ class UserResponse(ResponseSchema):
 
 class UserUpdateRequest(BaseModel):
     # username: str | None = None is not alterable
-    password: str | None = None
+    password: PasswordStr | None = None
     can_interact: bool | None = None
 
 
@@ -68,4 +70,4 @@ class UserId(BaseModel):
 
 
 class Username(BaseModel):
-    username: str
+    username: UsernameStr
