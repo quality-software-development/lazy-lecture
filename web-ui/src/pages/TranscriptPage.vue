@@ -101,9 +101,7 @@ const handleAnchorClick = async (idx: number) => {
     $q.notify({
         position: 'top',
         message: 'Ссылка на фрагмент скопирована.',
-        actions: [
-            { icon: 'close', color: 'white', round: true },
-        ],
+        actions: [{ icon: 'close', color: 'white', round: true }],
     });
 };
 
@@ -119,8 +117,8 @@ const updateMarkPositions = () => {
             (xPos) =>
                 (xPos =
                     xPos *
-                        (progressMarksSvg.value!.getBoundingClientRect().width -
-                            progressBarRightPadding) -
+                        (progressMarksSvg.value?.getBoundingClientRect()
+                            .width || 0 - progressBarRightPadding) -
                     markWidth)
         );
         if (newRelativeXes) {
