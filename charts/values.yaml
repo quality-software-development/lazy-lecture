@@ -88,7 +88,7 @@ webUI:
     targetPort: 80
   ingress:
     enabled: true
-    host: "lazy.remysorate.ru"
+    host: "lazy.remystorage.ru"
     path: "/"
     tls: true
 
@@ -121,7 +121,7 @@ api:
     targetPort: 8000
   ingress:
     enabled: true
-    host: "lazy.remysorate.ru"
+    host: "lazy.remystorage.ru"
     path: "/api/"
     tls: true
 
