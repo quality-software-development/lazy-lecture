@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "lazy-lecture.fullname" . }}-api-source-pvc
+  labels:
+    {{- include "lazy-lecture.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.api.volumes.source.size | default "5Gi" }}

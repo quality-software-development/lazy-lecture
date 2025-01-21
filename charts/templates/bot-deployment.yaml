@@ -1,0 +1,27 @@
+# templates/bot-deployment.yaml
+{{- if .Values.bot.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "lazy-lecture.fullname" . }}-bot
+  labels:
+    {{- include "lazy-lecture.labels" . | nindent 4 }}
+    app: "bot"
+spec:
+  replicas: {{ .Values.bot.replicaCount }}
+  selector:
+    matchLabels:
+      app: "bot"
+  template:
+    metadata:
+      labels:
+        app: "bot"
+    spec:
+      containers:
+        - name: bot
+          image: "{{ .Values.bot.image.repository }}:{{ .Values.bot.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          env:
+            - name: "BOT_TOKEN"
+              value: "{{ .Values.bot.env.BOT_TOKEN }}"
+{{- end }}

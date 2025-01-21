@@ -1,0 +1,15 @@
+# templates/pvc-rabbitmq.yaml
+{{- if .Values.rabbitmq.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "lazy-lecture.fullname" . }}-rabbitmq-pvc
+  labels:
+    {{- include "lazy-lecture.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "{{ .Values.rabbitmq.persistence.size }}"
+{{- end }}

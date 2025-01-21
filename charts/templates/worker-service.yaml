@@ -1,0 +1,18 @@
+# templates/worker-service.yaml
+{{- if .Values.worker.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "lazy-lecture.fullname" . }}-worker
+  labels:
+    {{- include "lazy-lecture.labels" . | nindent 4 }}
+    app: "worker"
+spec:
+  selector:
+    app: "worker"
+  ports:
+    - protocol: "TCP"
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+{{- end }}

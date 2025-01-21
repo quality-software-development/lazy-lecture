@@ -1,0 +1,15 @@
+# templates/pvc-worker-objectstorage.yaml
+{{- if .Values.worker.persistence.objectStorage.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "lazy-lecture.fullname" . }}-worker-objectstorage-pvc
+  labels:
+    {{- include "lazy-lecture.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "{{ .Values.worker.persistence.objectStorage.size }}"
+{{- end }}

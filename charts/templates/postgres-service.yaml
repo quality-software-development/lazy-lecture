@@ -1,0 +1,19 @@
+# templates/postgres-service.yaml
+{{- if .Values.postgres.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "lazy-lecture.fullname" . }}-postgres
+  labels:
+    {{- include "lazy-lecture.labels" . | nindent 4 }}
+    app: "postgres"
+    app.kubernetes.io/component: "database"
+spec:
+  selector:
+    app: "postgres"
+  ports:
+    - protocol: "TCP"
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
+{{- end }}

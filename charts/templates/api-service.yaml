@@ -1,0 +1,19 @@
+# templates/api-service.yaml
+{{- if .Values.api.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "lazy-lecture.fullname" . }}-api
+  labels:
+    {{- include "lazy-lecture.labels" . | nindent 4 }}
+    app: "api"
+spec:
+  selector:
+    app: "api"
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.api.service.port }}
+      targetPort: {{ .Values.api.service.targetPort }}
+  type: ClusterIP
+{{- end }}

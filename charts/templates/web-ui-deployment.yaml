@@ -1,0 +1,29 @@
+# templates/web-ui-deployment.yaml
+{{- if .Values.webUI.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "lazy-lecture.fullname" . }}-web-ui
+  labels:
+    {{- include "lazy-lecture.labels" . | nindent 4 }}
+    app: "web-ui"
+spec:
+  replicas: {{ .Values.webUI.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: "web-ui"
+  template:
+    metadata:
+      labels:
+        app: "web-ui"
+    spec:
+      containers:
+        - name: web-ui
+          image: "{{ .Values.webUI.image.repository }}:{{ .Values.webUI.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          env:
+            - name: NODE_ENV
+              value: "{{ .Values.webUI.env.NODE_ENV }}"
+          ports:
+            - containerPort: 80
+{{- end }}
