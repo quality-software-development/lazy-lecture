@@ -30,6 +30,7 @@ from fastapi.responses import FileResponse
 import aiofiles
 
 from source.core.settings import settings
+from .types import ValidAudioFile
 
 transcriptions_router = APIRouter(prefix="", tags=["transcriptions"])
 
@@ -86,7 +87,7 @@ async def transcript_list(
 )
 async def create_upload_file(
     user: CanInteractCurrentUser,
-    audiofile: UploadFile,
+    audiofile: ValidAudioFile,
     task_q: tp.Tuple[tp.Any, str] = Depends(get_task_queue),
     db: AsyncSession = Depends(get_db),
 ):
