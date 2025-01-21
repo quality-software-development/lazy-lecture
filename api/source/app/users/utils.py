@@ -14,7 +14,6 @@ async def create_admin(db: AsyncSession = SessionLocal()):
         **UserCreate(
             username=settings.ADMIN_USERNAME,
             password=settings.ADMIN_PASSWORD,
-            email=settings.ADMIN_EMAIL,
             role=Roles.ADMIN,
         ).model_dump()
     )
