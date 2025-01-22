@@ -1,4 +1,5 @@
 from datetime import datetime
+import typing as tp
 
 from pydantic import BaseModel
 
@@ -17,7 +18,7 @@ class TranscriptionResponse(ResponseSchema):
     description: str
 
 
-class SingleTranscriptionResponse(ResponseSchema):
+class TranscriptionChunkResponse(ResponseSchema):
     chunk_order: int
     chunk_size_secs: int
     transcription: str
@@ -28,7 +29,7 @@ class TranscriptionPagination(PaginationSchema):
     pass
 
 
-class SingleTranscriptionPagination(PaginationSchema):
+class TranscriptionChunksPagination(PaginationSchema):
     task_id: int
     pass
 
@@ -37,8 +38,8 @@ class TranscriptionPage(PageSchema):
     transcriptions: list[TranscriptionResponse]
 
 
-class SingleTranscriptionPage(PageSchema):
-    transcriptions: list[SingleTranscriptionResponse]
+class TranscriptionChunksPage(PageSchema):
+    transcriptions: list[TranscriptionChunkResponse]
 
 
 class TranscriptionRequest(BaseModel):
@@ -46,3 +47,14 @@ class TranscriptionRequest(BaseModel):
     audio_len_secs: float
     chunk_size_secs: float
     current_state: TranscriptionState
+
+
+class CreateTranscriptionChunk(BaseModel):
+    text: str
+    chunk_no: int
+
+
+class TranscriptionStatusUpdateRequest(BaseModel):
+    transcription_id: int
+    current_state: tp.Optional[TranscriptionState] = None
+    new_chunk: tp.Optional[CreateTranscriptionChunk] = None

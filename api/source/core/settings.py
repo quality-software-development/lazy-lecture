@@ -31,6 +31,8 @@ class Settings(BaseSettings):
 
     DEFAULT_CHUNK_SIZE: float = 60 * 15
 
+    SECRET_WORKER_TOKEN: str = "71y209716yc20n971yoj"
+
     @model_validator(mode="after")
     def validator(cls, values: "Settings") -> "Settings":
         values.POSTGRES_URI = (
