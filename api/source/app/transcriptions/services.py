@@ -18,7 +18,7 @@ from source.app.transcriptions.schemas import (
     TranscriptionResponse,
     TranscriptionStatusUpdateRequest,
 )
-from sqlalchemy import asc, desc, func, select
+from sqlalchemy import asc, desc, func, select, and_, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 async def get_transcritption_descrtiption(transcription_id: int, db: AsyncSession) -> str:
     transcription_first_chunk: TranscriptionChunk = await db.scalar(
         select(TranscriptionChunk).where(
-            TranscriptionChunk.transcript_id == transcription_id and TranscriptionChunk.chunk_no == 0
+            and_(TranscriptionChunk.transcript_id == transcription_id, TranscriptionChunk.chunk_no == 0)
         )
     )
     return transcription_first_chunk.text[:256] if transcription_first_chunk else ""
@@ -166,8 +166,10 @@ async def update_transcription_state(data: TranscriptionStatusUpdateRequest, db:
         )
         possible_old_chunk = await db.scalar(
             select(TranscriptionChunk).where(
-                TranscriptionChunk.transcript_id == transcription_id
-                and TranscriptionChunk.chunk_no == new_chunk.chunk_no
+                and_(
+                    TranscriptionChunk.transcript_id == transcription_id,
+                    TranscriptionChunk.chunk_no == new_chunk.chunk_no,
+                )
             )
         )
         if possible_old_chunk is not None:
@@ -175,6 +177,7 @@ async def update_transcription_state(data: TranscriptionStatusUpdateRequest, db:
             chunk_for_update = await db.get_one(TranscriptionChunk, old_chunk_id)
             chunk_for_update.text = new_chunk.text
             await db.commit()
+            await db.refresh(chunk_for_update)
         else:
             new_chunk = await add_new_chunk(transcription_chunk, db)
             if new_chunk is None:

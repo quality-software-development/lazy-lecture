@@ -14,6 +14,9 @@ class WorkerConfig:
     PIKA_PASS = os.getenv("PIKA_PASS", "rmpassword")
     PIKA_QUEUE = os.getenv("PIKA_QUEUE", "task_queue")
 
+    SECRET_WORKER_TOKEN: str = "71y209716yc20n971yoj"
+    API_BASE_URL: str = "http://api:8000"
+
 
 @dataclass(frozen=True)
 class ObjectStorageConfig:

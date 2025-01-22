@@ -20,6 +20,8 @@ services:
       - PIKA_PASS=${RMQ_PASS:-pass}
       - PIKA_QUEUE=task_queue
       - OBJECT_STORAGE_PATH=${OBJECT_STORAGE_PATH:-/object_storage}
+      - SECRET_WORKER_TOKEN=${SECRET_WORKER_TOKEN}
+      - API_BASE_URL=http://api:8000
     depends_on:
       - rabbitmq
 
@@ -63,6 +65,8 @@ services:
       - "8000:8000"
     env_file:
       - ./api/config/.env
+    environment:
+      - SECRET_WORKER_TOKEN=${SECRET_WORKER_TOKEN}
     volumes:
       - ./api/source:/app/source
       - ./api/mock:/app/mock
