@@ -7,7 +7,7 @@ services:
   worker:
     build: worker
     volumes:
-      - worker_cache:/cache:rw
+      - ./volumes/worker_cache:/cache:rw
       - ./volumes/object_storage:/object_storage:rw
 
     environment:
@@ -115,7 +115,6 @@ services:
           memory: 1G
 
 volumes:
-  worker_cache:
   rabbitmq:
   pgadmin-data:
   pg-data:
