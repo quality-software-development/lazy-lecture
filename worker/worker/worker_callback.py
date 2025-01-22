@@ -54,11 +54,12 @@ def process_transcription_job_messages(ch: pika.channel.Channel, method, body):
         transcription_id = job_dict["transcription_id"]
 
         transcription_state, chunk_size_secs = get_transcription_state_chunk_size_secs(transcription_id)
-        if transcription_state == TranscriptionState.IN_PROGRESS:
-            #   status==in_progress -> ignore, skip
-            print("[x] Job has already in progress, skip")
-            # ack should be done by the one who does the job
-            return
+        # if transcription_state == TranscriptionState.IN_PROGRESS:
+        #     #   status==in_progress -> ignore, skip
+        #     print("[x] Job has already in progress, skip")
+        #     # ack should be done by the one who does the job
+        #     ack(ch, method.delivery_tag)
+        #     return
         if transcription_state in [
             TranscriptionState.COMPLETED,
             TranscriptionState.COMPLETED_PARTIALLY,
@@ -132,7 +133,7 @@ def process_transcription_job_messages(ch: pika.channel.Channel, method, body):
             os.remove(user_audio_path)
 
         ack(ch, method.delivery_tag)
-    except Exception as e:
+    except:
         print(f"[x] Processing Error!\n{traceback.format_exc()}")
         update_transcription_state(
             transcription_id,

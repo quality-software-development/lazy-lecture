@@ -1,3 +1,4 @@
+import io
 import os
 from aiogram import F, Router
 from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
@@ -34,7 +35,7 @@ async def get_history(message: Message) -> None:
     access_token = users.get(user_id).get("access_token")  # type: ignore
     # print("Sending history request:", access_token)
     data = await send_history_request(url, access_token)
-    # print(data)
+    print(data)
     # data = json.loads(mock_history) Fuck you MOCK. I dont need yoU!
     await send_transcriptions(message, data["transcriptions"], 0, False)
 
@@ -105,35 +106,83 @@ async def transcription_handler(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
+async def get_export_request(url, bearer_token):
+    headers = {"Authorization": f"Bearer {bearer_token}", "Content-Type": "application/x-www-form-urlencoded"}
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers) as response:
+            return await response.read()  # or response.text() if you expect plain text
+
+
+import io
+import tempfile
+from pathlib import Path
+
+
+# @transcriptions_router.callback_query(F.data.startswith("send_txt_"))
+# async def send_txt_file(callback: CallbackQuery) -> None:
+#     task_id = callback.data.split("_")[-1]  # type: ignore
+#     print(f"Retrieving txt of file {task_id}")
+#     # Here you would generate or retrieve the .txt file based on the task_id
+#     # file_path = f"{task_id}.txt"  # Example file path
+#     url = f'{API_BASE_URL}/transcript/export?task_id={task_id}&format=txt'
+#     user_id = callback.from_user.id
+#     access_token = users.get(user_id).get("access_token")
+#     exported_file = await get_export_request(url, access_token)
+
+
+#     print(user_id)
+#     buf = io.BytesIO(exported_file)
+#     input_file = FSInputFile(buf, filename=f'{task_id}.txt')
+
+#     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+#         temp_file.write(exported_file.decode('utf-8').encode('utf-8'))
+#         print(exported_file)
+#         p = Path(temp_file.name)
+#         input_file = FSInputFile(p, filename=f'{task_id}.txt')
+
+#         await callback.message.answer_document(input_file, caption="Here is your .txt file.")  # type: ignore
+#         await callback.answer()
+
+
 @transcriptions_router.callback_query(F.data.startswith("send_txt_"))
 async def send_txt_file(callback: CallbackQuery) -> None:
-    task_id = callback.data.split("_")[-1]  # type: ignore
-    print(f"Retrieving txt of file {task_id}")
+    task_id = callback.data.split("_")[-1]
+    print(f"Retrieving txt file for task {task_id}")
 
-    print(cwd)
-    # Here you would generate or retrieve the .txt file based on the task_id
-    # file_path = f"{task_id}.txt"  # Example file path
+    url = f"{API_BASE_URL}/transcript/export?task_id={task_id}&format=txt"
+    user_id = callback.from_user.id
+    access_token = users.get(user_id).get("access_token")
 
-    file_path = r"handlers/transcriptions/mock.txt"
-    input_file = FSInputFile(file_path)
+    exported_file = await get_export_request(url, access_token)
 
-    await callback.message.answer_document(input_file, caption="Here is your .txt file.")  # type: ignore
-    await callback.answer()
+    try:
+        # Decode and re-encode as UTF-8
+        decoded_content = exported_file.decode("utf-8")
+        with tempfile.NamedTemporaryFile(delete=False, mode="w", encoding="utf-8") as temp_file:
+            temp_file.write(decoded_content)
+            temp_path = Path(temp_file.name)
 
+        input_file = FSInputFile(temp_path, filename=f"{task_id}.txt")
+        await callback.message.answer_document(input_file, caption="Here is your .txt file.")
+        await callback.answer()
 
-cwd = os.getcwd()
+    except UnicodeDecodeError as e:
+        print(f"Decoding error: {e}")
+        await callback.message.answer("Failed to process the file. Please try again.")
 
 
 @transcriptions_router.callback_query(F.data.startswith("send_docx_"))
 async def send_docx_file(callback: CallbackQuery) -> None:
     task_id = callback.data.split("_")[-1]  # type: ignore
     print(f"Retrieving docx of file {task_id}")
-    # Here you would generate or retrieve the .docx file based on the task_id
-    # file_path = f"{task_id}.docx"  # Example file path
-
-    file_path = r"handlers/transcriptions/mock.docx"
-    input_file = FSInputFile(file_path)
-
-    # type: ignore
-    await callback.message.answer_document(input_file, caption="Here is your .docx file.")  # type: ignore
-    await callback.answer()
+    url = f"{API_BASE_URL}/transcript/export?task_id={task_id}&format=doc"
+    user_id = callback.from_user.id
+    access_token = users.get(user_id).get("access_token")
+    exported_file = await get_export_request(url, access_token)
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        print(exported_file)
+        temp_file.write(exported_file)
+        p = Path(temp_file.name)
+        input_file = FSInputFile(p, filename=f"{task_id}.docx")
+        await callback.message.answer_document(input_file, caption="Here is your .docx file.")  # type: ignore
+        await callback.answer()
