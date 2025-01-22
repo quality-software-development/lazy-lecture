@@ -10,75 +10,9 @@ from datetime import datetime
 from handlers.auth import users, refresh_token
 import aiohttp
 
-transcriptions_router = Router()
+from .settings import API_BASE_URL
 
-# Mock API response
-mock_history = """
-{
-    "transcriptions": [
-        {
-            "task_id": "12345",
-            "transcription": "This is the transcribed text of the audio.",
-            "timestamp": "2024-10-22T12:34:56Z"
-        },
-        {
-            "task_id": "12346",
-            "transcription": "This is another transcribed text of a different audio.",
-            "timestamp": "2024-10-21T11:33:45Z"
-        },
-        {
-            "task_id": "12344",
-            "transcription": "This is yet another transcribed text.",
-            "timestamp": "2024-10-20T10:30:00Z"
-        },
-        {
-            "task_id": "12347",
-            "transcription": "The quick brown fox jumps over the lazy dog.",
-            "timestamp": "2024-10-19T09:15:30Z"
-        },
-        {
-            "task_id": "12348",
-            "transcription": "Artificial intelligence is transforming the world.",
-            "timestamp": "2024-10-18T08:45:12Z"
-        },
-        {
-            "task_id": "12349",
-            "transcription": "Data science combines statistics and computer science.",
-            "timestamp": "2024-10-17T07:30:00Z"
-        },
-        {
-            "task_id": "12350",
-            "transcription": "Machine learning algorithms can improve over time.",
-            "timestamp": "2024-10-16T06:20:45Z"
-        },
-        {
-            "task_id": "12351",
-            "transcription": "Natural language processing enables machines to understand human language.",
-            "timestamp": "2024-10-15T05:10:30Z"
-        },
-        {
-            "task_id": "12352",
-            "transcription": "Cloud computing provides scalable resources over the internet.",
-            "timestamp": "2024-10-14T04:00:00Z"
-        },
-        {
-            "task_id": "12353",
-            "transcription": "Blockchain technology ensures secure and transparent transactions.",
-            "timestamp": "2024-10-13T03:50:15Z"
-        },
-        {
-            "task_id": "12354",
-            "transcription": "Cybersecurity is crucial for protecting sensitive information.",
-            "timestamp": "2024-10-12T02:40:00Z"
-        },
-        {
-            "task_id": "12355",
-            "transcription": "The Internet of Things connects everyday devices to the internet.",
-            "timestamp": "2024-10-11T01:30:00Z"
-        }
-    ]
-}
-"""
+transcriptions_router = Router()
 
 # Constants
 TRANSCRIPTIONS_PER_PAGE = 5
@@ -96,7 +30,7 @@ async def get_history(message: Message) -> None:
     user = message.from_user
     user_id = user.id  # type: ignore
     await refresh_token(user_id)
-    url = "http://localhost:8000/transcriptions?page=1"
+    url = f"{API_BASE_URL}/transcriptions?page=1"
     access_token = users.get(user_id).get("access_token")  # type: ignore
     # print("Sending history request:", access_token)
     data = await send_history_request(url, access_token)
@@ -142,7 +76,7 @@ async def pagination_handler(callback: CallbackQuery) -> None:
     page = int(callback.data.split("_")[1])  # type: ignore
     print(f"Page: {page}")
     user_id = callback.from_user.id
-    url = f"http://localhost:8000/transcriptions?page={page+1}"
+    url = f"{API_BASE_URL}/transcriptions?page={page+1}"
     print(f"URL: {url}")
     access_token = users.get(user_id).get("access_token")  # type: ignore
     data = await send_history_request(url, access_token)

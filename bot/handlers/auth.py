@@ -11,6 +11,8 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 import aiohttp
 
+from .settings import API_BASE_URL
+
 auth_router = Router()
 
 # { id: { name: string
@@ -30,7 +32,7 @@ async def send_refresh_request(url, body):
 async def refresh_token(user_id: int):
     user_data = users.get(user_id)
     refresh_token = user_data.get("refresh_token")  # type: ignore
-    url = f"http://localhost:8000/auth/refresh"  # Replace with your internal server URL
+    url = f"{API_BASE_URL}/auth/refresh"  # Replace with your internal server URL
     body = {"refresh_token": refresh_token}
     resp = await send_refresh_request(url, body)
     # TODO обратотать момент, когда refresh_token Не сработает - взять новый новый
