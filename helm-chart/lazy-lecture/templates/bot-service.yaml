@@ -1,0 +1,18 @@
+# templates/bot-service.yaml
+{{- if .Values.bot.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "lazy-lecture.fullname" . }}-bot
+  labels:
+    {{- include "lazy-lecture.labels" . | nindent 4 }}
+    app: "bot"
+spec:
+  selector:
+    app: "bot"
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+{{- end }}

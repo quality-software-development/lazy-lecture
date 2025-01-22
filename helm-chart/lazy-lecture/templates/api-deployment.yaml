@@ -1,0 +1,53 @@
+# templates/api-deployment.yaml
+  { { - if .Values.api.enabled } }
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: { { include "lazy-lecture.fullname" . } }-api
+  labels:
+    {{- include "lazy-lecture.labels" . | nindent 4 }}
+    app: "api"
+spec:
+  replicas: { { .Values.api.replicaCount } }
+  selector:
+    matchLabels:
+      app: "api"
+  template:
+    metadata:
+      labels:
+        app: "api"
+    spec:
+      containers:
+        - name: api
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          envFrom:
+            { { - range .Values.api.envFrom } }
+            - configMapRef:
+                name: "{{ .configMapRef.name }}"
+            { { - end } }
+          env:
+            { { - range .Values.api.env } }
+            - name: "{{ .name }}"
+              value: "{{ .value }}"
+            { { - end } }
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: source
+              mountPath: "{{ .Values.api.volumes.source.path }}"
+            - name: mock
+              mountPath: "{{ .Values.api.volumes.mock.path }}"
+            - name: object-storage
+              mountPath: "{{ .Values.api.volumes.objectStorage.path }}"
+      volumes:
+        - name: source
+          persistentVolumeClaim:
+            claimName: { { include "lazy-lecture.fullname" . } }-api-source-pvc
+        - name: mock
+        persistentVolumeClaim:
+          claimName: { { include "lazy-lecture.fullname" . } }-api-mock-pvc
+        - name: object-storage
+        persistentVolumeClaim:
+          claimName: { { include "lazy-lecture.fullname" . } }-api-objectstorage-pvc
+  { { - end } }

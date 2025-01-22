@@ -1,0 +1,10 @@
+# templates/configmap-rabbitmq.conf.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: { { include "lazy-lecture.fullname" . } }-rabbitmq-conf
+  labels:
+    {{- include "lazy-lecture.labels" . | nindent 4 }}
+data:
+  rabbitmq.conf: |
+  { { .Values.rabbitmq.rabbitmqConf | indent 4 } }
