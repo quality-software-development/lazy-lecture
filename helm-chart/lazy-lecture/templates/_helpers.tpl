@@ -13,4 +13,3 @@ app.kubernetes.io/managed-by: "{{ .Release.Service }}"
 {{- define "lazy-lecture.fullname" -}}
 {{ .Release.Name }}-{{ .Chart.Name }}
 {{- end }}
-
