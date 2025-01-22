@@ -1,0 +1,180 @@
+# values.yaml
+image:
+  repository: harbor.remystorage.ru/lazy-lecture
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+# 🤖 Сервис Bot
+bot:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: harbor.remystorage.ru/lazy-lecture/bot
+    tag: "latest"
+  env:
+    BOT_TOKEN: "BOT_TOKEN"
+
+# ⚙️ Сервис Worker
+worker:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: harbor.remystorage.ru/lazy-lecture/worker
+    tag: "latest"
+  env:
+    DEVICE: "cpu"
+    WHISPER_MODEL_NAME: "base"
+    DOWNLOAD_ROOT: "/cache"
+    PIKA_HOST: "rabbitmq"
+    PIKA_PORT: "5672"
+    PIKA_USER: "user"
+    PIKA_PASS: "pass"
+    PIKA_QUEUE: "task_queue"
+    OBJECT_STORAGE_PATH: "/object_storage"
+  resources:
+    limits:
+      cpu: "1"
+      memory: "10Gi"
+    requests:
+      cpu: "0.5"
+      memory: "10Gi"
+  persistence:
+    cache:
+      enabled: true
+      size: "10Gi"
+      path: "/cache"
+    objectStorage:
+      enabled: true
+      size: "10Gi"
+      path: "/object_storage"
+
+# 🐇 Сервис RabbitMQ
+rabbitmq:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: rabbitmq
+    tag: "4.0.3-management"
+  env:
+    RMQ_USER: "user"
+    RMQ_PASS: "pass"
+  resources:
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+    requests:
+      cpu: "0.5"
+      memory: "1Gi"
+  persistence:
+    enabled: true
+    size: "5Gi"
+  rabbitmqConf: |
+    default_user = user
+    default_pass = pass
+    disk_free_limit.absolute = 1Gi
+    vm_memory_high_watermark.absolute = 1Gi
+
+# 🖥️ Сервис Web-UI
+webUI:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: harbor.remystorage.ru/lazy-lecture/web-ui
+    tag: "latest"
+  env:
+    NODE_ENV: "production"
+  service:
+    port: 80
+    targetPort: 80
+  ingress:
+    enabled: true
+    host: "lazy.remystorage.ru"
+    path: "/"
+    tls: true
+
+# 🔌 Сервис API
+api:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: harbor.remystorage.ru/lazy-lecture/api
+    tag: "latest"
+  envFrom:
+    - configMapRef:
+        name: api-env
+  env: {}
+  volumes:
+    source:
+      enabled: true
+      path: /app/source
+      size: "1Gi"
+    mock:
+      enabled: true
+      path: /app/mock
+      size: "1Gi"
+    objectStorage:
+      enabled: true
+      path: /app/object_storage
+      size: "2Gi"
+  service:
+    port: 8000
+    targetPort: 8000
+  ingress:
+    enabled: true
+    host: "lazy.remystorage.ru"
+    path: "/api/"
+    tls: true
+
+# 🗄️ Сервис Postgres
+postgres:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: postgres
+    tag: "17.2"
+  env:
+    POSTGRES_DB: "lazy-lecture"
+    POSTGRES_USER: "postgres"
+    POSTGRES_PASSWORD: "postgres"
+  resources:
+    limits:
+      cpu: "1"
+      memory: "4Gi"
+    requests:
+      cpu: "0.5"
+      memory: "2Gi"
+  persistence:
+    enabled: true
+    size: "10Gi"
+  healthCheck:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+
+# 🌐 Общие настройки Ingress
+ingress:
+  enabled: true
+  annotations: {}
+  tls:
+    enabled: true
+    certResolver: "le"
+
+# 📦 Persistent Volume Claims
+persistence:
+  workerCache:
+    enabled: true
+    size: "10Gi"
+  workerObjectStorage:
+    enabled: true
+    size: "10Gi"
+  rabbitmq:
+    enabled: true
+    size: "5Gi"
+  postgres:
+    enabled: true
+    size: "10Gi"
+  pgadmin:
+    enabled: true
+    size: "5Gi"

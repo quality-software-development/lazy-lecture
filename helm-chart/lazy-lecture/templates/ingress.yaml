@@ -1,0 +1,36 @@
+# templates/ingress.yaml
+  { { - if .Values.ingress.enabled } }
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: { { include "lazy-lecture.fullname" . } }-ingress
+  labels:
+    {{- include "lazy-lecture.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    { { - if .Values.webUI.ingress.enabled } }
+    - match: Host(`{{ .Values.webUI.ingress.host }}`) && PathPrefix(`/`)
+      kind: Rule
+      services:
+        - name: { { include "lazy-lecture.fullname" . } }-web-ui
+          port: { { .Values.webUI.service.port } }
+    { { - end } }
+    { { - if .Values.api.ingress.enabled } }
+    - match: Host(`{{ .Values.api.ingress.host }}`) && PathPrefix(`/api/`)
+      kind: Rule
+      services:
+        - name: { { include "lazy-lecture.fullname" . } }-api
+          port: { { .Values.api.service.port } }
+    { { - end } }
+  tls:
+    certResolver: { { .Values.ingress.tls.certResolver | quote } }
+    domains:
+      { { - if .Values.webUI.ingress.enabled } }
+      - main: "{{ .Values.webUI.ingress.host }}"
+      { { - end } }
+      { { - if .Values.api.ingress.enabled } }
+      - main: "{{ .Values.api.ingress.host }}"
+      { { - end } }
+  { { - end } }

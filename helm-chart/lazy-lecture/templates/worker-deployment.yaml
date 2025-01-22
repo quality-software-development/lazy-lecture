@@ -1,0 +1,55 @@
+# templates/worker-deployment.yaml
+  { { - if .Values.worker.enabled } }
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: { { include "lazy-lecture.fullname" . } }-worker
+  labels:
+    {{- include "lazy-lecture.labels" . | nindent 4 }}
+    app: "worker"
+spec:
+  replicas: { { .Values.worker.replicaCount | default 1 } }
+  selector:
+    matchLabels:
+      app: "worker"
+  template:
+    metadata:
+      labels:
+        app: "worker"
+    spec:
+      containers:
+        - name: worker
+          image: "{{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          env:
+            - name: DEVICE
+              value: "{{ .Values.worker.env.DEVICE | default "cpu" }}"
+            - name: WHISPER_MODEL_NAME
+              value: "{{ .Values.worker.env.WHISPER_MODEL_NAME | default "base" }}"
+            - name: DOWNLOAD_ROOT
+              value: "{{ .Values.worker.env.DOWNLOAD_ROOT | default "/cache" }}"
+            - name: PIKA_HOST
+              value: "{{ .Values.worker.env.PIKA_HOST | default "rabbitmq" }}"
+            - name: PIKA_PORT
+              value: "{{ .Values.worker.env.PIKA_PORT | default "5672" }}"
+            - name: PIKA_USER
+              value: "{{ .Values.worker.env.PIKA_USER | default "user" }}"
+            - name: PIKA_PASS
+              value: "{{ .Values.worker.env.PIKA_PASS | default "pass" }}"
+            - name: PIKA_QUEUE
+              value: "{{ .Values.worker.env.PIKA_QUEUE | default "task_queue" }}"
+            - name: OBJECT_STORAGE_PATH
+              value: "{{ .Values.worker.env.OBJECT_STORAGE_PATH | default "/object_storage" }}"
+          volumeMounts:
+            - name: cache
+              mountPath: "{{ .Values.worker.persistence.cache.path }}"
+            - name: object-storage
+              mountPath: "{{ .Values.worker.persistence.objectStorage.path }}"
+      volumes:
+        - name: cache
+          persistentVolumeClaim:
+            claimName: { { include "lazy-lecture.fullname" . } }-worker-cache-pvc
+        - name: object-storage
+        persistentVolumeClaim:
+          claimName: { { include "lazy-lecture.fullname" . } }-worker-objectstorage-pvc
+  { { - end } }
