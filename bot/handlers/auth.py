@@ -72,7 +72,7 @@ async def process_login_name(message: Message, state: FSMContext) -> None:
 
 
 async def send_login_request(username: str, password: str):
-    url = f"http://localhost:8000/auth/login"  # Replace with your internal server URL
+    url = f"{API_BASE_URL}/auth/login"  # Replace with your internal server URL
 
     body = {"username": username, "password": password}
 
