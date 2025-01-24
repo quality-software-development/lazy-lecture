@@ -18,12 +18,19 @@ from .api_client import (
 )
 
 
-def get_user_audio_path(user_id: int, object_storage_root: Path, raise_if_not_found: bool = True) -> Path:
+def get_user_audio_path(
+    user_id: int, object_storage_root: Path, raise_if_not_found: bool = True
+) -> Path:
+    print("DOES NOT EXISTS???", object_storage_root)
     if not object_storage_root.exists():
-        raise FileNotFoundError(f"Object Storage Path does not exist. ({str(object_storage_root)})")
+        raise FileNotFoundError(
+            f"Object Storage Path does not exist. ({str(object_storage_root)})"
+        )
     expected_user_audiofile_path = object_storage_root / f"{user_id}.mp3"
     if not expected_user_audiofile_path.exists() and raise_if_not_found:
-        raise FileNotFoundError(f"User audiofile is not present at {str(expected_user_audiofile_path)}")
+        raise FileNotFoundError(
+            f"User audiofile is not present at {str(expected_user_audiofile_path)}"
+        )
     return expected_user_audiofile_path
 
 
@@ -53,7 +60,9 @@ def process_transcription_job_messages(ch: pika.channel.Channel, method, body):
         user_id = job_dict["user_id"]
         transcription_id = job_dict["transcription_id"]
 
-        transcription_state, chunk_size_secs = get_transcription_state_chunk_size_secs(transcription_id)
+        transcription_state, chunk_size_secs = get_transcription_state_chunk_size_secs(
+            transcription_id
+        )
         # if transcription_state == TranscriptionState.IN_PROGRESS:
         #     #   status==in_progress -> ignore, skip
         #     print("[x] Job has already in progress, skip")
@@ -75,7 +84,9 @@ def process_transcription_job_messages(ch: pika.channel.Channel, method, body):
         ]:
             #   status==processing_fail -> ignore, skip
             #   status==cancelled -> ignore, skip
-            print("[x] Job is not to be processed anymore due to cancellation or processing fail, skip")
+            print(
+                "[x] Job is not to be processed anymore due to cancellation or processing fail, skip"
+            )
             ack(ch, method.delivery_tag)
             return
         update_transcription_state(transcription_id, TranscriptionState.IN_PROGRESS)
@@ -85,12 +96,16 @@ def process_transcription_job_messages(ch: pika.channel.Channel, method, body):
 
         # check if in object_storage_config
         # if not in object_storage_config -> Exception
-        user_audio_path: Path = get_user_audio_path(user_id, Path(object_storage_config.PATH), raise_if_not_found=True)
+        print(f"ALO GARAZH PATH: {object_storage_config.PATH}")
+        user_audio_path: Path = get_user_audio_path(
+            user_id, Path(object_storage_config.PATH), raise_if_not_found=True
+        )
         print(f"[x] Inference Begin!")
         audio_len_s: float = get_audio_len(user_audio_path)
         print(f"[x] Audio len: {audio_len_s}")
         clip_timestamps = [
-            [v, min(audio_len_s, v + chunk_size_secs)] for v in range(0, int(audio_len_s) + 1, chunk_size_secs)
+            [v, min(audio_len_s, v + chunk_size_secs)]
+            for v in range(0, int(audio_len_s) + 1, chunk_size_secs)
         ]
         clip_timestamps[-1] = [
             clip_timestamps[-1][0],
@@ -100,7 +115,9 @@ def process_transcription_job_messages(ch: pika.channel.Channel, method, body):
         for chunk_no, clip_timestamp in enumerate(clip_timestamps):
             print(f"[x] Processing clip {clip_timestamp}")
             start = time.time()
-            text, segments = transcribe_audio_file(user_audio_path, whisper_model, clip_timestamp=clip_timestamp)
+            text, segments = transcribe_audio_file(
+                user_audio_path, whisper_model, clip_timestamp=clip_timestamp
+            )
             end = time.time()
             time_spent = end - start
             if len(clip_timestamp) == 2:
@@ -108,13 +125,19 @@ def process_transcription_job_messages(ch: pika.channel.Channel, method, body):
             else:
                 speedup = (audio_len_s - clip_timestamp[0]) / time_spent
 
-            print(f"[x] Inferred clip {clip_timestamp} (took {time_spent:.2f}s or x{speedup:.1f}): {text}")
+            print(
+                f"[x] Inferred clip {clip_timestamp} (took {time_spent:.2f}s or x{speedup:.1f}): {text}"
+            )
             update_transcription_state(
                 transcription_id,
                 transcription_state=TranscriptionState.IN_PROGRESS,
-                transcription_chunk=CreateTranscriptionChunk(text=text, chunk_no=chunk_no),
+                transcription_chunk=CreateTranscriptionChunk(
+                    text=text, chunk_no=chunk_no
+                ),
             )
-            transcription_state, _ = get_transcription_state_chunk_size_secs(transcription_id)
+            transcription_state, _ = get_transcription_state_chunk_size_secs(
+                transcription_id
+            )
             if transcription_state == TranscriptionState.CANCELLED:
                 update_transcription_state(
                     transcription_id,

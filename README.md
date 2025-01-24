@@ -14,7 +14,19 @@
 BOT_TOKEN=<your_bot_token_here>
 ```
 
-2. Поднять сервисы с помощью Docker Compose:
+
+Прописать в `api/config/.env` нормальный пароль `ADMIN_PASSWORD=`. Иначе Pydantic накричит на вас и API откажется работать 
+```env
+ADMIN_PASSWORD=Kartoshe4ku?
+```
+
+Добавить в корень проекта `.env`
+```env
+SECRET_WORKER_TOKEN=somestring
+```
+
+
+1. Поднять сервисы с помощью Docker Compose:
 
 ```bash
 docker compose --env-file .env up -d
