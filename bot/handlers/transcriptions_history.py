@@ -25,28 +25,37 @@ async def send_history_request(url, bearer_token):
             return await response.json()  # or response.text() if you expect plain text
 
 
+def get_paginated_data(data, page, page_size=5):
+    start_index = (page - 1) * page_size
+    end_index = start_index + page_size
+    return data[start_index:end_index]
+
+
 @transcriptions_router.message(Command("history"))
 async def get_history(message: Message) -> None:
     user = message.from_user
     user_id = user.id  # type: ignore
     await refresh_token(user_id)
-    url = f"{API_BASE_URL}/transcriptions?page=1"
+    url = f"{API_BASE_URL}/transcriptions?page=1&?size=100000000"
     access_token = users.get(user_id).get("access_token")  # type: ignore
     # print("Sending history request:", access_token)
     data = await send_history_request(url, access_token)
+    data = data["transcriptions"]
+    data = [item for item in data if item["current_state"] == "completed"]
+    data = get_paginated_data(data, 1, TRANSCRIPTIONS_PER_PAGE)
     print(data)
     # data = json.loads(mock_history) Fuck you MOCK. I dont need yoU!
-    await send_transcriptions(message, data["transcriptions"], 0, False)
+
+    # TODO: ОТФИЛЬТРОВАТЬ ТРАНСКРИПЦИИ ПО статусу COMPLETED
+    await send_transcriptions(message, data, 1, False)
 
 
 async def send_transcriptions(
     message, transcriptions: list, page: int, from_callback: bool
 ) -> None:
-    start_index = 0
-    end_index = start_index + TRANSCRIPTIONS_PER_PAGE
     keyboard = []
-
-    for transcription in transcriptions[start_index:end_index]:
+    print(transcriptions)
+    for transcription in transcriptions:
         date_string = transcription["create_date"]
         formatted_date_time = datetime.strptime(
             date_string, "%Y-%m-%dT%H:%M:%S.%f"
@@ -61,7 +70,7 @@ async def send_transcriptions(
 
     # Pagination buttons
     pagination_buttons = []
-    if page > 0:
+    if page > 1:
         pagination_buttons.append(
             InlineKeyboardButton(text="Previous", callback_data=f"page_{page - 1}")
         )
@@ -84,14 +93,19 @@ async def pagination_handler(callback: CallbackQuery) -> None:
     page = int(callback.data.split("_")[1])  # type: ignore
     print(f"Page: {page}")
     user_id = callback.from_user.id
-    url = f"{API_BASE_URL}/transcriptions?page={page+1}"
+    url = f"{API_BASE_URL}/transcriptions?page=1&?size=100000000"
+
     print(f"URL: {url}")
     access_token = users.get(user_id).get("access_token")  # type: ignore
     data = await send_history_request(url, access_token)
-    transcriptions = data["transcriptions"]
-    print(f"Data: {transcriptions}")
+    data = data["transcriptions"]
+    data = [item for item in data if item["current_state"] == "completed"]
+    data = get_paginated_data(data, page, TRANSCRIPTIONS_PER_PAGE)
+    # TODO: ОТФИЛЬТРОВАТЬ ТРАНСКРИПЦИИ ПО статусу COMPLETED
+
+    print(f"Data: {data}")
     # data = json.loads(mock_history)
-    await send_transcriptions(callback.message, transcriptions, page, True)
+    await send_transcriptions(callback.message, data, page, True)
     await callback.answer()  # Acknowledge the callback
 
 

@@ -26,6 +26,7 @@ async def upload(message: Message, state: FSMContext) -> None:
     user = message.from_user
     user_id = user.id  # type: ignore
     user = users.get(user_id)
+    # TODO: ЕСЛИ ЮЗЕР НЕ АКТИВЕЙТЕД ОТПРАВЛЯТЬ ЕМУ ССЫЛКУ НА ТГ ИЛЬИ
     if user is not None:
         # Если пользователь вошёл в систему, сказать отправляй файл и ждать файла.
         await state.set_state(UploadForm.waiting_for_file)
@@ -129,7 +130,6 @@ async def get_task_status(url, bearer_token):
 async def check_task_status(callback: CallbackQuery) -> None:
     task_id = int(callback.data.split("_")[-1])  # type: ignore
     print(f"TAKSID UPDATE CHECKSTAUS: {task_id}")
-    # TODO:--- типа делаем запрос на то чтобы узнать статус ---
     user_id = callback.from_user.id
     await refresh_token(user_id)
     url = f"{API_BASE_URL}/transcript/info?transcript_id={task_id}"
@@ -154,9 +154,6 @@ async def post_cancel_task(url, bearer_token):
 async def cancel_task(callback: CallbackQuery) -> None:
     task_id = int(callback.data.split("_")[-1])  # type: ignore
     print(f"CANCELLING TASK ID: {task_id}")
-
-    # TODO: ПРОВЕРКА НА ТО ЧТО ОН УЖЕ COMPLETED ТОГДА СДЕЛАТЬ ЧТО-ТО
-
     user_id = callback.from_user.id
     await refresh_token(user_id)
     url = f"{API_BASE_URL}/transcript/cancel?transcript_id={task_id}"
