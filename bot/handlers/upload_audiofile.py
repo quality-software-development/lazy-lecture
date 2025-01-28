@@ -136,15 +136,34 @@ async def check_task_status(callback: CallbackQuery) -> None:
     access_token = users.get(user_id).get("access_token")  # type: ignore
     state = await get_task_status(url, access_token)
     new_status = state["current_state"]
-    # new_status = "Обрабатывается"
-    await callback.message.edit_text(f"Статус: {new_status}", reply_markup=callback.message.reply_markup)  # type: ignore
+    if new_status == "completed":
+        await callback.message.edit_text("Статус: completed")  # type: ignore
+    else:
+        await callback.message.edit_text(f"Статус: {new_status}", reply_markup=callback.message.reply_markup)  # type: ignore
     await callback.answer()
+
+
+async def post_cancel_task(url, bearer_token):
+    headers = {"Authorization": f"Bearer {bearer_token}"}
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers) as response:
+            return await response.text()  # or response.text() if you expect plain text
 
 
 @upload_router.callback_query(F.data.startswith("cancel_task_"))
 async def cancel_task(callback: CallbackQuery) -> None:
     task_id = int(callback.data.split("_")[-1])  # type: ignore
     print(f"CANCELLING TASK ID: {task_id}")
-    # TODO:--- типа делаем запрос на то чтобы отменить обработку ---
-    await callback.message.edit_text("Статус: Отменён")  # type: ignore
+
+    # TODO: ПРОВЕРКА НА ТО ЧТО ОН УЖЕ COMPLETED ТОГДА СДЕЛАТЬ ЧТО-ТО
+
+    user_id = callback.from_user.id
+    await refresh_token(user_id)
+    url = f"{API_BASE_URL}/transcript/cancel?transcript_id={task_id}"
+    access_token = users.get(user_id).get("access_token")  # type: ignore
+    resp = await post_cancel_task(url, access_token)
+    if resp == "OK":
+        await callback.message.edit_text("Статус: Отменён")  # type: ignore
+    elif resp == '{"detail":"You can\'t cancel a finished job"}':
+        await callback.message.edit_text("Статус: completed")  # type: ignore
     await callback.answer()
