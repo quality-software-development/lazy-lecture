@@ -17,12 +17,13 @@ from aiogram.types import (
 
 from handlers.auth import auth_router, users
 from handlers.echo import echo_router
-from handlers.transcriptions import transcriptions_router
+from handlers.transcriptions_history import transcriptions_router
+from handlers.upload_audiofile import upload_router
 
 TOKEN = getenv("BOT_TOKEN") or "Token was not found in the environment"
 
 dp = Dispatcher()
-dp.include_routers(auth_router, transcriptions_router, echo_router)
+dp.include_routers(auth_router, transcriptions_router, upload_router, echo_router)
 
 
 async def get_username(message: Message) -> str:
@@ -40,7 +41,7 @@ async def get_username(message: Message) -> str:
                 username = user.full_name
             else:
                 username = user_data["name"]
-    return username
+    return username  # type: ignore
 
 
 @dp.message(CommandStart())
@@ -85,6 +86,10 @@ Secretly, you can check whose name you are logged in under.
 
 @dp.message(Command("whoami"))
 async def whoami(message: Message) -> None:
+    for user_id, user_info in users.items():
+        print(f"User ID: {user_id}")
+        print(f"User Info: {user_info}")
+        print()  # Print a newline for better readability
     username = await get_username(message)
     await message.answer(f"you are logged in as {username}")
 
