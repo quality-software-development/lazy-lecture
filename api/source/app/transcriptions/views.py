@@ -3,6 +3,7 @@ import typing as tp
 
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi.responses import PlainTextResponse
 from source.app.auth.auth import CanInteractCurrentUser, CurrentUser
 from source.app.transcriptions.enums import TranscriptionState
 from source.app.transcriptions.models import Transcription
@@ -15,9 +16,11 @@ from source.app.transcriptions.schemas import (
     TranscriptionStatusUpdateRequest,
 )
 from source.app.transcriptions.services import (
+    cancel_transcript,
     create_transcription,
     export_transcription,
     get_audio_len,
+    info_transcript,
     list_user_transcript,
     list_user_transcriptions,
     send_transcription_job_to_queue,
@@ -125,3 +128,23 @@ async def create_upload_file(
     transcription_id = transcription.id
     send_transcription_job_to_queue(channel, q_name, transcription_id, user_id)
     return {"message": "File uploaded successfully", "task_id": transcription_id, "file": out_file_path}
+
+
+@transcriptions_router.post("/transcript/cancel")
+async def _transcript_cancel(
+    user: CurrentUser,
+    transcript_id: int,
+    # task_q: tp.Tuple[tp.Any, str] = Depends(get_task_queue), # later will use broadcast...
+    db: AsyncSession = Depends(get_db),
+):
+    _ = await cancel_transcript(transcript_id=transcript_id, user_id=user.id, db=db)
+    return PlainTextResponse(content="OK")
+
+
+@transcriptions_router.get("/transcript/info")
+async def _transcript_info(
+    user: CurrentUser,
+    transcript_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    return await info_transcript(transcript_id=transcript_id, user_id=user.id, db=db)

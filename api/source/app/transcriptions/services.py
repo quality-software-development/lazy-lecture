@@ -22,6 +22,8 @@ from sqlalchemy import asc, desc, func, select, and_, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .enums import TranscriptionState
+
 
 async def get_transcritption_descrtiption(transcription_id: int, db: AsyncSession) -> str:
     transcription_first_chunk: TranscriptionChunk = await db.scalar(
@@ -210,3 +212,33 @@ async def export_transcription(transcription_id: int, format: tp.Literal["doc", 
         return transcription_text.encode("utf-8")
     else:
         return get_transcription_doc(transcription_text)
+
+
+async def get_user_trancsript(user_id: int, transcript_id: int, db: AsyncSession):
+    transcript = await db.get_one(Transcription, transcript_id)
+    if transcript.creator_id != user_id:
+        raise ValueError("You may cancel processing only of your transcript")
+    return transcript
+
+
+async def cancel_transcript(user_id: int, transcript_id: int, db: AsyncSession) -> None:
+    transcript = await get_user_trancsript(user_id, transcript_id, db)
+    if transcript.current_state in [
+        TranscriptionState.COMPLETED,
+        TranscriptionState.COMPLETED_PARTIALLY,
+        TranscriptionState.PROCESSING_FAIL,
+        TranscriptionState.CANCELLED,
+    ]:
+        raise ValueError("You can't cancel a finished job")
+    transcript.current_state = TranscriptionState.CANCELLED
+
+    await db.commit()
+    await db.refresh(transcript)
+
+
+async def info_transcript(
+    user_id: int,
+    transcript_id: int,
+    db: AsyncSession,
+) -> TranscriptionResponse:
+    return await get_user_trancsript(user_id, transcript_id, db)
