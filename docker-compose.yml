@@ -97,24 +97,23 @@ services:
           cpus: '1'
           memory: 4G
 
-  pgadmin:
-    image: dpage/pgadmin4:7.2
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-kek@ll.ru}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-asdfghjk!@#$%^&*}
-      PGADMIN_CONFIG_SERVER_MODE: ${PGADMIN_CONFIG_SERVER_MODE:-False}
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
     ports:
-      - "5050:80"
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 1G
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - postgres
 
 volumes:
   rabbitmq:
-  pgadmin-data:
   pg-data:
+  grafana_data:
