@@ -70,7 +70,7 @@ services:
     volumes:
       - ./api/source:/app/source
       - ./api/mock:/app/mock
-      - ./volumes/object_storage:/app/object_storage:rw
+      - ./volumes/object_storage:/object_storage:rw
     depends_on:
       - rabbitmq
       - postgres
