@@ -159,7 +159,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \r\n  COALESCE(SUM(audio_len_secs), 0) AS audio_length\r\nFROM \r\n  \"Transcription\"\r\nWHERE \r\n  CASE\r\n    WHEN '${time_range}' = '24 hours' THEN create_date >= NOW() - INTERVAL '24 hours'\r\n    WHEN '${time_range}' = '7 days' THEN create_date >= NOW() - INTERVAL '7 days'\r\n    WHEN '${time_range}' = '1 month' THEN create_date >= NOW() - INTERVAL '1 month'\r\n    ELSE TRUE -- для \"all time\" (все данные)\r\n  END;",
+          "rawSql": "SELECT \r\n  COALESCE(SUM(T.chunk_size_secs * chunk_count), 0) AS total_audio_length\r\nFROM \r\n  \"Transcription\" T\r\nJOIN (\r\n  SELECT \r\n    transcript_id, \r\n    COUNT(*) AS chunk_count,\r\n    MAX(update_date) AS last_update_date\r\n  FROM \r\n    \"TranscriptionChunk\"\r\n  GROUP BY \r\n    transcript_id\r\n) TC\r\nON \r\n  T.id = TC.transcript_id\r\nWHERE \r\n  CASE\r\n    WHEN '${time_range}' = '24 hours' THEN TC.last_update_date >= NOW() - INTERVAL '24 hours'\r\n    WHEN '${time_range}' = '7 days' THEN TC.last_update_date >= NOW() - INTERVAL '7 days'\r\n    WHEN '${time_range}' = '1 month' THEN TC.last_update_date >= NOW() - INTERVAL '1 month'\r\n    ELSE TRUE -- для \"all time\"\r\n  END;\r\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -396,6 +396,6 @@
   "timezone": "browser",
   "title": "statistic",
   "uid": "deb99j9nfri80d",
-  "version": 6,
+  "version": 1,
   "weekStart": ""
 }
