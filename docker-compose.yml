@@ -135,3 +135,4 @@ volumes:
   pg-data:
   grafana_data:
   pgadmin-data:
+  pgadmin-data:
