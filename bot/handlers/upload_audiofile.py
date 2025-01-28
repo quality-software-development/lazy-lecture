@@ -118,12 +118,25 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
                 await message.answer("Ошибка при загрузке файла.")
 
 
+async def get_task_status(url, bearer_token):
+    headers = {"Authorization": f"Bearer {bearer_token}"}
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            return await response.json()  # or response.text() if you expect plain text
+
+
 @upload_router.callback_query(F.data.startswith("check_status_"))
 async def check_task_status(callback: CallbackQuery) -> None:
     task_id = int(callback.data.split("_")[-1])  # type: ignore
     print(f"TAKSID UPDATE CHECKSTAUS: {task_id}")
     # TODO:--- типа делаем запрос на то чтобы узнать статус ---
-    new_status = "Обрабатывается"
+    user_id = callback.from_user.id
+    await refresh_token(user_id)
+    url = f"{API_BASE_URL}/transcript/info?transcript_id={task_id}"
+    access_token = users.get(user_id).get("access_token")  # type: ignore
+    state = await get_task_status(url, access_token)
+    new_status = state["current_state"]
+    # new_status = "Обрабатывается"
     await callback.message.edit_text(f"Статус: {new_status}", reply_markup=callback.message.reply_markup)  # type: ignore
     await callback.answer()
 
