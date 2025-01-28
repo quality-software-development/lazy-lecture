@@ -109,19 +109,22 @@ def process_transcription_job_messages(ch: pika.channel.Channel, method, body):
                 speedup = (audio_len_s - clip_timestamp[0]) / time_spent
 
             print(f"[x] Inferred clip {clip_timestamp} (took {time_spent:.2f}s or x{speedup:.1f}): {text}")
-            update_transcription_state(
-                transcription_id,
-                transcription_state=TranscriptionState.IN_PROGRESS,
-                transcription_chunk=CreateTranscriptionChunk(text=text, chunk_no=chunk_no),
-            )
+
             transcription_state, _ = get_transcription_state_chunk_size_secs(transcription_id)
             if transcription_state == TranscriptionState.CANCELLED:
                 update_transcription_state(
                     transcription_id,
                     transcription_state=TranscriptionState.COMPLETED_PARTIALLY,
+                    transcription_chunk=CreateTranscriptionChunk(text=text, chunk_no=chunk_no),
                 )
                 print("[x] Job has been cancelled, exitting...")
                 return
+            else:
+                update_transcription_state(
+                    transcription_id,
+                    transcription_state=TranscriptionState.IN_PROGRESS,
+                    transcription_chunk=CreateTranscriptionChunk(text=text, chunk_no=chunk_no),
+                )
         print(f"[x] Inference End!")
         update_transcription_state(
             transcription_id,
