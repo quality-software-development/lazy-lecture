@@ -47,16 +47,12 @@ async def get_history(message: Message) -> None:
     await send_transcriptions(message, data, 1, False)
 
 
-async def send_transcriptions(
-    message, transcriptions: list, page: int, from_callback: bool
-) -> None:
+async def send_transcriptions(message, transcriptions: list, page: int, from_callback: bool) -> None:
     keyboard = []
     # print(transcriptions)
     for transcription in transcriptions:
         date_string = transcription["create_date"]
-        formatted_date_time = datetime.strptime(
-            date_string, "%Y-%m-%dT%H:%M:%S.%f"
-        ).strftime("%Y.%m.%d %H:%M:%S")
+        formatted_date_time = datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S.%f").strftime("%Y.%m.%d %H:%M:%S")
         # Create buttons for transcription, .txt, and .doc
         transcription_button = InlineKeyboardButton(
             text=f"{formatted_date_time} | {transcription['description']}",
@@ -68,12 +64,8 @@ async def send_transcriptions(
     # Pagination buttons
     pagination_buttons = []
     if page > 1:
-        pagination_buttons.append(
-            InlineKeyboardButton(text="Previous", callback_data=f"page_{page - 1}")
-        )
-    pagination_buttons.append(
-        InlineKeyboardButton(text="Next", callback_data=f"page_{page + 1}")
-    )
+        pagination_buttons.append(InlineKeyboardButton(text="Previous", callback_data=f"page_{page - 1}"))
+    pagination_buttons.append(InlineKeyboardButton(text="Next", callback_data=f"page_{page + 1}"))
 
     keyboard.append(pagination_buttons)
 
@@ -112,12 +104,8 @@ async def transcription_handler(callback: CallbackQuery) -> None:
     format_keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(
-                    text="Send as .txt", callback_data=f"send_txt_{task_id}"
-                ),
-                InlineKeyboardButton(
-                    text="Send as .docx", callback_data=f"send_docx_{task_id}"
-                ),
+                InlineKeyboardButton(text="Send as .txt", callback_data=f"send_txt_{task_id}"),
+                InlineKeyboardButton(text="Send as .docx", callback_data=f"send_docx_{task_id}"),
             ]
         ]
     )
@@ -150,9 +138,7 @@ async def send_txt_file(callback: CallbackQuery) -> None:
         # Decode and re-encode as UTF-8
         decoded_content = exported_file.decode("utf-8")
         # print(f"DECODED FILE:{decoded_content}")
-        with tempfile.NamedTemporaryFile(
-            delete=False, mode="w", encoding="utf-8", suffix=".txt"
-        ) as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, mode="w", encoding="utf-8", suffix=".txt") as temp_file:
             temp_file.write(decoded_content)
             temp_file.flush()
             temp_path = Path(temp_file.name)
