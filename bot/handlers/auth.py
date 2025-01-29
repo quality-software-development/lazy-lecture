@@ -93,14 +93,17 @@ async def process_login_password(message: Message, state: FSMContext) -> None:
             await state.clear()
 
             # Проверить, есть ли есть такой пользователь+пароль в API
-            print(f"SENDING REQUEST WITH\nNAME: {state_data.get('name')}\nPASS: {user_password}")
+            # print(
+            #     f"SENDING REQUEST WITH\nNAME: {state_data.get('name')}\nPASS: {user_password}"
+            # )
             resp = await send_login_request(state_data.get("name"), user_password)  # type: ignore
-            print(resp)
+            # print(resp)
 
             # Если пользователя нет, сказать что неверные данные
             # {'detail': 'Incorrect username or password'}
             resp_detail = resp.get("detail", None)
-            if resp_detail == "Incorrect username or password":
+            # print(f"RESP DETAILS: {resp_detail}")
+            if resp_detail != None:
                 await message.answer(f"Incorrect Username or Password")
             else:
                 # Если есть, то вытащить из полученного ответа "access_token" и "refresh_token"
