@@ -41,18 +41,33 @@ async def get_history(message: Message) -> None:
     # print("Sending history request:", access_token)
     data = await send_history_request(url, access_token)
     data = data["transcriptions"]
-    data = [item for item in data if item["current_state"] == "completed"]
+    data = [
+        item
+        for item in data
+        if item["current_state"]
+        in [
+            "completed",
+            "partially_completed",
+            "in_progress",
+            "processing_error",
+            "processing_fail",
+        ]
+    ]
     data = get_paginated_data(data, 1, TRANSCRIPTIONS_PER_PAGE)
     # print(data)
     await send_transcriptions(message, data, 1, False)
 
 
-async def send_transcriptions(message, transcriptions: list, page: int, from_callback: bool) -> None:
+async def send_transcriptions(
+    message, transcriptions: list, page: int, from_callback: bool
+) -> None:
     keyboard = []
     # print(transcriptions)
     for transcription in transcriptions:
         date_string = transcription["create_date"]
-        formatted_date_time = datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S.%f").strftime("%Y.%m.%d %H:%M:%S")
+        formatted_date_time = datetime.strptime(
+            date_string, "%Y-%m-%dT%H:%M:%S.%f"
+        ).strftime("%Y.%m.%d %H:%M:%S")
         # Create buttons for transcription, .txt, and .doc
         transcription_button = InlineKeyboardButton(
             text=f"{formatted_date_time} | {transcription['description']}",
@@ -64,8 +79,12 @@ async def send_transcriptions(message, transcriptions: list, page: int, from_cal
     # Pagination buttons
     pagination_buttons = []
     if page > 1:
-        pagination_buttons.append(InlineKeyboardButton(text="Previous", callback_data=f"page_{page - 1}"))
-    pagination_buttons.append(InlineKeyboardButton(text="Next", callback_data=f"page_{page + 1}"))
+        pagination_buttons.append(
+            InlineKeyboardButton(text="Previous", callback_data=f"page_{page - 1}")
+        )
+    pagination_buttons.append(
+        InlineKeyboardButton(text="Next", callback_data=f"page_{page + 1}")
+    )
 
     keyboard.append(pagination_buttons)
 
@@ -88,7 +107,18 @@ async def pagination_handler(callback: CallbackQuery) -> None:
     access_token = users.get(user_id).get("access_token")  # type: ignore
     data = await send_history_request(url, access_token)
     data = data["transcriptions"]
-    data = [item for item in data if item["current_state"] == "completed"]
+    data = [
+        item
+        for item in data
+        if item["current_state"]
+        in [
+            "completed",
+            "partially_completed",
+            "in_progress",
+            "processing_error",
+            "processing_fail",
+        ]
+    ]
     data = get_paginated_data(data, page, TRANSCRIPTIONS_PER_PAGE)
     # print(f"Data: {data}")
     # data = json.loads(mock_history)
@@ -104,8 +134,12 @@ async def transcription_handler(callback: CallbackQuery) -> None:
     format_keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="Send as .txt", callback_data=f"send_txt_{task_id}"),
-                InlineKeyboardButton(text="Send as .docx", callback_data=f"send_docx_{task_id}"),
+                InlineKeyboardButton(
+                    text="Send as .txt", callback_data=f"send_txt_{task_id}"
+                ),
+                InlineKeyboardButton(
+                    text="Send as .docx", callback_data=f"send_docx_{task_id}"
+                ),
             ]
         ]
     )
@@ -138,7 +172,9 @@ async def send_txt_file(callback: CallbackQuery) -> None:
         # Decode and re-encode as UTF-8
         decoded_content = exported_file.decode("utf-8")
         # print(f"DECODED FILE:{decoded_content}")
-        with tempfile.NamedTemporaryFile(delete=False, mode="w", encoding="utf-8", suffix=".txt") as temp_file:
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", encoding="utf-8", suffix=".txt"
+        ) as temp_file:
             temp_file.write(decoded_content)
             temp_file.flush()
             temp_path = Path(temp_file.name)
