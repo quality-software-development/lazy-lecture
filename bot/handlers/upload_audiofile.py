@@ -84,8 +84,8 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
                 async with session.post(
                     f"{API_BASE_URL}/upload-audiofile", data=form, headers=headers
                 ) as upload_resp:
-                    print(upload_resp.status)
-                    print(await upload_resp.text())
+                    # print(upload_resp.status)
+                    # print(await upload_resp.text())
                     data = await upload_resp.json()
                     task_id = data["task_id"]
                     # {"message":"File uploaded successfully","task_id":9,"file":"object_storage/4.mp3"}
@@ -129,7 +129,7 @@ async def get_task_status(url, bearer_token):
 @upload_router.callback_query(F.data.startswith("check_status_"))
 async def check_task_status(callback: CallbackQuery) -> None:
     task_id = int(callback.data.split("_")[-1])  # type: ignore
-    print(f"TAKSID UPDATE CHECKSTAUS: {task_id}")
+    # print(f"TAKSID UPDATE CHECKSTAUS: {task_id}")
     user_id = callback.from_user.id
     await refresh_token(user_id)
     url = f"{API_BASE_URL}/transcript/info?transcript_id={task_id}"
@@ -153,7 +153,7 @@ async def post_cancel_task(url, bearer_token):
 @upload_router.callback_query(F.data.startswith("cancel_task_"))
 async def cancel_task(callback: CallbackQuery) -> None:
     task_id = int(callback.data.split("_")[-1])  # type: ignore
-    print(f"CANCELLING TASK ID: {task_id}")
+    # print(f"CANCELLING TASK ID: {task_id}")
     user_id = callback.from_user.id
     await refresh_token(user_id)
     url = f"{API_BASE_URL}/transcript/cancel?transcript_id={task_id}"

@@ -51,7 +51,7 @@ async def send_transcriptions(
     message, transcriptions: list, page: int, from_callback: bool
 ) -> None:
     keyboard = []
-    print(transcriptions)
+    # print(transcriptions)
     for transcription in transcriptions:
         date_string = transcription["create_date"]
         formatted_date_time = datetime.strptime(
@@ -88,11 +88,11 @@ async def send_transcriptions(
 @transcriptions_router.callback_query(F.data.startswith("page_"))
 async def pagination_handler(callback: CallbackQuery) -> None:
     page = int(callback.data.split("_")[1])  # type: ignore
-    print(f"Page: {page}")
+    # print(f"Page: {page}")
     user_id = callback.from_user.id
     url = f"{API_BASE_URL}/transcriptions?page=1&?size=100000000"
 
-    print(f"URL: {url}")
+    # print(f"URL: {url}")
     access_token = users.get(user_id).get("access_token")  # type: ignore
     data = await send_history_request(url, access_token)
     data = data["transcriptions"]
@@ -139,45 +139,45 @@ async def get_export_request(url, bearer_token):
 @transcriptions_router.callback_query(F.data.startswith("send_txt_"))
 async def send_txt_file(callback: CallbackQuery) -> None:
     task_id = callback.data.split("_")[-1]  # type: ignore
-    print(f"Retrieving txt file for task {task_id}")
+    # print(f"Retrieving txt file for task {task_id}")
     url = f"{API_BASE_URL}/transcript/export?task_id={task_id}&format=txt"
     user_id = callback.from_user.id
     access_token = users.get(user_id).get("access_token")  # type: ignore
 
     exported_file = await get_export_request(url, access_token)
-    print(f"EXPORTED FILE: {exported_file}")
+    # print(f"EXPORTED FILE: {exported_file}")
     try:
         # Decode and re-encode as UTF-8
         decoded_content = exported_file.decode("utf-8")
-        print(f"DECODED FILE:{decoded_content}")
+        # print(f"DECODED FILE:{decoded_content}")
         with tempfile.NamedTemporaryFile(
             delete=False, mode="w", encoding="utf-8", suffix=".txt"
         ) as temp_file:
             temp_file.write(decoded_content)
             temp_file.flush()
             temp_path = Path(temp_file.name)
-            print(f"Temporary file created at: {temp_path}")  # Verify the file path
-            print(f"File size: {temp_path.stat().st_size} bytes")
-            print(f"File permissions: {temp_path.stat().st_mode}")
+            # print(f"Temporary file created at: {temp_path}")  # Verify the file path
+            # print(f"File size: {temp_path.stat().st_size} bytes")
+            # print(f"File permissions: {temp_path.stat().st_mode}")
         input_file = FSInputFile(temp_path, filename=f"{task_id}.txt")
         await callback.message.answer_document(input_file, caption="Here is your .txt file.")  # type: ignore
         await callback.answer()
     except UnicodeDecodeError as e:
-        print(f"Decoding error: {e}")
+        # print(f"Decoding error: {e}")
         await callback.message.answer("Failed to process the file. Please try again.")  # type: ignore
 
 
 @transcriptions_router.callback_query(F.data.startswith("send_docx_"))
 async def send_docx_file(callback: CallbackQuery) -> None:
     task_id = callback.data.split("_")[-1]  # type: ignore
-    print(f"Retrieving docx of file {task_id}")
+    # print(f"Retrieving docx of file {task_id}")
     url = f"{API_BASE_URL}/transcript/export?task_id={task_id}&format=doc"
     user_id = callback.from_user.id
     access_token = users.get(user_id).get("access_token")  # type: ignore
 
     exported_file = await get_export_request(url, access_token)
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        print(exported_file)
+        # print(exported_file)
         temp_file.write(exported_file)
         p = Path(temp_file.name)
         input_file = FSInputFile(p, filename=f"{task_id}.docx")
