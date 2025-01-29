@@ -20,13 +20,7 @@ auth_router = Router()
 #         refresh_token: string
 #       }
 # }
-users: dict[int, dict[str, str | int]] = {
-    440632933: {
-        "name": "stringer",
-        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0LCJwYXNzd29yZF90aW1lc3RhbXAiOjE3Mzc3MjU2NTIuNjI5NTQxLCJleHAiOjE3Mzc3MzIwOTUsInRva2VuX3R5cGUiOiJhY2Nlc3MifQ.thlTs8uZU0ipYeMqEizphsF7CNKpoqGEcTOsrGp-rT8",
-        "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0LCJwYXNzd29yZF90aW1lc3RhbXAiOjE3Mzc3MjU2NTIuNjI5NTQxLCJleHAiOjE3NDAzMjIyOTUsInRva2VuX3R5cGUiOiJyZWZyZXNoIn0.oNJSGzB58alnbdVmiVNFY2TNcfUPTz91T8t5QkR_kJE",
-    }
-}
+users: dict[int, dict[str, str]] = {}
 
 
 async def send_refresh_request(url, body):
@@ -70,7 +64,9 @@ async def process_login_name(message: Message, state: FSMContext) -> None:
     username = message.text
     match username:
         case None:
-            await message.answer("You must write your name as a text message broooo\nTry again")
+            await message.answer(
+                "You must write your name as a text message broooo\nTry again"
+            )
         case str():
             await state.set_state(LoginForm.password)
             await state.update_data(name=username, name_message_id=message.message_id)
@@ -92,14 +88,20 @@ async def process_login_password(message: Message, state: FSMContext) -> None:
     user_password = message.text
     match user_password:
         case None:
-            await message.answer("You must write your password as a text message broooo\nTry again")
+            await message.answer(
+                "You must write your password as a text message broooo\nTry again"
+            )
         case str():
-            await state.update_data(password=user_password, password_message_id=message.message_id)
+            await state.update_data(
+                password=user_password, password_message_id=message.message_id
+            )
             state_data = await state.get_data()
             await state.clear()
 
             # Проверить, есть ли есть такой пользователь+пароль в API
-            print(f"SENDING REQUEST WITH\nNAME: {state_data.get('name')}\nPASS: {user_password}")
+            print(
+                f"SENDING REQUEST WITH\nNAME: {state_data.get('name')}\nPASS: {user_password}"
+            )
             resp = await send_login_request(state_data.get("name"), user_password)  # type: ignore
             print(resp)
 
@@ -132,7 +134,9 @@ async def process_login_password(message: Message, state: FSMContext) -> None:
                     name_message_id = state_data.get("name_message_id")
                     password_message_id = state_data.get("password_message_id")
                     await message.chat.delete_message(message_id=name_message_id or 0)
-                    await message.chat.delete_message(message_id=password_message_id or 0)
+                    await message.chat.delete_message(
+                        message_id=password_message_id or 0
+                    )
 
 
 class LogoutForm(StatesGroup):
@@ -150,7 +154,9 @@ async def logout(message: Message, state: FSMContext) -> None:
         user_id = user.id
         user_data = users.get(user_id)
         if user_data is None:
-            await message.answer(f"You weren't logged in", reply_markup=ReplyKeyboardRemove())
+            await message.answer(
+                f"You weren't logged in", reply_markup=ReplyKeyboardRemove()
+            )
         else:
             await state.set_state(LogoutForm.confirms)
             await state.update_data(user_id=user_id)

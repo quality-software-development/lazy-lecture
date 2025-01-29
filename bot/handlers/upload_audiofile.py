@@ -56,7 +56,9 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
 
     # Download the file
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"https://api.telegram.org/file/bot{bot.token}/{file_path}") as resp:
+        async with session.get(
+            f"https://api.telegram.org/file/bot{bot.token}/{file_path}"
+        ) as resp:
             if resp.status == 200:
                 user = message.from_user
                 user_id = user.id  # type: ignore
@@ -79,7 +81,9 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
                     content_type="audio/mpeg",
                 )
                 # Send the file to the server
-                async with session.post(f"{API_BASE_URL}/upload-audiofile", data=form, headers=headers) as upload_resp:
+                async with session.post(
+                    f"{API_BASE_URL}/upload-audiofile", data=form, headers=headers
+                ) as upload_resp:
                     print(upload_resp.status)
                     print(await upload_resp.text())
                     data = await upload_resp.json()
