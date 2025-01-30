@@ -35,13 +35,15 @@ async def upload(message: Message, state: FSMContext) -> None:
     user = users.get(user_id)
 
     if user is not None:
-        # TODO: ЕСЛИ ЮЗЕР НЕ АКТИВЕЙТЕД ОТПРАВЛЯТЬ ЕМУ ССЫЛКУ НА ТГ ИЛЬИ
+        # ЕСЛИ ЮЗЕР НЕ АКТИВЕЙТЕД ОТПРАВЛЯТЬ ЕМУ ССЫЛКУ НА ТГ ИЛЬИ
         url = f"{API_BASE_URL}/auth/info"
         access_token = users.get(user_id).get("access_token")  # type: ignore
         acc_info = await get_account_info(url, access_token)
         activated = acc_info["can_interact"]
         if not activated:
-            await message.answer("Попросите активировать свой аккаунт у администрации https://t.me/ll_requests")
+            await message.answer(
+                "Попросите активировать свой аккаунт у администрации https://t.me/ll_requests"
+            )
         else:
             # Если пользователь вошёл в систему, сказать отправляй файл и ждать файла.
             await state.set_state(UploadForm.waiting_for_file)
@@ -71,7 +73,9 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
 
     # Download the file
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"https://api.telegram.org/file/bot{bot.token}/{file_path}") as resp:
+        async with session.get(
+            f"https://api.telegram.org/file/bot{bot.token}/{file_path}"
+        ) as resp:
             if resp.status == 200:
                 user = message.from_user
                 user_id = user.id  # type: ignore
@@ -94,7 +98,9 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
                     content_type="audio/mpeg",
                 )
                 # Send the file to the server
-                async with session.post(f"{API_BASE_URL}/upload-audiofile", data=form, headers=headers) as upload_resp:
+                async with session.post(
+                    f"{API_BASE_URL}/upload-audiofile", data=form, headers=headers
+                ) as upload_resp:
                     # print(upload_resp.status)
                     # print(await upload_resp.text())
                     data = await upload_resp.json()
