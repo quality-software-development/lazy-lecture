@@ -41,7 +41,20 @@ async def upload(message: Message, state: FSMContext) -> None:
         acc_info = await get_account_info(url, access_token)
         activated = acc_info["can_interact"]
         if not activated:
-            await message.answer("Попросите активировать свой аккаунт у администрации https://t.me/ll_requests")
+            keyboard = []
+            buttons = []
+            buttons.append(
+                InlineKeyboardButton(
+                    text="Запросить доступ к транскрипции",
+                    url="https://t.me/ll_requests",
+                )
+            )
+            keyboard.append(buttons)
+            inline_keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard)
+            await message.answer(
+                "Попросите активировать свой аккаунт у администрации",
+                reply_markup=inline_keyboard,
+            )
         else:
             # Если пользователь вошёл в систему, сказать отправляй файл и ждать файла.
             await state.set_state(UploadForm.waiting_for_file)
