@@ -111,7 +111,7 @@ async def whoami(message: Message) -> None:
         print(f"User Info: {user_info}")
         print()  # Print a newline for better readability
     username = await get_username(message)
-    await message.answer(f"you are logged in as {username}")
+    await message.answer(f"Вы вошли в систему как {username}")
 
 
 async def main() -> None:
