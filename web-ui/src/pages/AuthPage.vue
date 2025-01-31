@@ -1,7 +1,7 @@
 <template>
     <div class="fullscreen row items-center justify-evenly">
         <q-card
-            class="q-pa-xl column items-center justify-evenly"
+            class="q-py-xl q-mx-lg column items-center justify-evenly"
             style="height: 500px; width: 500px"
         >
             <div class="text-h3">
@@ -43,6 +43,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { AuthApi } from 'src/api/auth';
+import { ResError } from 'src/models/responses';
 const router = useRouter();
 const props = defineProps(['signUp']);
 
@@ -54,22 +55,22 @@ const submitHandler = async () => {
     if (props.signUp) {
         const signUpRes = await AuthApi.signUp(login.value, password.value);
         if (signUpRes?.successful) {
-            router.push('log_in');
+            router.push('/log_in');
         } else {
-            errorMsg.value = signUpRes?.message;
+            errorMsg.value = (signUpRes as ResError)?.message;
         }
     } else {
         const logInRes = await AuthApi.logIn(login.value, password.value);
         if (logInRes?.successful) {
             router.push('/transcripts');
         } else {
-            errorMsg.value = logInRes?.message;
+            errorMsg.value = (logInRes as ResError)?.message;
         }
     }
 };
 const signUpClickHandler = () => {
     errorMsg.value = '';
-    router.push(props.signUp ? 'log_in' : 'sign_up');
+    router.push(props.signUp ? '/log_in' : '/sign_up');
 };
 </script>
 

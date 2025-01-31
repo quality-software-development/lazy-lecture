@@ -45,8 +45,10 @@ export default route(function (/* { store, ssrContext } */) {
 
     Router.beforeEach(async (to, from) => {
         const userInfoStore = useUserInfoStore();
-        const userInfo = await userInfoStore.updateUserInfo();
-        const isAuthorized = userInfo.successful;
+        if (!userInfoStore.userInfo?.id) {
+            await userInfoStore.updateUserInfo();
+        }
+        const isAuthorized = userInfoStore.userInfo?.id;
 
         if (!isAuthorized && to.path !== '/log_in' && to.path !== '/sign_up') {
             return { path: 'log_in' };

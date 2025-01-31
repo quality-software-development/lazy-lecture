@@ -24,6 +24,20 @@ api.interceptors.request.use((config) => {
     }
     return config;
 });
+api.interceptors.response.use(null, async (error) => {
+    if (
+        error.status === 401 &&
+        error.response?.data?.detail === 'Invalid or expired token'
+    ) {
+        const res = await api.post('/auth/refresh', {
+            refresh_token: localStorage.getItem('refreshToken'),
+        });
+        if (res.status === 200) {
+            localStorage.setItem('accessToken', res.data.access_token);
+            localStorage.setItem('refreshToken', res.data.refresh_token);
+        }
+    }
+});
 
 export default boot(({ app }) => {
     // for use inside Vue files (Options API) through this.$axios and this.$api
