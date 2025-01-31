@@ -21,16 +21,31 @@ class UploadForm(StatesGroup):
     file_uploaded = State()
 
 
+async def get_account_info(url, bearer_token):
+    headers = {"Authorization": f"Bearer {bearer_token}"}
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            return await response.json()  # or response.text() if you expect plain text
+
+
 @upload_router.message(Command("upload"))
 async def upload(message: Message, state: FSMContext) -> None:
     user = message.from_user
     user_id = user.id  # type: ignore
     user = users.get(user_id)
-    # TODO: ЕСЛИ ЮЗЕР НЕ АКТИВЕЙТЕД ОТПРАВЛЯТЬ ЕМУ ССЫЛКУ НА ТГ ИЛЬИ
+
     if user is not None:
-        # Если пользователь вошёл в систему, сказать отправляй файл и ждать файла.
-        await state.set_state(UploadForm.waiting_for_file)
-        await message.answer("Отправь мне .mp3 файл")
+        # ЕСЛИ ЮЗЕР НЕ АКТИВЕЙТЕД ОТПРАВЛЯТЬ ЕМУ ССЫЛКУ НА ТГ ИЛЬИ
+        url = f"{API_BASE_URL}/auth/info"
+        access_token = users.get(user_id).get("access_token")  # type: ignore
+        acc_info = await get_account_info(url, access_token)
+        activated = acc_info["can_interact"]
+        if not activated:
+            await message.answer("Попросите активировать свой аккаунт у администрации https://t.me/ll_requests")
+        else:
+            # Если пользователь вошёл в систему, сказать отправляй файл и ждать файла.
+            await state.set_state(UploadForm.waiting_for_file)
+            await message.answer("Отправь мне .mp3 файл")
     else:
         # Если пользователь не вошёл в систему,
         # команда /upload выводит сообщение о необходимости входа в систему.
