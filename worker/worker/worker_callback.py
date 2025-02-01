@@ -131,8 +131,11 @@ def process_transcription_job_messages(ch: pika.channel.Channel, method, body):
             # the file has been processed and therefore
             # not to be stored on our servers
             os.remove(user_audio_path)
-
-        ack(ch, method.delivery_tag)
+        try:
+            # TODO: fix the error by moving workload to the separate thread
+            ack(ch, method.delivery_tag)
+        except:
+            print("[x] W: Disconnected from rabbitmq due to healthcheck not sending during heavy processing")
     except:
         print(f"[x] Processing Error!\n{traceback.format_exc()}")
         update_transcription_state(
