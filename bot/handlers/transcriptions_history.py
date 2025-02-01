@@ -75,8 +75,8 @@ async def send_transcriptions(message, transcriptions: list, page: int, from_cal
     # Pagination buttons
     pagination_buttons = []
     if page > 1:
-        pagination_buttons.append(InlineKeyboardButton(text="Previous", callback_data=f"page_{page - 1}"))
-    pagination_buttons.append(InlineKeyboardButton(text="Next", callback_data=f"page_{page + 1}"))
+        pagination_buttons.append(InlineKeyboardButton(text="<", callback_data=f"page_{page - 1}"))
+    pagination_buttons.append(InlineKeyboardButton(text=">", callback_data=f"page_{page + 1}"))
 
     keyboard.append(pagination_buttons)
 
@@ -85,7 +85,7 @@ async def send_transcriptions(message, transcriptions: list, page: int, from_cal
     if from_callback:
         await message.edit_reply_markup(reply_markup=inline_keyboard)
     else:
-        await message.answer("Your transcriptions:", reply_markup=inline_keyboard)
+        await message.answer("Ваши транскрипции:", reply_markup=inline_keyboard)
 
 
 @transcriptions_router.callback_query(F.data.startswith("page_"))
@@ -126,13 +126,13 @@ async def transcription_handler(callback: CallbackQuery) -> None:
     format_keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="Send as .txt", callback_data=f"send_txt_{task_id}"),
-                InlineKeyboardButton(text="Send as .docx", callback_data=f"send_docx_{task_id}"),
+                InlineKeyboardButton(text="Отправить .txt", callback_data=f"send_txt_{task_id}"),
+                InlineKeyboardButton(text="Отправить .docx", callback_data=f"send_docx_{task_id}"),
             ]
         ]
     )
 
-    await callback.message.answer("Choose a file format:", reply_markup=format_keyboard)  # type: ignore
+    await callback.message.answer("Выберите формат файла:", reply_markup=format_keyboard)  # type: ignore
     await callback.answer()
 
 
@@ -168,11 +168,11 @@ async def send_txt_file(callback: CallbackQuery) -> None:
             # print(f"File size: {temp_path.stat().st_size} bytes")
             # print(f"File permissions: {temp_path.stat().st_mode}")
         input_file = FSInputFile(temp_path, filename=f"{task_id}.txt")
-        await callback.message.answer_document(input_file, caption="Here is your .txt file.")  # type: ignore
+        await callback.message.answer_document(input_file, caption="Вот ваш .txt файл.")  # type: ignore
         await callback.answer()
     except UnicodeDecodeError as e:
         # print(f"Decoding error: {e}")
-        await callback.message.answer("Failed to process the file. Please try again.")  # type: ignore
+        await callback.message.answer("Не удалось обработать файл. Пожалуйста, попробуйте еще раз.")  # type: ignore
 
 
 @transcriptions_router.callback_query(F.data.startswith("send_docx_"))
@@ -189,5 +189,5 @@ async def send_docx_file(callback: CallbackQuery) -> None:
         temp_file.write(exported_file)
         p = Path(temp_file.name)
         input_file = FSInputFile(p, filename=f"{task_id}.docx")
-        await callback.message.answer_document(input_file, caption="Here is your .docx file.")  # type: ignore
+        await callback.message.answer_document(input_file, caption="Вот ваш .docx файл.")  # type: ignore
         await callback.answer()
