@@ -50,20 +50,32 @@ async def command_start_handler(message: Message) -> None:
     reply_text = ""
     match user_name:
         case "":
-            reply_text = f"Привет, студент!"
+            reply_text = f"Привет, студент."
         case _:
-            reply_text = f"Привет, {html.bold(user_name)}!"
+            reply_text = f"Привет, {user_name}."
 
+    reply_text += """
+Инструкция по пользованию ботом
+
+1. Вход в систему /login
+
+2. Загрузка аудиозаписей /upload
+Вы можете загрузить свои аудиозаписи в формате .mp3
+
+3. Просмотр истории транскрипций /history
+Для просмотра истории ваших транскрипций и их извлечения в форматах .txt или .docx
+
+4. Выход из системы /logout
+
+5. Проверка вашего имени пользователя /whoami
+Чтобы узнать, под чьим именем вы вошли в систему
+
+6. Получение помощи /help
+Если вы хотите увидеть это сообщение снова
+"""
+    print("START")
     await message.answer(
         reply_text,
-        reply_markup=ReplyKeyboardMarkup(
-            keyboard=[
-                [
-                    KeyboardButton(text="/help"),
-                ]
-            ],
-            resize_keyboard=True,
-        ),
     )
 
 
@@ -71,16 +83,24 @@ async def command_start_handler(message: Message) -> None:
 async def login(message: Message) -> None:
     await message.answer(
         """
-First of all you can
-    /login
-Secondly, you can
-    /upload your audio as an .mp3 file
-    view /history of your transcriptions & get one in .txt or .doc
-Finally, you can
-    /logout
-Secretly, you can check whose name you are logged in under.
-    /whoami""",
-        reply_markup=ReplyKeyboardRemove(),
+Инструкция по пользованию ботом
+
+1. Вход в систему /login
+
+2. Загрузка аудиозаписей /upload
+Вы можете загрузить свои аудиозаписи в формате .mp3
+
+3. Просмотр истории транскрипций /history
+Для просмотра истории ваших транскрипций и их извлечения в форматах .txt или .docx
+
+4. Выход из системы /logout
+
+5. Проверка вашего имени пользователя /whoami
+Чтобы узнать, под чьим именем вы вошли в систему
+
+6. Получение помощи /help
+Если вы хотите увидеть это сообщение снова
+""",
     )
 
 
