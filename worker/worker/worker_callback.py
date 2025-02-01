@@ -80,9 +80,6 @@ def process_transcription_job_messages(ch: pika.channel.Channel, method, body):
             return
         update_transcription_state(transcription_id, TranscriptionState.IN_PROGRESS)
 
-        # TODO: add restoration logic from the last place
-        #   status==processing_error -> get last chunk id, try to continue
-
         # check if in object_storage_config
         # if not in object_storage_config -> Exception
         user_audio_path: Path = get_user_audio_path(user_id, Path(object_storage_config.PATH), raise_if_not_found=True)
@@ -140,16 +137,6 @@ def process_transcription_job_messages(ch: pika.channel.Channel, method, body):
         print(f"[x] Processing Error!\n{traceback.format_exc()}")
         update_transcription_state(
             transcription_id,
-            transcription_state=TranscriptionState.PROCESSING_FAIL,
+            transcription_state=TranscriptionState.PROCESSING_ERROR,
         )
         ack(ch, method.delivery_tag, negative=True, requeue=False)
-
-        # processing_error_count = 3  # TODO: get actual processing_error_count
-        # if processing_error_count < 3:
-        #     # TODO: set processing_error_count++
-        #     # TODO: set status=queued
-        #     ack(ch, method.delivery_tag, negative=True, requeue=True)
-        # else:
-        #     # Don't return, set Processing Fail
-        #     # TODO: set status=processing_fail
-        #     ack(ch, method.delivery_tag, negative=True, requeue=False)

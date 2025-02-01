@@ -11,6 +11,7 @@ class Transcription(Model):
     audio_len_secs = Column(name="audio_len_secs", type_=Float)
     chunk_size_secs = Column(name="chunk_size_secs", type_=Float)
     current_state = Column(name="current_state", type_=Enum(TranscriptionState))
+    error_count = Column(name="error_count", type_=Integer, default=0)
 
 
 class TranscriptionChunk(Model):

@@ -149,7 +149,17 @@ async def update_transcription_state(data: TranscriptionStatusUpdateRequest, db:
         transcription = await db.get_one(Transcription, transcription_id)
         if transcription is None:
             raise ValueError("Transcription does not exist")
-        transcription.current_state = new_state
+
+        if new_state == TranscriptionState.PROCESSING_ERROR:
+            error_count = transcription.error_count + 1
+            transcription.error_count = error_count
+            if error_count >= 3:
+                transcription.current_state = TranscriptionState.PROCESSING_FAIL
+            else:
+                transcription.current_state = new_state
+        else:
+            transcription.current_state = new_state
+
         await db.commit()
 
     if new_chunk is not None:
