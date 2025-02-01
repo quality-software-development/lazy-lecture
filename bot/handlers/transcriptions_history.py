@@ -35,9 +35,14 @@ def get_paginated_data(data, page, page_size=5):
 async def get_history(message: Message) -> None:
     user = message.from_user
     user_id = user.id  # type: ignore
+    user = users.get(user_id)
+    if user is None:
+        await message.answer("Войдите в систему. /login")
+        return
+
     await refresh_token(user_id)
     url = f"{API_BASE_URL}/transcriptions?page=1&?size=100000000"
-    access_token = users.get(user_id).get("access_token")  # type: ignore
+    access_token = user.get("access_token")  # type: ignore
     # print("Sending history request:", access_token)
     data = await send_history_request(url, access_token)
     data = data["transcriptions"]
@@ -126,8 +131,8 @@ async def transcription_handler(callback: CallbackQuery) -> None:
     format_keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="Отправить .txt", callback_data=f"send_txt_{task_id}"),
-                InlineKeyboardButton(text="Отправить .docx", callback_data=f"send_docx_{task_id}"),
+                InlineKeyboardButton(text="Экспорт в TXT", callback_data=f"send_txt_{task_id}"),
+                InlineKeyboardButton(text="Экспорт в DOC", callback_data=f"send_docx_{task_id}"),
             ]
         ]
     )
