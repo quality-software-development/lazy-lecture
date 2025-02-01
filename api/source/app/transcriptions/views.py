@@ -20,6 +20,7 @@ from source.app.transcriptions.services import (
     create_transcription,
     export_transcription,
     get_audio_len,
+    get_current_transcriptions,
     info_transcript,
     list_user_transcript,
     list_user_transcriptions,
@@ -113,6 +114,15 @@ async def create_upload_file(
 
     audio_len_sec = get_audio_len(out_file_path)
     channel, q_name = task_q
+
+    current_transcriptions: tp.List[Transcription] = await get_current_transcriptions(
+        user_id=user.id,
+        db=db,
+    )
+    if len(current_transcriptions) != 0:
+        raise ValueError(
+            f"Transcription {current_transcriptions[0].id} is {current_transcriptions[0].current_state}. Please cancel the job or wait before its completion to start a new one."
+        )
 
     transcription: Transcription = await create_transcription(
         TranscriptionRequest(
