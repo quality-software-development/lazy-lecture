@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class WorkerConfig:
-    DEVICE: tp.Literal["cuda", "cpu"] = os.getenv("DEVICE", "cpu")
+    DEVICE: tp.Optional[tp.Literal["cuda", "cpu"]] = os.getenv("DEVICE", None)
     MODEL_NAME: str = os.getenv("WHISPER_MODEL_NAME", "tiny")
     DOWNLOAD_ROOT: str = os.getenv("DOWNLOAD_ROOT", "/cache")
     PIKA_HOST = os.getenv("PIKA_HOST", "localhost")

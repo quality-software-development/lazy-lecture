@@ -11,7 +11,7 @@ services:
       - ./volumes/object_storage:/object_storage:rw
 
     environment:
-      - DEVICE=${DEVICE:-cpu}
+      - DEVICE=${DEVICE}
       - WHISPER_MODEL_NAME=${WHISPER_MODEL_NAME:-base}
       - DOWNLOAD_ROOT=${DOWNLOAD_ROOT:-/cache}
       - PIKA_HOST=rabbitmq
