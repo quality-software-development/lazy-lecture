@@ -263,3 +263,24 @@ async def info_transcript(
     db: AsyncSession,
 ) -> TranscriptionResponse:
     return await get_user_trancsript(user_id, transcript_id, db)
+
+
+async def get_current_transcriptions(
+    user_id: int,
+    db: AsyncSession,
+) -> tp.List[Transcription]:
+    active_transcription_states = [
+        TranscriptionState.QUEUED,
+        TranscriptionState.IN_PROGRESS,
+        TranscriptionState.PROCESSING_ERROR,
+    ]
+    current_transcripts = await db.scalars(
+        select(Transcription).where(
+            and_(
+                Transcription.creator_id == user_id,
+                or_(*[Transcription.current_state == state for state in active_transcription_states]),
+            )
+        )
+    )
+    transcriptions: tp.List[Transcription] = current_transcripts.all()
+    return transcriptions
