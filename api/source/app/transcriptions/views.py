@@ -33,7 +33,7 @@ from source.core.settings import settings
 from source.core.task_queue import get_task_queue
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .types import SecretWorkerToken, ValidAudioFile
+from .types import ValidAudioFile, validate_worker_token
 
 transcriptions_router = APIRouter(prefix="", tags=["transcriptions"])
 
@@ -87,7 +87,7 @@ async def transcript_export(
 )
 async def worker_post_transcription_state(
     data: TranscriptionStatusUpdateRequest,
-    secret_worker_token: SecretWorkerToken,
+    secret_worker_token: str = Depends(validate_worker_token),
     db: AsyncSession = Depends(get_db),
 ):
     transcription = await update_transcription_state(data, db)
@@ -144,7 +144,6 @@ async def create_upload_file(
 async def _transcript_cancel(
     user: CurrentUser,
     transcript_id: int,
-    # task_q: tp.Tuple[tp.Any, str] = Depends(get_task_queue), # later will use broadcast...
     db: AsyncSession = Depends(get_db),
 ):
     _ = await cancel_transcript(transcript_id=transcript_id, user_id=user.id, db=db)

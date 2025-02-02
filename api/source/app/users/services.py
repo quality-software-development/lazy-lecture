@@ -27,6 +27,13 @@ async def create_user(user: UserRequest, db: AsyncSession) -> User | None:
         return None
 
 
+async def get_user_by_id(
+    user_id: int,
+    db: AsyncSession,
+) -> User:
+    return await db.get_one(User, user_id)
+
+
 async def update_user(
     user: User,
     request: UserUpdateRequest,
