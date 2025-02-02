@@ -19,7 +19,7 @@ from source.app.transcriptions.services import (
     cancel_transcript,
     create_transcription,
     export_transcription,
-    get_audio_len,
+    get_audio_duration,
     get_current_transcriptions,
     info_transcript,
     list_user_transcript,
@@ -112,7 +112,7 @@ async def create_upload_file(
         while chunk := await audiofile.read(512 * 1024):  # Read in 0.5 MB chunks
             await out_file.write(chunk)  # Write each chunk
 
-    audio_len_sec = get_audio_len(out_file_path)
+    audio_len_sec = get_audio_duration(out_file_path)
     channel, q_name = task_q
 
     current_transcriptions: tp.List[Transcription] = await get_current_transcriptions(
