@@ -19,7 +19,8 @@ from source.app.transcriptions.services import (
     cancel_transcript,
     create_transcription,
     export_transcription,
-    get_audio_len,
+    get_audio_duration,
+    get_current_transcriptions,
     info_transcript,
     list_user_transcript,
     list_user_transcriptions,
@@ -32,7 +33,7 @@ from source.core.settings import settings
 from source.core.task_queue import get_task_queue
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .types import SecretWorkerToken, ValidAudioFile
+from .types import ValidAudioFile, validate_worker_token
 
 transcriptions_router = APIRouter(prefix="", tags=["transcriptions"])
 
@@ -86,7 +87,7 @@ async def transcript_export(
 )
 async def worker_post_transcription_state(
     data: TranscriptionStatusUpdateRequest,
-    secret_worker_token: SecretWorkerToken,
+    secret_worker_token: str = Depends(validate_worker_token),
     db: AsyncSession = Depends(get_db),
 ):
     transcription = await update_transcription_state(data, db)
@@ -111,8 +112,17 @@ async def create_upload_file(
         while chunk := await audiofile.read(512 * 1024):  # Read in 0.5 MB chunks
             await out_file.write(chunk)  # Write each chunk
 
-    audio_len_sec = get_audio_len(out_file_path)
+    audio_len_sec = get_audio_duration(out_file_path)
     channel, q_name = task_q
+
+    current_transcriptions: tp.List[Transcription] = await get_current_transcriptions(
+        user_id=user.id,
+        db=db,
+    )
+    if len(current_transcriptions) != 0:
+        raise ValueError(
+            f"Transcription {current_transcriptions[0].id} is {current_transcriptions[0].current_state}. Please cancel the job or wait before its completion to start a new one."
+        )
 
     transcription: Transcription = await create_transcription(
         TranscriptionRequest(
@@ -134,7 +144,6 @@ async def create_upload_file(
 async def _transcript_cancel(
     user: CurrentUser,
     transcript_id: int,
-    # task_q: tp.Tuple[tp.Any, str] = Depends(get_task_queue), # later will use broadcast...
     db: AsyncSession = Depends(get_db),
 ):
     _ = await cancel_transcript(transcript_id=transcript_id, user_id=user.id, db=db)

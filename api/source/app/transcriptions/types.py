@@ -1,8 +1,9 @@
 from fastapi import UploadFile
-from mutagen import File as MutagenFile
 from pydantic import AfterValidator, PlainSerializer, WithJsonSchema
 from source.core.settings import settings
 from typing_extensions import Annotated
+from pydantic import ValidationError
+import ffmpeg
 
 
 class ValidAudioFile(UploadFile):
@@ -14,33 +15,35 @@ class ValidAudioFile(UploadFile):
         yield cls.validate
 
     @classmethod
-    def validate(cls, value: UploadFile) -> UploadFile:
+    def get_audio_duration(cls, file: UploadFile) -> float:
+        """Extracts duration using ffmpeg-python bindings."""
         try:
-            audio = MutagenFile(value.file)
-            if not audio or not hasattr(audio, "info"):
-                raise ValueError("Invalid audio file format or metadata.")
+            probe = ffmpeg.probe(file.file, select_streams="a", show_entries="format=duration")
+            duration = float(probe["format"]["duration"])
+            return duration
         except Exception as e:
-            raise ValueError(f"Could not read the audio file: {e}")
-        duration = getattr(audio.info, "length", None)
-        if duration is None:
-            raise ValueError("Audio duration could not be determined.")
+            raise ValueError(f"Error reading audio duration: {e}")
+
+    @classmethod
+    def validate(cls, value: UploadFile) -> UploadFile:
+        duration = cls.get_audio_duration(value)
         if not (cls.MIN_DURATION <= duration <= cls.MAX_DURATION):
-            raise ValueError(
-                f"Audio duration must be between {cls.MIN_DURATION} seconds and {cls.MAX_DURATION} seconds. "
+            raise ValidationError(
+                f"Audio duration must be between {cls.MIN_DURATION} and {cls.MAX_DURATION} seconds. "
                 f"Provided file is {duration:.2f} seconds long."
             )
         return value
 
 
-def validate_worker_token(value: str) -> str:
-    if not value == settings.SECRET_WORKER_TOKEN:
+def validate_worker_token(secret_worker_token: str) -> str:
+    print(f"Received: {secret_worker_token}, Expected: {settings.SECRET_WORKER_TOKEN}")  # Debugging
+    if secret_worker_token != settings.SECRET_WORKER_TOKEN:
         raise ValueError(f"Wrong worker token")
-    return value
+    return secret_worker_token
 
 
-SecretWorkerToken = Annotated[
-    str,
-    AfterValidator(validate_worker_token),
-    PlainSerializer(lambda x: str(x), return_type=str),
-    WithJsonSchema({"type": "string"}, mode="serialization"),
-]
+def validate_admin_token(secret_admin_token: str) -> str:
+    print(f"Received: {secret_admin_token}, Expected: {settings.SECRET_ADMIN_TOKEN}")  # Debugging
+    if secret_admin_token != settings.SECRET_ADMIN_TOKEN:
+        raise ValueError(f"Wrong admin token")
+    return secret_admin_token

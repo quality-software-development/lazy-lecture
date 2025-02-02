@@ -54,7 +54,8 @@ class LoginForm(StatesGroup):
 async def login(message: Message, state: FSMContext) -> None:
     await state.set_state(LoginForm.name)
     await message.answer(
-        f"Got you! Let's start the login process\nWhat is your username?",
+        """Давайте начнем процесс входа в систему.
+Введите имя пользователя.""",
         reply_markup=ReplyKeyboardRemove(),
     )
 
@@ -68,7 +69,7 @@ async def process_login_name(message: Message, state: FSMContext) -> None:
         case str():
             await state.set_state(LoginForm.password)
             await state.update_data(name=username, name_message_id=message.message_id)
-            await message.answer("Good. What is your password?")
+            await message.answer("Введите пароль пользователя.")
 
 
 async def send_login_request(username: str, password: str):
@@ -93,15 +94,18 @@ async def process_login_password(message: Message, state: FSMContext) -> None:
             await state.clear()
 
             # Проверить, есть ли есть такой пользователь+пароль в API
-            print(f"SENDING REQUEST WITH\nNAME: {state_data.get('name')}\nPASS: {user_password}")
+            # print(
+            #     f"SENDING REQUEST WITH\nNAME: {state_data.get('name')}\nPASS: {user_password}"
+            # )
             resp = await send_login_request(state_data.get("name"), user_password)  # type: ignore
-            print(resp)
+            # print(resp)
 
             # Если пользователя нет, сказать что неверные данные
             # {'detail': 'Incorrect username or password'}
             resp_detail = resp.get("detail", None)
-            if resp_detail == "Incorrect username or password":
-                await message.answer(f"Incorrect Username or Password")
+            # print(f"RESP DETAILS: {resp_detail}")
+            if resp_detail != None:
+                await message.answer(f"Неверное имя пользователя или пароль\nПопробуйте снова /login")
             else:
                 # Если есть, то вытащить из полученного ответа "access_token" и "refresh_token"
                 #  и записать их вместе с именем в мапу
@@ -109,7 +113,7 @@ async def process_login_password(message: Message, state: FSMContext) -> None:
                 refresh_token = resp["refresh_token"]
                 name = state_data.get("name")
 
-                await message.answer(f"Good. You are logged in as {name}")
+                await message.answer(f"Вы вошли в систему как {name}")
                 user = message.from_user
                 if user is None:
                     # TODO: some handling
@@ -143,17 +147,17 @@ async def logout(message: Message, state: FSMContext) -> None:
         user_id = user.id
         user_data = users.get(user_id)
         if user_data is None:
-            await message.answer(f"You weren't logged in", reply_markup=ReplyKeyboardRemove())
+            await message.answer(f"Вы не входили в систему", reply_markup=ReplyKeyboardRemove())
         else:
             await state.set_state(LogoutForm.confirms)
             await state.update_data(user_id=user_id)
             await message.answer(
-                f"Do you really want to logout?",
+                f"Вы действительно хотите выйти из системы?",
                 reply_markup=ReplyKeyboardMarkup(
                     keyboard=[
                         [
-                            KeyboardButton(text="Yes"),
-                            KeyboardButton(text="No"),
+                            KeyboardButton(text="Да"),
+                            KeyboardButton(text="Нет"),
                         ]
                     ],
                     resize_keyboard=True,
@@ -163,10 +167,10 @@ async def logout(message: Message, state: FSMContext) -> None:
 
 @auth_router.message(LogoutForm.confirms)
 async def confirms_logout(message: Message, state: FSMContext) -> None:
-    if message.text not in ["Yes", "yes", "Y", "y"]:
+    if message.text not in ["Да", "да", "Д", "д"]:
         await state.clear()
         await message.answer(
-            f"Ok ok. You are not gonna be logged out",
+            f"Хорошо-хорошо. Вы не вышли из системы",
             reply_markup=ReplyKeyboardRemove(),
         )
     else:
@@ -175,7 +179,7 @@ async def confirms_logout(message: Message, state: FSMContext) -> None:
         user_data = users.get(user_id) or {}  # User 100% exists
         await state.clear()
         await message.answer(
-            f"Got you! You are no longer a {user_data['name']}\nYou are logged out",
+            f"Вы больше не {user_data['name']}\nВы вышли из системы",
             reply_markup=ReplyKeyboardRemove(),
         )
         del users[user_id]

@@ -16,6 +16,7 @@ class TranscriptionResponse(ResponseSchema):
     create_date: datetime
     update_date: datetime
     description: str
+    error_count: int
 
 
 class TranscriptionChunkResponse(ResponseSchema):

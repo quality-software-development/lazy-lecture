@@ -3,12 +3,11 @@ import typing as tp
 from io import BytesIO
 from math import ceil, floor
 from pathlib import Path
-from typing import Any, Mapping, Union
+from typing import Any, Mapping
 
 import pika
 import pika.channel
 from docx import Document
-from mutagen.mp3 import MP3
 from source.app.transcriptions.models import Transcription, TranscriptionChunk
 from source.app.transcriptions.schemas import (
     TranscriptionChunkResponse,
@@ -18,6 +17,7 @@ from source.app.transcriptions.schemas import (
     TranscriptionResponse,
     TranscriptionStatusUpdateRequest,
 )
+import ffmpeg
 from sqlalchemy import asc, desc, func, select, and_, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -108,17 +108,31 @@ def send_transcription_job_to_queue(
     return job_dict
 
 
-def get_audio_len(fpath: Union[str, Path]) -> float:
-    p = Path(fpath)
-    if not p.exists():
-        raise FileNotFoundError(str(p))
-    return MP3(str(p)).info.length
+def get_audio_duration(file: Path) -> float:
+    """Extracts duration using ffmpeg-python bindings."""
+    try:
+        probe = ffmpeg.probe(file, select_streams="a", show_entries="format=duration")
+        duration = float(probe["format"]["duration"])
+        return duration
+    except Exception as e:
+        raise ValueError(f"Error reading audio duration: {e}")
 
 
 async def create_transcription(create_transcription: TranscriptionRequest, db: AsyncSession) -> Transcription | None:
     try:
         transcription = Transcription(**create_transcription.model_dump())
         db.add(transcription)
+
+        all_user_transcriptions = await db.scalars(
+            select(Transcription)
+            .where(Transcription.creator_id == create_transcription.creator_id)
+            .order_by(asc("create_date"))
+        )
+        all_user_transcriptions = all_user_transcriptions.all()
+        if len(all_user_transcriptions) > 100:
+            # remove the oldest transcription
+            oldest_transcription = all_user_transcriptions[0]
+            await db.delete(oldest_transcription)
         await db.commit()
         await db.refresh(transcription)
         return transcription
@@ -149,7 +163,17 @@ async def update_transcription_state(data: TranscriptionStatusUpdateRequest, db:
         transcription = await db.get_one(Transcription, transcription_id)
         if transcription is None:
             raise ValueError("Transcription does not exist")
-        transcription.current_state = new_state
+
+        if new_state == TranscriptionState.PROCESSING_ERROR:
+            error_count = transcription.error_count + 1
+            transcription.error_count = error_count
+            if error_count >= 3:
+                transcription.current_state = TranscriptionState.PROCESSING_FAIL
+            else:
+                transcription.current_state = new_state
+        else:
+            transcription.current_state = new_state
+
         await db.commit()
 
     if new_chunk is not None:
@@ -242,3 +266,24 @@ async def info_transcript(
     db: AsyncSession,
 ) -> TranscriptionResponse:
     return await get_user_trancsript(user_id, transcript_id, db)
+
+
+async def get_current_transcriptions(
+    user_id: int,
+    db: AsyncSession,
+) -> tp.List[Transcription]:
+    active_transcription_states = [
+        TranscriptionState.QUEUED,
+        TranscriptionState.IN_PROGRESS,
+        TranscriptionState.PROCESSING_ERROR,
+    ]
+    current_transcripts = await db.scalars(
+        select(Transcription).where(
+            and_(
+                Transcription.creator_id == user_id,
+                or_(*[Transcription.current_state == state for state in active_transcription_states]),
+            )
+        )
+    )
+    transcriptions: tp.List[Transcription] = current_transcripts.all()
+    return transcriptions
