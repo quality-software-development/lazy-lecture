@@ -1,11 +1,13 @@
-import typing as tp
 from pathlib import Path
 
-from mutagen.mp3 import MP3
+import ffmpeg
 
 
-def get_audio_len(fpath: tp.Union[str, Path]) -> float:
-    p = Path(fpath)
-    if not p.exists():
-        raise FileNotFoundError(str(p))
-    return MP3(str(p)).info.length
+def get_audio_duration(file: Path) -> float:
+    """Extracts duration using ffmpeg-python bindings."""
+    try:
+        probe = ffmpeg.probe(file, select_streams="a", show_entries="format=duration")
+        duration = float(probe["format"]["duration"])
+        return duration
+    except Exception as e:
+        raise ValueError(f"Error reading audio duration: {e}")
