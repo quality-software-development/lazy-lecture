@@ -119,6 +119,17 @@ async def create_transcription(create_transcription: TranscriptionRequest, db: A
     try:
         transcription = Transcription(**create_transcription.model_dump())
         db.add(transcription)
+
+        all_user_transcriptions = await db.scalars(
+            select(Transcription)
+            .where(Transcription.creator_id == create_transcription.creator_id)
+            .order_by(asc("create_date"))
+        )
+        all_user_transcriptions = all_user_transcriptions.all()
+        if len(all_user_transcriptions) > 100:
+            # remove the oldest transcription
+            oldest_transcription = all_user_transcriptions[0]
+            await db.delete(oldest_transcription)
         await db.commit()
         await db.refresh(transcription)
         return transcription
