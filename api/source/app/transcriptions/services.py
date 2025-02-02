@@ -5,6 +5,7 @@ from math import ceil, floor
 from pathlib import Path
 from typing import Any, Mapping, Union
 
+from fastapi import UploadFile
 import pika
 import pika.channel
 from docx import Document
@@ -18,6 +19,7 @@ from source.app.transcriptions.schemas import (
     TranscriptionResponse,
     TranscriptionStatusUpdateRequest,
 )
+import ffmpeg
 from sqlalchemy import asc, desc, func, select, and_, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -108,11 +110,14 @@ def send_transcription_job_to_queue(
     return job_dict
 
 
-def get_audio_len(fpath: Union[str, Path]) -> float:
-    p = Path(fpath)
-    if not p.exists():
-        raise FileNotFoundError(str(p))
-    return MP3(str(p)).info.length
+def get_audio_duration(file: Path) -> float:
+    """Extracts duration using ffmpeg-python bindings."""
+    try:
+        probe = ffmpeg.probe(file, select_streams="a", show_entries="format=duration")
+        duration = float(probe["format"]["duration"])
+        return duration
+    except Exception as e:
+        raise ValueError(f"Error reading audio duration: {e}")
 
 
 async def create_transcription(create_transcription: TranscriptionRequest, db: AsyncSession) -> Transcription | None:
