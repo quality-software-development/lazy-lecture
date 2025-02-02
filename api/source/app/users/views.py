@@ -1,19 +1,18 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from source.app.auth.auth import Admin, CurrentUser
+from source.app.auth.auth import CurrentUser
 from source.app.users.models import User
 from source.app.users.schemas import (
-    UserPage,
-    UserPagination,
     UserRequest,
     UserResponse,
     UserUpdateRequest,
 )
-from source.app.users.services import create_user, delete_user, list_users, update_user
+from source.app.users.services import create_user, get_user_by_id, update_user
 from source.core.database import get_db
 from source.core.exceptions import conflict
 from source.core.schemas import ExceptionSchema
+from source.app.transcriptions.types import validate_admin_token
 
 users_router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -48,44 +47,13 @@ async def user_get(user: CurrentUser) -> User:
     },
 )
 async def user_update(
-    user: CurrentUser,
+    user_id: int,
     request: UserUpdateRequest,
+    admin_secret_token: str = Depends(validate_admin_token),
     db: AsyncSession = Depends(get_db),
 ) -> User:
+    print(admin_secret_token)
+    user = await get_user_by_id(user_id, db)
     if updated_user := await update_user(user=user, request=request, db=db):
         return updated_user
     return conflict(f"User '{request.username}' already exists")
-
-
-# @users_router.delete(
-#     "/",
-#     responses={status.HTTP_401_UNAUTHORIZED: {"model": ExceptionSchema}},
-#     status_code=status.HTTP_204_NO_CONTENT,
-#     tags=["users"],
-# )
-# async def user_delete(user: CurrentUser, db: AsyncSession = Depends(get_db)) -> None:
-#     await delete_user(user=user, db=db)
-#     return None
-
-
-# @users_router.get(
-#     "/admin",
-#     response_model=UserPage,
-#     responses={
-#         status.HTTP_401_UNAUTHORIZED: {"model": ExceptionSchema},
-#         status.HTTP_403_FORBIDDEN: {"model": ExceptionSchema},
-#     },
-#     tags=["admin"],
-# )
-# async def users_list(
-#     user: Admin,
-#     pagination: UserPagination = Depends(),
-#     db: AsyncSession = Depends(get_db),
-# ) -> UserPage:
-#     return await list_users(
-#         page=pagination.page,
-#         size=pagination.size,
-#         sort=pagination.sort,
-#         order=pagination.order,
-#         db=db,
-#     )

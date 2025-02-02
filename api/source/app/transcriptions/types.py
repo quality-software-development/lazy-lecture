@@ -32,15 +32,15 @@ class ValidAudioFile(UploadFile):
         return value
 
 
-def validate_worker_token(value: str) -> str:
-    if not value == settings.SECRET_WORKER_TOKEN:
+def validate_worker_token(secret_worker_token: str) -> str:
+    print(f"Received: {secret_worker_token}, Expected: {settings.SECRET_WORKER_TOKEN}")  # Debugging
+    if secret_worker_token != settings.SECRET_WORKER_TOKEN:
         raise ValueError(f"Wrong worker token")
-    return value
+    return secret_worker_token
 
 
-SecretWorkerToken = Annotated[
-    str,
-    AfterValidator(validate_worker_token),
-    PlainSerializer(lambda x: str(x), return_type=str),
-    WithJsonSchema({"type": "string"}, mode="serialization"),
-]
+def validate_admin_token(secret_admin_token: str) -> str:
+    print(f"Received: {secret_admin_token}, Expected: {settings.SECRET_ADMIN_TOKEN}")  # Debugging
+    if secret_admin_token != settings.SECRET_ADMIN_TOKEN:
+        raise ValueError(f"Wrong admin token")
+    return secret_admin_token
