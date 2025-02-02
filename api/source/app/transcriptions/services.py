@@ -3,13 +3,11 @@ import typing as tp
 from io import BytesIO
 from math import ceil, floor
 from pathlib import Path
-from typing import Any, Mapping, Union
+from typing import Any, Mapping
 
-from fastapi import UploadFile
 import pika
 import pika.channel
 from docx import Document
-from mutagen.mp3 import MP3
 from source.app.transcriptions.models import Transcription, TranscriptionChunk
 from source.app.transcriptions.schemas import (
     TranscriptionChunkResponse,
