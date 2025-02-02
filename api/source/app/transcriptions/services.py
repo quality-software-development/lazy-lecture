@@ -119,6 +119,17 @@ async def create_transcription(create_transcription: TranscriptionRequest, db: A
     try:
         transcription = Transcription(**create_transcription.model_dump())
         db.add(transcription)
+
+        all_user_transcriptions = await db.scalars(
+            select(Transcription)
+            .where(Transcription.creator_id == create_transcription.creator_id)
+            .order_by(asc("create_date"))
+        )
+        all_user_transcriptions = all_user_transcriptions.all()
+        if len(all_user_transcriptions) > 100:
+            # remove the oldest transcription
+            oldest_transcription = all_user_transcriptions[0]
+            await db.delete(oldest_transcription)
         await db.commit()
         await db.refresh(transcription)
         return transcription
@@ -149,7 +160,17 @@ async def update_transcription_state(data: TranscriptionStatusUpdateRequest, db:
         transcription = await db.get_one(Transcription, transcription_id)
         if transcription is None:
             raise ValueError("Transcription does not exist")
-        transcription.current_state = new_state
+
+        if new_state == TranscriptionState.PROCESSING_ERROR:
+            error_count = transcription.error_count + 1
+            transcription.error_count = error_count
+            if error_count >= 3:
+                transcription.current_state = TranscriptionState.PROCESSING_FAIL
+            else:
+                transcription.current_state = new_state
+        else:
+            transcription.current_state = new_state
+
         await db.commit()
 
     if new_chunk is not None:
