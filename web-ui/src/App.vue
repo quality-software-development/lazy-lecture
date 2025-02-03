@@ -13,6 +13,7 @@ useTranscriptStore().$onAction(({ onError }) => {
     onError((error: any) => {
         $q.notify({
             type: 'negative',
+            icon: 'error',
             position: 'bottom-right',
             message: error,
             actions: [{ icon: 'close', color: 'white', round: true }],

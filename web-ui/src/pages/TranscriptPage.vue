@@ -1,5 +1,9 @@
 <template>
-    <div v-if="currentTranscript">
+    <div v-if="currentTranscript" :class="[
+                    TranscriptionState.in_progress,
+                    TranscriptionState.queued,
+                    TranscriptionState.cancelled,
+                ].includes(currentTranscript.currentState) ? 'column' : ''">
         <div class="ui-transcript-page-progress-container">
             <div
                 class="ui-trancscript-page-progress-bar q-pa-lg q-pb-sm q-px-xl"
@@ -46,16 +50,81 @@
                         chunkTimeStamp, idx
                     ) of currentTranscript.timeStampViews"
                     :key="idx"
-                    @click="handleMarkClick(idx)"
                     :span-idx="idx"
-                    >{{ chunkTimeStamp }}</span
+                    @click="handleMarkClick(idx)"
                 >
+                    {{ chunkTimeStamp }}
+                </span>
             </div>
+            <q-btn
+                class="full-width"
+                v-if="
+                    isCurrentTranscriptProcessing ||
+                    currentTranscript.currentState === TranscriptionState.queued
+                "
+                flat
+                square
+                color="negative"
+                @click="
+                    transcriptStore.cancelTranscriptionProcess(
+                        currentTranscript.id
+                    )
+                "
+            >
+                Отменить обработку
+            </q-btn>
+            <p
+                v-if="isCurrentTranscriptCancelling"
+                class="text-grey-6 text-center"
+            >
+                Обработка отменена. Текущий фрагмент будет обработан.
+            </p>
             <q-separator />
         </div>
         <div
-            class="column float-right"
-            style="top: 134px; width: 56px; position: sticky"
+            v-if="
+                [
+                    TranscriptionState.in_progress,
+                    TranscriptionState.queued,
+                    TranscriptionState.cancelled,
+                ].includes(currentTranscript.currentState)
+            "
+            class="column items-center self-center"
+            style="position: absolute; top: 45%;"
+        >
+            <IconMessageItem
+                :icon="
+                    currentTranscript.currentState === TranscriptionState.queued
+                        ? 'schedule'
+                        : isCurrentTranscriptProcessing
+                        ? 'settings'
+                        : 'block'
+                "
+            >
+                {{
+                    currentTranscript.currentState === TranscriptionState.queued
+                        ? 'В очереди на обработку.'
+                        : isCurrentTranscriptProcessing
+                        ? 'В обработке.'
+                        : 'Обработка отменена.'
+                }}
+                <br />
+                {{
+                    isCurrentTranscriptCancelling
+                        ? 'Текущий фрагмент будет обработан.'
+                        : ''
+                }}
+            </IconMessageItem>
+        </div>
+        <div
+            class="column float-right self-end"
+            :style="`top: ${
+                isCurrentTranscriptProcessing
+                    ? 170
+                    : transcriptStore.isCancelling
+                    ? 171
+                    : 134
+            }px; width: 56px; position: sticky`"
         >
             <q-btn
                 class="q-pa-md"
@@ -63,8 +132,8 @@
                 square
                 color="primary"
                 icon="close"
-                @click="router.push('/transcripts')"
                 title="Закрыть транскрипцию"
+                @click="router.push('/transcripts')"
             />
             <q-separator inset />
             <q-btn
@@ -73,8 +142,8 @@
                 flat
                 square
                 color="primary"
-                @click="downloadFile('doc')"
                 title="Экспорт в .doc"
+                @click="downloadFile('doc')"
             >
                 <svg
                     class="ui-export-btn"
@@ -96,8 +165,8 @@
                 flat
                 square
                 color="primary"
-                @click="downloadFile('plain')"
                 title="Экспорт в .txt"
+                @click="downloadFile('plain')"
             >
                 <svg
                     class="ui-export-btn"
@@ -113,6 +182,7 @@
                 </svg>
             </q-btn>
         </div>
+
         <div
             v-for="(timeStampView, idx) of currentTranscript.timeStampViews"
             :key="idx"
@@ -151,7 +221,7 @@ import {
 import { useQuasar, copyToClipboard } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { useTranscriptStore } from 'src/stores/transcriptStore';
-import { TranscriptionStatus } from 'src/models/transcripts';
+import { TranscriptionState } from 'src/models/transcripts';
 import IconMessageItem from 'src/components/IconMessageItem.vue';
 const $q = useQuasar();
 const route = useRoute();
@@ -200,7 +270,7 @@ const updateMarkPositions = () => {
                             progressBarRightPadding) -
                     markWidth)
         );
-        if (newRelativeXes) {
+        if (newRelativeXes?.length) {
             newRelativeXes[0] += markWidth;
             relativeMarkPositions.value = newRelativeXes;
         }
@@ -255,10 +325,11 @@ const downloadFile = (format: 'doc' | 'plain') => {
     }
 };
 
-const isCurrentTranscriptProcessing = computed(
-    () =>
-        transcriptStore.processingTranscriptionId ===
-        currentTranscript.value?.id
+const isCurrentTranscriptProcessing = computed(() =>
+    transcriptStore.isTranscriptProcessing(currentTranscript.value?.id)
+);
+const isCurrentTranscriptCancelling = computed(() =>
+    transcriptStore.isTranscriptCancelling(currentTranscript.value?.id)
 );
 
 const resizeObserver = new ResizeObserver(() => updateMarkPositions());
@@ -279,15 +350,15 @@ watch(
         if (anotherTranscript) {
             if (
                 ![
-                    TranscriptionStatus.queued,
-                    TranscriptionStatus.in_progress,
-                    TranscriptionStatus.processing_error,
+                    TranscriptionState.queued,
+                    TranscriptionState.in_progress,
+                    TranscriptionState.processing_error,
                 ].includes(anotherTranscript.currentState)
             ) {
             }
             currentTranscript.value = anotherTranscript;
             relativeMarkPositions.value = anotherTranscript.markXPositions;
-            setTimeout(() => updateMarkPositions());
+            updateMarkPositions();
         } else {
             currentTranscript.value = null;
         }

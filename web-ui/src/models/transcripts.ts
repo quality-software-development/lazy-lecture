@@ -1,5 +1,5 @@
 //Состояния обработки аудио
-export enum TranscriptionStatus {
+export enum TranscriptionState {
     queued,
     in_progress,
     processing_error,
@@ -41,7 +41,7 @@ export interface Transcription {
     creatorId: number;
     audioLenSecs: number;
     chunkSizeSecs: number;
-    currentState: TranscriptionStatus;
+    currentState: TranscriptionState;
     createDate: Date;
     updateDate: Date;
     description: string;

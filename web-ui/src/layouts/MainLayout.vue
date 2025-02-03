@@ -52,15 +52,7 @@
                         :transcription="transcript"
                     />
                 </div>
-                <p class="q-ma-md text-grey-6" v-else>Нет транскрипций</p>
-                <div
-                    style="
-                        position: sticky;
-                        bottom: 0;
-                        z-index: 1;
-                        background-color: white;
-                    "
-                ></div>
+                <p class="q-ma-md text-grey-6" v-else>Нет транскрипций.</p>
             </q-list>
         </q-drawer>
 

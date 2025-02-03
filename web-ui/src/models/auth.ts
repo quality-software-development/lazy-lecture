@@ -13,7 +13,6 @@ export interface SignUpResDTO {
     role: string;
     create_date: string;
     update_date: string;
-    detail?: any;
 }
 
 export interface UserInfo {

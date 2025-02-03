@@ -4,7 +4,7 @@ import {
     TranscriptionsMapElement,
     Transcriptions,
     ChunkedTranscription,
-    TranscriptionStatus,
+    TranscriptionState,
     Transcription,
 } from 'src/models/transcripts';
 import { date } from 'quasar';
@@ -15,6 +15,7 @@ export const useTranscriptStore = defineStore('transcripts', {
     state: () => ({
         transcriptsMap: new Map<number, TranscriptionsMapElement>(),
         isProcessing: false,
+        isCancelling: false,
         processingTranscriptionId: null as number | null,
         processingTimerId: null as NodeJS.Timeout | null,
         processsingTicks: 0,
@@ -121,14 +122,6 @@ export const useTranscriptStore = defineStore('transcripts', {
             }
         },
 
-        async cancelTranscriptionProcess(taskId: number) {
-            const res = await TranscriptionsApi.cancelTranscriptionProcess(
-                taskId
-            );
-            if (res.successful) {
-            }
-        },
-
         watchTranscriptionProcess(taskId: number) {
             this.processingTranscriptionId = taskId;
             this.isProcessing = true;
@@ -144,9 +137,10 @@ export const useTranscriptStore = defineStore('transcripts', {
                 if (processingTranscript) {
                     if (
                         ![
-                            TranscriptionStatus.queued,
-                            TranscriptionStatus.in_progress,
-                            TranscriptionStatus.processing_error,
+                            TranscriptionState.queued,
+                            TranscriptionState.in_progress,
+                            TranscriptionState.processing_error,
+                            TranscriptionState.cancelled,
                         ].includes(processingTranscript.currentState) ||
                         new Date().getTime() -
                             processingTranscript.updateDate.getTime() >
@@ -162,8 +156,9 @@ export const useTranscriptStore = defineStore('transcripts', {
             clearInterval(this.processingTimerId!);
             this.processingTimerId = null;
             this.isProcessing = false;
+            this.isCancelling = false;
             this.processsingTicks = 0;
-            this.processingTranscriptionId = null;
+            setTimeout(() => (this.processingTranscriptionId = null));
         },
 
         checkProcessingTranscription() {
@@ -171,16 +166,47 @@ export const useTranscriptStore = defineStore('transcripts', {
                 for (const transcription of this.transcriptsMap.values()) {
                     if (
                         transcription.currentState ===
-                            TranscriptionStatus.in_progress &&
+                            TranscriptionState.in_progress &&
                         new Date().getTime() -
                             transcription.updateDate.getTime() <
                             30 * 60 * 1000
                     ) {
                         this.watchTranscriptionProcess(transcription.id);
-                        return;
+                        return transcription.id;
                     }
                 }
             }
+        },
+
+        async cancelTranscriptionProcess(taskId?: number) {
+            const id = taskId || this.processingTranscriptionId;
+            if (id) {
+                const res = await TranscriptionsApi.cancelTranscriptionProcess(
+                    id
+                );
+                if (res.successful) {
+                    if (id === this.processingTranscriptionId) {
+                        this.isCancelling = true;
+                    } else {
+                        const transcript = this.transcriptsMap.get(id);
+                        if (transcript) {
+                            transcript.currentState = TranscriptionState.cancelled;
+                        }
+                    }
+                }
+            }
+        },
+
+        isTranscriptProcessing(taskId: number | undefined) {
+            return (
+                this.processingTranscriptionId === taskId && !this.isCancelling
+            );
+        },
+
+        isTranscriptCancelling(taskId: number | undefined) {
+            return (
+                this.processingTranscriptionId === taskId && this.isCancelling
+            );
         },
     },
 });

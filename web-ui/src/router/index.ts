@@ -22,8 +22,8 @@ export default route(function (/* { store, ssrContext } */) {
     const createHistory = process.env.SERVER
         ? createMemoryHistory
         : process.env.VUE_ROUTER_MODE === 'history'
-        ? createWebHistory
-        : createWebHashHistory;
+            ? createWebHistory
+            : createWebHashHistory;
 
     const Router = createRouter({
         scrollBehavior(to) {
@@ -45,7 +45,11 @@ export default route(function (/* { store, ssrContext } */) {
 
     Router.beforeEach(async (to, from) => {
         const userInfoStore = useUserInfoStore();
-        if (!userInfoStore.userInfo?.id) {
+        if (
+            !userInfoStore.userInfo?.id &&
+            !(to.path === '/log_in' && from.path === '/sign_up') &&
+            !(to.path === '/sign_up' && from.path === '/log_in')
+        ) {
             await userInfoStore.updateUserInfo();
         }
         const isAuthorized = userInfoStore.userInfo?.id;

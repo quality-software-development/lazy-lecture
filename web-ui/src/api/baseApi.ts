@@ -7,7 +7,7 @@ export class BaseApi {
         method: 'get' | 'post',
         url: string,
         callback: (response: AxiosResponse<DTO, any>) => ResDataType,
-        errorMsg?: string,
+        errorMsg: string,
         body?: object
     ): Promise<ResSuccess<ResDataType> | ResError> {
         try {
@@ -22,8 +22,8 @@ export class BaseApi {
             const serverMsg =
                 e.status === 422
                     ? e.response.data.detail.reduce(
-                        (concatedErrs: string, err: string) =>
-                            `${concatedErrs}\n${err}`,
+                        (concatedErrs: string, err: any) =>
+                            `${concatedErrs}\n${err.msg}`,
                         ''
                     )
                     : e.status && e.status !== 418
@@ -31,7 +31,8 @@ export class BaseApi {
                         : '';
             return {
                 successful: false,
-                message: `${errorMsg ? `${errorMsg}\n` : ''}${serverMsg}`,
+                message: errorMsg || '',
+                caption: serverMsg
             };
         }
     }

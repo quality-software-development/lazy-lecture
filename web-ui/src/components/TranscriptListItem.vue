@@ -9,8 +9,17 @@
         @click="router.push(`/transcripts/${transcription.id}`)"
     >
         <div class="row">
-            <q-item-section style="margin-right: -20px" avatar>
+            <q-item-section avatar :title="hint">
                 <q-icon :name="statusIconName" :color="statusIconColor" />
+            </q-item-section>
+            <q-item-section
+                v-if="
+                    transcriptStore.isTranscriptCancelling(transcription.id) &&
+                    statusIconName !== 'settings'
+                "
+                avatar
+            >
+                <q-icon name="settings" color="warning" />
             </q-item-section>
             <q-item-section class="text-grey-6">{{
                 date.formatDate(transcription.updateDate, 'D MMM HH:mm', {
@@ -43,6 +52,15 @@
                 {{
                     transcription.description || transcription.chunks?.[0]?.text
                 }}
+                <div
+                    v-if="
+                        !transcription.description &&
+                        !transcription.chunks?.[0]?.text
+                    "
+                    class="text-italic"
+                >
+                    Нет текста.
+                </div>
             </q-item-label>
         </q-item-section>
     </q-item>
@@ -51,12 +69,11 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router';
-import {
-    TranscriptionStatus,
-    TranscriptionsMapElement,
-} from 'src/models/transcripts';
+import { TranscriptionsMapElement } from 'src/models/transcripts';
 import { date } from 'quasar';
 import { computed } from 'vue';
+import { useTranscriptStore } from 'src/stores/transcriptStore';
+const transcriptStore = useTranscriptStore();
 
 const route = useRoute();
 const router = useRouter();
@@ -68,41 +85,50 @@ defineOptions({
     name: 'TranscriptListItem',
 });
 
-const statusIconName = computed(() => {
-    switch (props.transcription.currentState) {
-        case TranscriptionStatus.queued:
-            return 'schedule';
-        case TranscriptionStatus.in_progress:
-            return 'settings';
-        case TranscriptionStatus.completed:
-            return 'check_circle';
-        case TranscriptionStatus.processing_fail:
-        case TranscriptionStatus.cancelled:
-            return 'cancel';
-        default:
-            return '';
-    }
-});
-const statusIconColor = computed(() => {
-    switch (props.transcription.currentState) {
-        case TranscriptionStatus.queued:
-            return 'grey';
-        case TranscriptionStatus.in_progress:
-            return 'warning';
-        case TranscriptionStatus.completed:
-            return 'positive';
-        case TranscriptionStatus.processing_fail:
-        case TranscriptionStatus.cancelled:
-            return 'negative';
-        default:
-            return '';
-    }
-});
+const statusIconName = computed(
+    () =>
+        [
+            'schedule',
+            'settings',
+            'error',
+            'check_circle',
+            'block',
+            'cancel',
+            'block',
+        ][props.transcription.currentState]
+);
+const statusIconColor = computed(
+    () =>
+        [
+            'grey',
+            'warning',
+            'negative',
+            'positive',
+            'black',
+            'negative',
+            'black',
+        ][props.transcription.currentState]
+);
+const hint = computed(
+    () =>
+        [
+            'В очереди',
+            'В обработке',
+            'Ошибка при обработке',
+            'Завершено',
+            'Завершено частично',
+            'Завершено с ошибкой',
+            'Отменено',
+        ][props.transcription.currentState]
+);
 </script>
 
 <style scoped>
 .ui-transcript-history-item-active {
     background-color: #ebebeb;
     color: grey;
+}
+.q-item__section--avatar {
+    margin-right: -20px;
 }
 </style>

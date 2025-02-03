@@ -1,100 +1,43 @@
 import { api } from 'src/boot/axios';
 import type { LogInResDTO, SignUpResDTO, UserInfo } from 'src/models/auth';
 import type { ResError, ResSuccess } from 'src/models/responses';
+import { BaseApi } from './baseApi';
 
-export class AuthApi {
+export class AuthApi extends BaseApi {
     static async logIn(
         username: string,
         password: string
     ): Promise<ResSuccess<null> | ResError> {
-        let logInRes;
-        try {
-            const res = await api.post<LogInResDTO>(
-                '/auth/login',
-                {
-                    username,
-                    password,
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            if (res.status === 200) {
+        return this.runRequest<null, LogInResDTO>(
+            'post',
+            '/auth/login',
+            (res) => {
                 localStorage.setItem('accessToken', res.data.access_token);
                 localStorage.setItem('refreshToken', res.data.refresh_token);
-                logInRes = {
-                    successful: true,
-                    data: null,
-                };
-            }
-        } catch (e: any) {
-            switch (e.status) {
-                case 401:
-                    logInRes = {
-                        successful: false,
-                        message: e.response.data.detail,
-                    };
-                case 422:
-                    logInRes = {
-                        successful: false,
-                        message: e.response.data.detail[0].msg,
-                    };
-            }
-        }
-        return (
-            logInRes || {
-                successful: false,
-                message: 'Ошибка входа.',
-            }
-        );
+                return null;
+            },
+            'Ошибка входа.',
+            {
+                username,
+                password,
+            },
+        )
     }
 
     static async signUp(
         username: string,
         password: string
     ): Promise<ResSuccess<SignUpResDTO> | ResError> {
-        let signUpRes;
-        try {
-            const res = await api.post<SignUpResDTO>(
-                '/auth/register',
-                {
-                    username,
-                    password,
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            if (res.status === 201) {
-                signUpRes = {
-                    successful: true,
-                    data: res.data,
-                };
-            }
-        } catch (e: any) {
-            switch (e.status) {
-                case 409:
-                    signUpRes = {
-                        successful: false,
-                        message: e.response.data.detail,
-                    };
-                case 422:
-                    signUpRes = {
-                        successful: false,
-                        message: e.response.data.detail.msg,
-                    };
-            }
-        }
-        return (
-            signUpRes || {
-                successful: false,
-                message: 'Ошибка регистрации.',
-            }
-        );
+        return this.runRequest<SignUpResDTO, SignUpResDTO>(
+            'post',
+            '/auth/register',
+            (res) => res.data,
+            'Ошибка регистрации.',
+            {
+                username,
+                password,
+            },
+        )
     }
 
     static async getUserInfo(): Promise<ResSuccess<UserInfo> | ResError> {

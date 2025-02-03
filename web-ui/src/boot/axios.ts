@@ -27,7 +27,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(null, async (error) => {
     if (
         error.status === 401 &&
-        error.response?.data?.detail === 'Invalid or expired token'
+        error.response?.data?.detail === 'Invalid or expired token' &&
+        error.config.url !== '/auth/refresh'
     ) {
         const res = await api.post('/auth/refresh', {
             refresh_token: localStorage.getItem('refreshToken'),
@@ -36,6 +37,8 @@ api.interceptors.response.use(null, async (error) => {
             localStorage.setItem('accessToken', res.data.access_token);
             localStorage.setItem('refreshToken', res.data.refresh_token);
         }
+    } else {
+        throw error;
     }
 });
 

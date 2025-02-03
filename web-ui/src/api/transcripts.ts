@@ -3,7 +3,7 @@ import {
     ChunkedTranscription,
     TranscriptionsQueryDTO,
     Transcriptions,
-    TranscriptionStatus,
+    TranscriptionState,
     TranscriptionQueryDTO,
     TranscriptionInfoQueryDTO,
     Transcription,
@@ -19,7 +19,7 @@ export class TranscriptionsApi extends BaseApi {
             creatorId: DTO.creator_id,
             audioLenSecs: DTO.audio_len_secs,
             chunkSizeSecs: DTO.chunk_size_secs,
-            currentState: TranscriptionStatus[DTO.current_state],
+            currentState: TranscriptionState[DTO.current_state],
             createDate: new Date(`${DTO.create_date}Z`),
             updateDate: new Date(`${DTO.update_date}Z`),
             description: DTO.description,
@@ -89,12 +89,9 @@ export class TranscriptionsApi extends BaseApi {
     ): Promise<ResSuccess<null> | ResError> {
         return this.runRequest<null, any>(
             'post',
-            '/transcript/cancel',
+            `/transcript/cancel?transcript_id=${taskId}`,
             () => null,
             `Не удалось отменить обработку транскрипции с id = ${taskId}.`,
-            {
-                transcript_id: taskId,
-            }
         );
     }
 }
