@@ -108,7 +108,7 @@ def process_transcription_job_messages(ch: pika.channel.Channel, method, body):
             print(f"[x] Inferred clip {clip_timestamp} (took {time_spent:.2f}s or x{speedup:.1f}): {text}")
 
             transcription_state, _ = get_transcription_state_chunk_size_secs(transcription_id)
-            if transcription_state == TranscriptionState.CANCELLED:
+            if transcription_state in [TranscriptionState.CANCELLED, TranscriptionState.COMPLETED_PARTIALLY]:
                 update_transcription_state(
                     transcription_id,
                     transcription_state=TranscriptionState.COMPLETED_PARTIALLY,

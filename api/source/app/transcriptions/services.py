@@ -154,6 +154,15 @@ async def add_new_chunk(chunk: TranscriptionChunk, db: AsyncSession):
         return None
 
 
+async def get_chunk_count_for_transcription(transcription: Transcription, db: AsyncSession) -> int:
+    transcription_id = transcription.id
+    transcription_chunks = await db.scalars(
+        select(TranscriptionChunk).where(TranscriptionChunk.transcript_id == transcription_id)
+    )
+    transcription_chunks = transcription_chunks.all()
+    return len(transcription_chunks)
+
+
 async def update_transcription_state(data: TranscriptionStatusUpdateRequest, db: AsyncSession) -> Transcription:
     transcription_id = data.transcription_id
     new_state = data.current_state
@@ -164,16 +173,18 @@ async def update_transcription_state(data: TranscriptionStatusUpdateRequest, db:
         if transcription is None:
             raise ValueError("Transcription does not exist")
 
-        if new_state == TranscriptionState.PROCESSING_ERROR:
-            error_count = transcription.error_count + 1
-            transcription.error_count = error_count
-            if error_count >= 3:
-                transcription.current_state = TranscriptionState.PROCESSING_FAIL
-            else:
-                transcription.current_state = new_state
-        else:
-            transcription.current_state = new_state
+        match new_state:
+            case TranscriptionState.PROCESSING_ERROR:
+                error_count = transcription.error_count + 1
+                transcription.error_count = error_count
+                if error_count >= 3:
+                    new_state = TranscriptionState.PROCESSING_FAIL
+            case TranscriptionState.CANCELLED:
+                chunk_count = await get_chunk_count_for_transcription(transcription)
+                if chunk_count >= 0:
+                    new_state = TranscriptionState.COMPLETED_PARTIALLY
 
+        transcription.current_state = new_state
         await db.commit()
 
     if new_chunk is not None:
