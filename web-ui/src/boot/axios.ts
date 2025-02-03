@@ -15,7 +15,7 @@ declare module '@vue/runtime-core' {
 // "export default () => {}" function below (which runs individually
 // for each client)
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL,
+    baseURL: 'http://localhost:8000',
 });
 api.interceptors.request.use((config) => {
     const accessToken = localStorage.getItem('accessToken');
@@ -23,6 +23,23 @@ api.interceptors.request.use((config) => {
         config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
+});
+api.interceptors.response.use(null, async (error) => {
+    if (
+        error.status === 401 &&
+        error.response?.data?.detail === 'Invalid or expired token' &&
+        error.config.url !== '/auth/refresh'
+    ) {
+        const res = await api.post('/auth/refresh', {
+            refresh_token: localStorage.getItem('refreshToken'),
+        });
+        if (res.status === 200) {
+            localStorage.setItem('accessToken', res.data.access_token);
+            localStorage.setItem('refreshToken', res.data.refresh_token);
+        }
+    } else {
+        throw error;
+    }
 });
 
 export default boot(({ app }) => {
