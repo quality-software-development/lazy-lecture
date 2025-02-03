@@ -7,7 +7,11 @@
             <div class="text-h3">
                 {{ props.signUp ? 'Регистрация' : 'Вход' }}
             </div>
-            <q-form ref="form" style="height: 50%; width: 50%" @submit="submitHandler">
+            <q-form
+                ref="form"
+                style="height: 50%; width: 50%"
+                @submit="submitHandler"
+            >
                 <q-input
                     :rules="[(val) => !!val || 'Введите логин']"
                     v-model="login"
@@ -26,7 +30,12 @@
             <div v-if="errorMsg" class="ui-auth-error row items-center q-mt-sm">
                 <q-icon name="sym_o_error" class="q-mr-xs" />
                 {{ errorMsg }}
-                <q-tooltip v-if="errorCaption" class="bg-negative text-body2" max-width="40%" :offset="[10, 10]">
+                <q-tooltip
+                    v-if="errorCaption"
+                    class="bg-negative text-body2"
+                    max-width="40%"
+                    :offset="[10, 10]"
+                >
                     {{ errorCaption }}
                 </q-tooltip>
             </div>
@@ -61,7 +70,7 @@ const form = useTemplateRef<QForm>('form');
 const setErrors = (err: ResError) => {
     errorMsg.value = (err as ResError)?.message;
     errorCaption.value = (err as ResError)?.caption || '';
-}
+};
 
 const submitHandler = async () => {
     if (props.signUp) {

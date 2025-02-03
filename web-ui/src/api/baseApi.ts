@@ -32,7 +32,7 @@ export class BaseApi {
             return {
                 successful: false,
                 message: errorMsg || '',
-                caption: serverMsg
+                caption: serverMsg,
             };
         }
     }

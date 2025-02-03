@@ -94,7 +94,7 @@ const handleAudioAdd = (files: readonly any[]) => {
             }
             uploader.value?.removeFile(files[0]);
         }
-    }
+    };
     audio.src = URL.createObjectURL(files[0]);
 
     hintText.value = hintAfterAdd;

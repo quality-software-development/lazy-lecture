@@ -91,7 +91,7 @@ export class TranscriptionsApi extends BaseApi {
             'post',
             `/transcript/cancel?transcript_id=${taskId}`,
             () => null,
-            `Не удалось отменить обработку транскрипции с id = ${taskId}.`,
+            `Не удалось отменить обработку транскрипции с id = ${taskId}.`
         );
     }
 }

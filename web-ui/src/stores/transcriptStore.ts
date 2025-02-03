@@ -190,7 +190,8 @@ export const useTranscriptStore = defineStore('transcripts', {
                     } else {
                         const transcript = this.transcriptsMap.get(id);
                         if (transcript) {
-                            transcript.currentState = TranscriptionState.cancelled;
+                            transcript.currentState =
+                                TranscriptionState.cancelled;
                         }
                     }
                 }

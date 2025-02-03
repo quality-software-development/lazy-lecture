@@ -1,9 +1,16 @@
 <template>
-    <div v-if="currentTranscript" :class="[
-                    TranscriptionState.in_progress,
-                    TranscriptionState.queued,
-                    TranscriptionState.cancelled,
-                ].includes(currentTranscript.currentState) ? 'column' : ''">
+    <div
+        v-if="currentTranscript"
+        :class="
+            [
+                TranscriptionState.in_progress,
+                TranscriptionState.queued,
+                TranscriptionState.cancelled,
+            ].includes(currentTranscript.currentState)
+                ? 'column'
+                : ''
+        "
+    >
         <div class="ui-transcript-page-progress-container">
             <div
                 class="ui-trancscript-page-progress-bar q-pa-lg q-pb-sm q-px-xl"
@@ -90,7 +97,7 @@
                 ].includes(currentTranscript.currentState)
             "
             class="column items-center self-center"
-            style="position: absolute; top: 45%;"
+            style="position: absolute; top: 45%"
         >
             <IconMessageItem
                 :icon="

@@ -20,8 +20,8 @@ export class AuthApi extends BaseApi {
             {
                 username,
                 password,
-            },
-        )
+            }
+        );
     }
 
     static async signUp(
@@ -36,8 +36,8 @@ export class AuthApi extends BaseApi {
             {
                 username,
                 password,
-            },
-        )
+            }
+        );
     }
 
     static async getUserInfo(): Promise<ResSuccess<UserInfo> | ResError> {
