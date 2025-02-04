@@ -1,86 +1,228 @@
 import { defineStore } from 'pinia';
-import { getTranscripts, getTranscriptChunked } from 'src/api/transcripts';
+import { TranscriptionsApi } from 'src/api/transcripts';
 import {
-    IChunk,
-    ITranscriptsMapElement,
-    TranscriptStatus,
+    TranscriptionsMapElement,
+    Transcriptions,
+    ChunkedTranscription,
+    TranscriptionState,
+    Transcription,
 } from 'src/models/transcripts';
-import { date } from 'quasar';
+import { formatTimestamp } from 'src/composables/formatTimestamp';
+import { ResSuccess } from 'src/models/responses';
+import { useUserInfoStore } from './userInfoStore';
 
 export const useTranscriptStore = defineStore('transcripts', {
     state: () => ({
-        transcriptsMap: new Map<number, ITranscriptsMapElement>(),
+        transcriptsMap: new Map<number, TranscriptionsMapElement>(),
+        isProcessing: false,
+        isCancelling: false,
+        processingTranscriptionId: null as number | null,
+        processingTimerId: null as NodeJS.Timeout | null,
+        processsingTicks: 0,
     }),
+    getters: {
+        processingTranscription: (state) => {
+            return state.processingTranscriptionId
+                ? state.transcriptsMap.get(state.processingTranscriptionId)
+                : null;
+        },
+    },
     actions: {
-        async loadTranscripts(skip: number, limit: number) {
-            const transcripts = await getTranscripts(skip, limit);
-            if (!transcripts) {
-                throw new Error('Не удалось загрузить транскрипции');
-            }
-            for (const transcript of transcripts) {
-                this.transcriptsMap.set(transcript.taskId, {
-                    ...transcript,
-                    chunks: [],
-                    markXPositions: [],
-                    timeStampViews: [],
-                    chunksDurationArray: [],
-                });
+        async loadTranscriptions(page = 1, size = 100) {
+            this.transcriptsMap.clear();
+            const res = await TranscriptionsApi.getTranscriptions(page, size);
+            if (res.successful) {
+                const userInfoStore = useUserInfoStore();
+                for (const transcript of (res as ResSuccess<Transcriptions>)
+                    .data.transcriptions) {
+                    if (transcript.creatorId === userInfoStore.userInfo?.id) {
+                        this.transcriptsMap.set(transcript.id, {
+                            ...transcript,
+                            chunks: [],
+                            markXPositions: [],
+                            timeStampViews: [],
+                            chunksDurationArray: [],
+                        });
+                    }
+                }
             }
         },
-        async loadTranscriptChunks(
-            taskId: number,
-            skip: number,
-            limit: number
-        ) {
-            const loadedTranscriptChunked = await getTranscriptChunked(
+
+        async loadTranscriptChunks(taskId: number, skip = 0, limit = 100) {
+            const res = await TranscriptionsApi.getChunkedTranscription(
                 taskId,
                 skip,
                 limit
             );
-            if (this.transcriptsMap.has(loadedTranscriptChunked.taskId)) {
-                const transcript = this.transcriptsMap.get(
-                    loadedTranscriptChunked.taskId
-                );
-
-                if (transcript) {
-                    transcript.chunks = loadedTranscriptChunked.chunks;
-
-                    const chunksDurationArray = transcript.chunks.reduce(
-                        (a, b, idx) => {
-                            if (idx == 0) {
-                                a.push(b.duration);
-                            } else {
-                                a.push(a[idx - 1] + b.duration);
-                            }
-                            return a;
-                        },
-                        [] as number[]
+            if (res.successful) {
+                const loadedChunkedTranscript = (
+                    res as ResSuccess<ChunkedTranscription>
+                ).data;
+                if (this.transcriptsMap.has(loadedChunkedTranscript.taskId)) {
+                    const transcript = this.transcriptsMap.get(
+                        loadedChunkedTranscript.taskId
                     );
-                    transcript.chunksDurationArray = chunksDurationArray;
 
-                    const markXPositions = [
-                        0,
-                        ...chunksDurationArray.map(
-                            (val) => val / transcript.duration
-                        ),
-                    ];
-                    markXPositions.pop();
-                    transcript.markXPositions = markXPositions;
+                    if (transcript) {
+                        transcript.chunks = loadedChunkedTranscript.chunks;
 
-                    const timeStampViews = [0, ...chunksDurationArray].map(
-                        (timestamp) =>
-                            date.formatDate(
-                                new Date(
-                                    timestamp * 1000 +
-                                        new Date().getTimezoneOffset() * 60000
-                                ),
-                                'HH:mm:ss'
-                            )
-                    );
-                    timeStampViews.pop();
-                    transcript.timeStampViews = timeStampViews;
+                        const chunksDurationArray = transcript.chunks.reduce(
+                            (a, b, idx) => {
+                                if (idx == 0) {
+                                    a.push(b.duration);
+                                } else {
+                                    a.push(a[idx - 1] + b.duration);
+                                }
+                                return a;
+                            },
+                            [] as number[]
+                        );
+                        transcript.chunksDurationArray = chunksDurationArray;
+
+                        const markXPositions = [
+                            0,
+                            ...chunksDurationArray.map(
+                                (val) => val / transcript.audioLenSecs
+                            ),
+                        ];
+                        markXPositions.pop();
+                        transcript.markXPositions = markXPositions;
+
+                        const timeStampViews = [0, ...chunksDurationArray].map(
+                            (timestamp) => formatTimestamp(timestamp)
+                        );
+                        timeStampViews.pop();
+                        transcript.timeStampViews = timeStampViews;
+                    }
                 }
             }
+        },
+
+        async updateTranscriptionData(taskId: number) {
+            const res = await TranscriptionsApi.getTranscriptionInfo(taskId);
+            if (res.successful) {
+                const transcription = this.transcriptsMap.get(taskId);
+                if (transcription) {
+                    this.transcriptsMap.set(taskId, {
+                        ...(res as ResSuccess<Transcription>).data,
+                        chunks: transcription.chunks,
+                        markXPositions: transcription.markXPositions,
+                        timeStampViews: transcription.timeStampViews,
+                        chunksDurationArray: transcription.chunksDurationArray,
+                    });
+                }
+            }
+        },
+
+        watchTranscriptionProcess(taskId: number) {
+            this.processingTranscriptionId = taskId;
+            this.isProcessing = true;
+            this.processingTimerId = setInterval(async () => {
+                await Promise.all([
+                    this.loadTranscriptChunks(this.processingTranscriptionId!),
+                    this.updateTranscriptionData(
+                        this.processingTranscriptionId!
+                    ),
+                ]);
+                this.processsingTicks++;
+                const processingTranscript = this.processingTranscription;
+                if (processingTranscript) {
+                    if (
+                        ((!localStorage.getItem('cancelledWhileProcessing') ||
+                            processingTranscript.currentState ===
+                                TranscriptionState.completed_partially) &&
+                            ![
+                                TranscriptionState.queued,
+                                TranscriptionState.in_progress,
+                                TranscriptionState.processing_error,
+                            ].includes(processingTranscript.currentState)) ||
+                        new Date().getTime() -
+                            processingTranscript.updateDate.getTime() >
+                            30 * 60 * 1000
+                    ) {
+                        this.unwatchTranscriptionProcess();
+                    }
+                }
+            }, 2000);
+        },
+
+        unwatchTranscriptionProcess() {
+            clearInterval(this.processingTimerId!);
+            this.processingTimerId = null;
+            this.isProcessing = false;
+            this.isCancelling = false;
+            localStorage.removeItem('cancelledWhileProcessing');
+            this.processsingTicks = 0;
+            setTimeout(() => (this.processingTranscriptionId = null));
+        },
+
+        checkProcessingTranscription() {
+            if (!this.isProcessing) {
+                const cancelledWhileProcessing = localStorage.getItem(
+                    'cancelledWhileProcessing'
+                );
+                if (cancelledWhileProcessing) {
+                    this.watchTranscriptionProcess(+cancelledWhileProcessing);
+                    return +cancelledWhileProcessing;
+                } else {
+                    for (const transcription of this.transcriptsMap.values()) {
+                        if (
+                            [
+                                TranscriptionState.queued,
+                                TranscriptionState.in_progress,
+                            ].includes(transcription.currentState) &&
+                            new Date().getTime() -
+                                transcription.updateDate.getTime() <
+                                30 * 60 * 1000
+                        ) {
+                            this.watchTranscriptionProcess(transcription.id);
+                            return transcription.id;
+                        }
+                    }
+                }
+            }
+        },
+
+        async cancelTranscriptionProcess() {
+            if (
+                this.processingTranscription &&
+                this.processingTranscriptionId
+            ) {
+                const res = await TranscriptionsApi.cancelTranscriptionProcess(
+                    this.processingTranscriptionId
+                );
+                if (res.successful) {
+                    if (
+                        this.processingTranscription.currentState ===
+                        TranscriptionState.in_progress
+                    ) {
+                        localStorage.setItem(
+                            'cancelledWhileProcessing',
+                            `${this.processingTranscriptionId}`
+                        );
+                    } else if (
+                        this.processingTranscription.currentState ===
+                        TranscriptionState.queued
+                    ) {
+                        this.processingTranscription.currentState =
+                            TranscriptionState.cancelled;
+                        return;
+                    }
+                    this.isCancelling = true;
+                }
+            }
+        },
+
+        isTranscriptProcessing(taskId: number | undefined) {
+            return (
+                this.processingTranscriptionId === taskId && !this.isCancelling
+            );
+        },
+
+        isTranscriptCancelling(taskId: number | undefined) {
+            return (
+                this.processingTranscriptionId === taskId && this.isCancelling
+            );
         },
     },
 });

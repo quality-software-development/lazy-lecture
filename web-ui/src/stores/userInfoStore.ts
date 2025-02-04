@@ -1,29 +1,32 @@
 import { defineStore } from 'pinia';
-import { UserInfo } from 'src/models/auth';
 import { AuthApi } from 'src/api/auth';
+
+import type { UserInfo } from 'src/models/auth';
+import type { ResError, ResSuccess } from 'src/models/responses';
 
 export const useUserInfoStore = defineStore('userInfo', {
     state: () => ({
-        userInfo: {} as UserInfo | null,
+        userInfo: null as UserInfo | null,
     }),
     actions: {
-        async updateUserInfo() {
+        async updateUserInfo(): Promise<ResSuccess<UserInfo> | ResError> {
             try {
-                const userInfo = await AuthApi.getUserInfo();
-                if (userInfo?.successful) {
-                    this.userInfo = userInfo.data as UserInfo;
-                    return userInfo;
+                const userInfoRes = await AuthApi.getUserInfo();
+                if (userInfoRes?.successful) {
+                    this.userInfo = (userInfoRes as ResSuccess<UserInfo>)
+                        .data as UserInfo;
+                    return userInfoRes;
                 } else {
-                    throw new Error(userInfo?.message);
+                    throw new Error((userInfoRes as ResError)?.message);
                 }
-            } catch (e) {
+            } catch (e: any) {
                 return {
                     successful: false,
-                    message: e || 'Ошибка авторизации',
+                    message: e.response?.data?.detail || 'Ошибка авторизации',
                 };
             }
         },
-        async clearUserInfo() {
+        clearUserInfo() {
             this.userInfo = null;
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');

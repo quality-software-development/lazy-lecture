@@ -1,51 +1,85 @@
-export enum TranscriptStatus {
-    QUEUED,
-    IN_PROGRESS,
-    COMPLETED,
-    REJECTED,
+//Состояния обработки аудио
+export enum TranscriptionState {
+    queued,
+    in_progress,
+    processing_error,
+    completed,
+    completed_partially,
+    processing_fail,
+    cancelled,
 }
 
-export interface TranscriptGeneralDTO {
-    task_id: number;
-    transcription: string;
-    timestamp: string;
-    transcript_length_secs: number;
-    status: TranscriptStatus;
-}
-export interface ITranscriptGeneral {
-    taskId: number;
-    text: string;
-    timeStamp: Date;
-    duration: number;
-    status: TranscriptStatus;
-}
-
-export interface ChunkDTO {
-    chunk_order: number;
+//Запрос api/transcription/info
+export interface TranscriptionInfoQueryDTO {
+    id: number;
+    creator_id: number;
+    audio_len_secs: number;
     chunk_size_secs: number;
-    transcription: string;
+    current_state:
+        | 'queued'
+        | 'in_progress'
+        | 'processing_error'
+        | 'completed'
+        | 'completed_partially'
+        | 'processing_fail'
+        | 'cancelled';
+    create_date: string;
+    update_date: string;
+    description: string;
 }
-export interface TranscriptChunkedDTO {
-    task_id: number;
-    transcription_chunks: ChunkDTO[];
+
+//Запрос api/transcriptions
+export interface TranscriptionsQueryDTO {
+    page: number;
+    pages: number;
+    size: number;
+    total: number;
+    transcriptions: TranscriptionInfoQueryDTO[];
 }
-export interface IChunk {
+export interface Transcription {
+    id: number;
+    creatorId: number;
+    audioLenSecs: number;
+    chunkSizeSecs: number;
+    currentState: TranscriptionState;
+    createDate: Date;
+    updateDate: Date;
+    description: string;
+}
+export interface Transcriptions {
+    page: number;
+    pages: number;
+    size: number;
+    total: number;
+    transcriptions: Transcription[];
+}
+
+//Запрос api/transcript
+export interface TranscriptionQueryDTO {
+    page: number;
+    pages: number;
+    size: number;
+    total: number;
+    transcriptions: {
+        chunk_order: number;
+        chunk_size_secs: number;
+        id: number;
+        transcription: string;
+    }[];
+}
+export interface Chunk {
     index: number;
     duration: number;
     text: string;
 }
-export interface ITranscriptChunked {
+export interface ChunkedTranscription {
     taskId: number;
-    chunks: IChunk[];
+    chunks: Chunk[];
 }
 
-export interface ITranscriptsMapElement {
-    taskId: number;
-    text: string;
-    timeStamp: Date;
-    duration: number;
-    status: TranscriptStatus;
-    chunks: IChunk[];
+//Элемент словаря транскрипций
+export interface TranscriptionsMapElement extends Transcription {
+    chunks: Chunk[];
     markXPositions: number[];
     timeStampViews: string[];
     chunksDurationArray: number[];

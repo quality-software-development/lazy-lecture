@@ -3,17 +3,20 @@
         class="column items-end q-pt-md"
         clickable
         v-ripple
-        :active="+route.params.taskId === taskId"
+        :active="+route.params.taskId === transcription.id"
         active-class="ui-transcript-history-item-active"
-        style="height: 90px"
-        @click="router.push(`/transcripts/${taskId}`)"
+        style="height: 110px"
+        @click="router.push(`/transcripts/${transcription.id}`)"
     >
         <div class="row">
-            <q-item-section style="margin-right: -20px" avatar>
+            <q-item-section avatar :title="hint">
                 <q-icon :name="statusIconName" :color="statusIconColor" />
             </q-item-section>
+            <q-item-section v-if="isExtraCogVisible" avatar>
+                <q-icon name="settings" color="warning" />
+            </q-item-section>
             <q-item-section class="text-grey-6">{{
-                date.formatDate(timeStamp, 'D MMM HH:mm', {
+                date.formatDate(transcription.updateDate, 'D MMM HH:mm', {
                     monthsShort: [
                         'янв',
                         'фев',
@@ -39,62 +42,128 @@
                     overflow: hidden;
                     text-overflow: ellipsis;
                 "
-                >{{ text }}</q-item-label
             >
+                {{
+                    transcription.description || transcription.chunks?.[0]?.text
+                }}
+                <div
+                    v-if="
+                        !transcription.description &&
+                        !transcription.chunks?.[0]?.text
+                    "
+                    class="text-italic"
+                >
+                    Нет текста.
+                </div>
+            </q-item-label>
         </q-item-section>
+
+        <div
+            v-if="+route.params.taskId === transcription.id"
+            class="text-italic text-grey-6 text-caption"
+        >
+            {{
+                `обработано ${
+                    transcription.chunks.length
+                        ? formatTimestamp(
+                              transcription.chunksDurationArray[
+                                  transcription.chunksDurationArray.length - 1
+                              ] < transcription.audioLenSecs
+                                  ? transcription.chunksDurationArray[
+                                        transcription.chunksDurationArray
+                                            .length - 1
+                                    ]
+                                  : transcription.audioLenSecs
+                          )
+                        : '00:00:00'
+                } из ${formatTimestamp(transcription.audioLenSecs)}`
+            }}
+        </div>
     </q-item>
     <q-separator />
 </template>
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router';
-import { IChunk, TranscriptStatus } from 'src/models/transcripts';
+import { TranscriptionsMapElement } from 'src/models/transcripts';
 import { date } from 'quasar';
+import { formatTimestamp } from 'src/composables/formatTimestamp';
+import { computed, ref, watch } from 'vue';
+import { useTranscriptStore } from 'src/stores/transcriptStore';
+const transcriptStore = useTranscriptStore();
 
 const route = useRoute();
 const router = useRouter();
 
-interface TranscriptListItemProps {
-    taskId: number;
-    text: string;
-    timeStamp: Date;
-    duration: number;
-    status: TranscriptStatus;
-    chunks: IChunk[];
-    markXPositions: number[];
-    timeStampViews: string[];
-    chunksDurationArray: number[];
-}
-
-const props = defineProps<TranscriptListItemProps>();
+const props = defineProps<{
+    transcription: TranscriptionsMapElement;
+}>();
 defineOptions({
     name: 'TranscriptListItem',
 });
 
-let statusIconName: string, statusIconColor: string;
-
-switch (props.status) {
-    case TranscriptStatus.QUEUED:
-        statusIconName = 'schedule';
-        statusIconColor = 'grey';
-        break;
-    case TranscriptStatus.IN_PROGRESS:
-        statusIconName = 'settings';
-        statusIconColor = 'warning';
-        break;
-    case TranscriptStatus.COMPLETED:
-        statusIconName = 'check_circle';
-        statusIconColor = 'positive';
-        break;
-    case TranscriptStatus.REJECTED:
-        statusIconName = 'cancel';
-        statusIconColor = 'negative';
-}
+const statusIconName = computed(
+    () =>
+        [
+            'schedule',
+            'settings',
+            'error',
+            'check_circle',
+            'block',
+            'cancel',
+            'block',
+        ][props.transcription.currentState]
+);
+const statusIconColor = computed(
+    () =>
+        [
+            'grey',
+            'warning',
+            'negative',
+            'positive',
+            'black',
+            'negative',
+            'black',
+        ][props.transcription.currentState]
+);
+const hint = computed(
+    () =>
+        [
+            'В очереди',
+            'В обработке',
+            'Ошибка при обработке',
+            'Завершено',
+            'Завершено частично',
+            'Завершено с ошибкой',
+            'Отменено',
+        ][props.transcription.currentState]
+);
+const cancelledWhileProcessing = ref(
+    localStorage.getItem('cancelledWhileProcessing')
+);
+const isExtraCogVisible = computed(
+    () =>
+        ((cancelledWhileProcessing.value &&
+            +cancelledWhileProcessing.value === props.transcription.id) ||
+            transcriptStore.isTranscriptCancelling(props.transcription.id)) &&
+        statusIconName.value !== 'settings'
+);
+watch(
+    () => transcriptStore.processsingTicks,
+    () => {
+        cancelledWhileProcessing.value = localStorage.getItem(
+            'cancelledWhileProcessing'
+        );
+    }
+);
 </script>
 
 <style scoped>
 .ui-transcript-history-item-active {
     background-color: #ebebeb;
     color: grey;
+}
+.q-item__section--avatar {
+    margin-right: -20px;
 }
 </style>

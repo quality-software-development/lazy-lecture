@@ -22,15 +22,20 @@ export default route(function (/* { store, ssrContext } */) {
     const createHistory = process.env.SERVER
         ? createMemoryHistory
         : process.env.VUE_ROUTER_MODE === 'history'
-        ? createWebHistory
-        : createWebHashHistory;
+            ? createWebHistory
+            : createWebHashHistory;
 
     const Router = createRouter({
         scrollBehavior(to) {
             if (to.hash) {
                 return {
                     el: to.hash,
-                    top: 182,
+                    top:
+                        (+(
+                            document.querySelector(
+                                '.ui-transcript-page-progress-container'
+                            ) as HTMLElement
+                        )?.clientHeight || 0) + 92,
                     behavior: 'smooth',
                 };
             }
@@ -45,8 +50,14 @@ export default route(function (/* { store, ssrContext } */) {
 
     Router.beforeEach(async (to, from) => {
         const userInfoStore = useUserInfoStore();
-        const userInfo = await userInfoStore.updateUserInfo();
-        const isAuthorized = userInfo.successful;
+        if (
+            !userInfoStore.userInfo?.id &&
+            !(to.path === '/log_in' && from.path === '/sign_up') &&
+            !(to.path === '/sign_up' && from.path === '/log_in')
+        ) {
+            await userInfoStore.updateUserInfo();
+        }
+        const isAuthorized = userInfoStore.userInfo?.id;
 
         if (!isAuthorized && to.path !== '/log_in' && to.path !== '/sign_up') {
             return { path: 'log_in' };

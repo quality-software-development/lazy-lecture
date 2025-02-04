@@ -34,13 +34,25 @@
 
         <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
             <q-list>
-                <q-item-label header> История </q-item-label>
-                <q-separator />
-                <TranscriptListItem
-                    v-for="transcript in transcriptStore.transcriptsMap.values()"
-                    :key="transcript.taskId"
-                    v-bind="transcript"
-                />
+                <div
+                    style="
+                        position: sticky;
+                        top: 0;
+                        z-index: 1;
+                        background-color: white;
+                    "
+                >
+                    <q-item-label header> История </q-item-label>
+                    <q-separator />
+                </div>
+                <div v-if="transcriptStore.transcriptsMap.size > 0">
+                    <TranscriptListItem
+                        v-for="transcript in transcriptStore.transcriptsMap.values()"
+                        :key="transcript.id"
+                        :transcription="transcript"
+                    />
+                </div>
+                <p class="q-ma-md text-grey-6" v-else>Нет транскрипций.</p>
             </q-list>
         </q-drawer>
 
@@ -63,9 +75,9 @@ defineOptions({
 });
 
 const userInfoStore = useUserInfoStore();
-
 const transcriptStore = useTranscriptStore();
-await transcriptStore.loadTranscripts(0, 100);
+await transcriptStore.loadTranscriptions();
+transcriptStore.checkProcessingTranscription();
 
 const leftDrawerOpen = ref(false);
 
@@ -75,12 +87,14 @@ const toggleLeftDrawer = () => {
 
 const logOut = () => {
     userInfoStore.clearUserInfo();
+    transcriptStore.transcriptsMap.clear();
+    transcriptStore.unwatchTranscriptionProcess();
     router.push({ path: '/log_in' });
 };
 </script>
 
 <style scoped>
 .q-item__section--avatar {
-    margin-right: -20px;
+    margin-right: -24px;
 }
 </style>
