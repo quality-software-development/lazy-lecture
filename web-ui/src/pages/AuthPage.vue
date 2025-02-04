@@ -20,9 +20,17 @@
                 <q-input
                     :rules="[(val) => !!val || 'Введите пароль']"
                     v-model="password"
-                    type="password"
+                    :type="isPassword ? 'password' : 'text'"
                     label="Пароль"
-                />
+                >
+                <template v-slot:append>
+                    <q-icon
+                        :name="isPassword ? 'visibility_off' : 'visibility'"
+                        class="cursor-pointer"
+                        @click="isPassword = !isPassword"
+                    />
+                    </template>
+                </q-input>
                 <q-btn class="q-mt-lg full-width" color="primary" type="submit"
                     >{{ props.signUp ? 'Зарегистрироваться' : 'Войти' }}
                 </q-btn>
@@ -64,6 +72,7 @@ const login = ref('');
 const password = ref('');
 const errorMsg = ref('');
 const errorCaption = ref('');
+const isPassword = ref(true);
 
 const form = useTemplateRef<QForm>('form');
 
