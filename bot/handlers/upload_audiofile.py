@@ -111,34 +111,43 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
                     # print(upload_resp.status)
                     # print(await upload_resp.text())
                     data = await upload_resp.json()
-                    task_id = data["task_id"]
-                    # {"message":"File uploaded successfully","task_id":9,"file":"object_storage/4.mp3"}
-                    if upload_resp.status == 200:
-                        # Отправляем сообщение с кнопкой по нажатию на которую отсылаем запрос на отмену обработки
-                        #                      с кнопкой по нажатию на которую будет запрос на обновление статуса
-                        # В самом сообщении будет написпан статус текстом
-                        keyboard = []
-                        buttons = []
-                        buttons.append(
-                            InlineKeyboardButton(
-                                text="Обновить статус",
-                                callback_data=f"check_status_{task_id}",
+                    # print(f"WATAFAK{data}")
+                    errorr = data.get("detail")
+                    if errorr is not None:
+                        if data["detail"].split(" ")[0] == "Transcription":
+                            print("YOU ARE LOH EBANIY. WAIT UNTIL THE QUEUED WILL BE ANTIQUEUED")
+                            await message.answer(
+                                "Невозможно обрабатывать более одного файла одновременно. Либо отмените обработку текущей транскрипции, либо дождитесь конца обработки."
                             )
-                        )
-                        buttons.append(
-                            InlineKeyboardButton(
-                                text="Отменить обработку",
-                                callback_data=f"cancel_task_{task_id}",
-                            )
-                        )
-                        keyboard.append(buttons)
-                        inline_keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard)
-                        await message.answer(
-                            "Файл поступил в обработку",
-                            reply_markup=inline_keyboard,
-                        )
                     else:
-                        await message.answer("Ошибка при загрузке файла на сервер.")
+                        task_id = data["task_id"]
+                        # {"message":"File uploaded successfully","task_id":9,"file":"object_storage/4.mp3"}
+                        if upload_resp.status == 200:
+                            # Отправляем сообщение с кнопкой по нажатию на которую отсылаем запрос на отмену обработки
+                            #                      с кнопкой по нажатию на которую будет запрос на обновление статуса
+                            # В самом сообщении будет написпан статус текстом
+                            keyboard = []
+                            buttons = []
+                            buttons.append(
+                                InlineKeyboardButton(
+                                    text="Обновить статус",
+                                    callback_data=f"check_status_{task_id}",
+                                )
+                            )
+                            buttons.append(
+                                InlineKeyboardButton(
+                                    text="Отменить обработку",
+                                    callback_data=f"cancel_task_{task_id}",
+                                )
+                            )
+                            keyboard.append(buttons)
+                            inline_keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard)
+                            await message.answer(
+                                "Файл поступил в обработку",
+                                reply_markup=inline_keyboard,
+                            )
+                        else:
+                            await message.answer("Ошибка при загрузке файла на сервер.")
             else:
                 await message.answer("Ошибка при загрузке файла.")
 
