@@ -5,20 +5,14 @@
         v-ripple
         :active="+route.params.taskId === transcription.id"
         active-class="ui-transcript-history-item-active"
-        style="height: 90px"
+        style="height: 110px"
         @click="router.push(`/transcripts/${transcription.id}`)"
     >
         <div class="row">
             <q-item-section avatar :title="hint">
                 <q-icon :name="statusIconName" :color="statusIconColor" />
             </q-item-section>
-            <q-item-section
-                v-if="
-                    transcriptStore.isTranscriptCancelling(transcription.id) &&
-                    statusIconName !== 'settings'
-                "
-                avatar
-            >
+            <q-item-section v-if="isExtraCogVisible" avatar>
                 <q-icon name="settings" color="warning" />
             </q-item-section>
             <q-item-section class="text-grey-6">{{
@@ -63,6 +57,28 @@
                 </div>
             </q-item-label>
         </q-item-section>
+
+        <div
+            v-if="+route.params.taskId === transcription.id"
+            class="text-italic text-grey-6 text-caption"
+        >
+            {{
+                `обработано ${
+                    transcription.chunks.length
+                        ? formatTimestamp(
+                              transcription.chunksDurationArray[
+                                  transcription.chunksDurationArray.length - 1
+                              ] < transcription.audioLenSecs
+                                  ? transcription.chunksDurationArray[
+                                        transcription.chunksDurationArray
+                                            .length - 1
+                                    ]
+                                  : transcription.audioLenSecs
+                          )
+                        : '00:00:00'
+                } из ${formatTimestamp(transcription.audioLenSecs)}`
+            }}
+        </div>
     </q-item>
     <q-separator />
 </template>
@@ -71,7 +87,8 @@
 import { useRoute, useRouter } from 'vue-router';
 import { TranscriptionsMapElement } from 'src/models/transcripts';
 import { date } from 'quasar';
-import { computed } from 'vue';
+import { formatTimestamp } from 'src/composables/formatTimestamp';
+import { computed, ref, watch } from 'vue';
 import { useTranscriptStore } from 'src/stores/transcriptStore';
 const transcriptStore = useTranscriptStore();
 
@@ -120,6 +137,24 @@ const hint = computed(
             'Завершено с ошибкой',
             'Отменено',
         ][props.transcription.currentState]
+);
+const cancelledWhileProcessing = ref(
+    localStorage.getItem('cancelledWhileProcessing')
+);
+const isExtraCogVisible = computed(
+    () =>
+        ((cancelledWhileProcessing.value &&
+            +cancelledWhileProcessing.value === props.transcription.id) ||
+            transcriptStore.isTranscriptCancelling(props.transcription.id)) &&
+        statusIconName.value !== 'settings'
+);
+watch(
+    () => transcriptStore.processsingTicks,
+    () => {
+        cancelledWhileProcessing.value = localStorage.getItem(
+            'cancelledWhileProcessing'
+        );
+    }
 );
 </script>
 

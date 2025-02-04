@@ -1,16 +1,5 @@
 <template>
-    <div
-        v-if="currentTranscript"
-        :class="
-            [
-                TranscriptionState.in_progress,
-                TranscriptionState.queued,
-                TranscriptionState.cancelled,
-            ].includes(currentTranscript.currentState)
-                ? 'column'
-                : ''
-        "
-    >
+    <div v-if="currentTranscript" :class="showStateIconMessage ? 'column' : ''">
         <div class="ui-transcript-page-progress-container">
             <div
                 class="ui-trancscript-page-progress-bar q-pa-lg q-pb-sm q-px-xl"
@@ -24,7 +13,8 @@
                     <rect
                         v-for="(xPos, idx) of relativeMarkPositions"
                         :class="`ui-progress-mark${
-                            isCurrentTranscriptProcessing
+                            isCurrentTranscriptProcessing ||
+                            isCurrentTranscriptCancelling
                                 ? '-processing'
                                 : '-complete'
                         }`"
@@ -38,14 +28,20 @@
                 </svg>
                 <q-linear-progress
                     size="md"
-                    :stripe="isCurrentTranscriptProcessing"
+                    :stripe="
+                        isCurrentTranscriptProcessing ||
+                        isCurrentTranscriptCancelling
+                    "
                     :value="
                         (currentTranscript.chunksDurationArray[
                             currentTranscript.chunksDurationArray.length - 1
                         ] || 0) / currentTranscript.audioLenSecs
                     "
                     :color="
-                        isCurrentTranscriptProcessing ? 'warning' : 'primary'
+                        isCurrentTranscriptProcessing ||
+                        isCurrentTranscriptCancelling
+                            ? 'warning'
+                            : 'primary'
                     "
                     animation-speed="100"
                 />
@@ -72,11 +68,7 @@
                 flat
                 square
                 color="negative"
-                @click="
-                    transcriptStore.cancelTranscriptionProcess(
-                        currentTranscript.id
-                    )
-                "
+                @click="transcriptStore.cancelTranscriptionProcess()"
             >
                 Отменить обработку
             </q-btn>
@@ -89,13 +81,7 @@
             <q-separator />
         </div>
         <div
-            v-if="
-                [
-                    TranscriptionState.in_progress,
-                    TranscriptionState.queued,
-                    TranscriptionState.cancelled,
-                ].includes(currentTranscript.currentState)
-            "
+            v-if="showStateIconMessage"
             class="column items-center self-center"
             style="position: absolute; top: 45%"
         >
@@ -106,6 +92,11 @@
                         : isCurrentTranscriptProcessing
                         ? 'settings'
                         : 'block'
+                "
+                :rotating="
+                    currentTranscript.currentState ===
+                        TranscriptionState.in_progress &&
+                    isCurrentTranscriptProcessing
                 "
             >
                 {{
@@ -284,25 +275,34 @@ const updateMarkPositions = () => {
     }
 };
 const updateTimeStampViews = () => {
+    console.time('timestamps update');
     if (currentTranscript.value) {
         for (
             let i = 0;
             i < currentTranscript.value.markXPositions.length;
             i++
         ) {
-            const markAbsoluteX = document
-                .querySelector(`rect[rect-idx="${i}"]`)
-                ?.getAttribute('x');
-            const timestampSpan = document.querySelector(
-                `span[span-idx="${i}"]`
-            ) as HTMLSpanElement;
-            timestampSpan.style.left = `${
-                +(markAbsoluteX || 0) -
-                i * +timestampSpan.getBoundingClientRect().width +
-                20
-            }px`;
+            const mark = document.querySelector(`rect[rect-idx="${i}"]`);
+            if (mark) {
+                const timestampSpan = document.querySelector(
+                    `span[span-idx="${i}"]`
+                ) as HTMLSpanElement;
+
+                timestampSpan.style.left = '';
+
+                const xDifference =
+                    mark.getBoundingClientRect().x -
+                    timestampSpan.getBoundingClientRect().x;
+
+                timestampSpan.style.left = `${
+                    (xDifference < 0 ? -1 : 1) * xDifference -
+                    (+timestampSpan.getBoundingClientRect().width - markWidth) /
+                        2
+                }px`;
+            }
         }
     }
+    console.timeEnd('timestamps update');
 };
 
 const downloadFile = (format: 'doc' | 'plain') => {
@@ -332,11 +332,29 @@ const downloadFile = (format: 'doc' | 'plain') => {
     }
 };
 
-const isCurrentTranscriptProcessing = computed(() =>
-    transcriptStore.isTranscriptProcessing(currentTranscript.value?.id)
+const cancelledWhileProcessing = ref(
+    localStorage.getItem('cancelledWhileProcessing')
 );
-const isCurrentTranscriptCancelling = computed(() =>
-    transcriptStore.isTranscriptCancelling(currentTranscript.value?.id)
+
+const isCurrentTranscriptProcessing = computed(
+    () =>
+        transcriptStore.isTranscriptProcessing(+route.params.taskId) &&
+        cancelledWhileProcessing.value !== route.params.taskId
+);
+const isCurrentTranscriptCancelling = computed(
+    () =>
+        transcriptStore.isTranscriptCancelling(+route.params.taskId) ||
+        cancelledWhileProcessing.value === route.params.taskId
+);
+const showStateIconMessage = computed(
+    () =>
+        currentTranscript.value &&
+        [
+            TranscriptionState.in_progress,
+            TranscriptionState.queued,
+            TranscriptionState.cancelled,
+        ].includes(currentTranscript.value.currentState) &&
+        !currentTranscript.value.chunks.length
 );
 
 const resizeObserver = new ResizeObserver(() => updateMarkPositions());
@@ -378,6 +396,9 @@ watch(
             transcriptStore.processingTranscriptionId &&
             +route.params.taskId === transcriptStore.processingTranscriptionId
         ) {
+            cancelledWhileProcessing.value = localStorage.getItem(
+                'cancelledWhileProcessing'
+            );
             currentTranscript.value = transcriptStore.processingTranscription!;
             relativeMarkPositions.value =
                 transcriptStore.processingTranscription!.markXPositions;

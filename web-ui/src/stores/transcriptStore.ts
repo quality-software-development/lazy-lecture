@@ -7,7 +7,7 @@ import {
     TranscriptionState,
     Transcription,
 } from 'src/models/transcripts';
-import { date } from 'quasar';
+import { formatTimestamp } from 'src/composables/formatTimestamp';
 import { ResSuccess } from 'src/models/responses';
 import { useUserInfoStore } from './userInfoStore';
 
@@ -89,15 +89,7 @@ export const useTranscriptStore = defineStore('transcripts', {
                         transcript.markXPositions = markXPositions;
 
                         const timeStampViews = [0, ...chunksDurationArray].map(
-                            (timestamp) =>
-                                date.formatDate(
-                                    new Date(
-                                        timestamp * 1000 +
-                                            new Date().getTimezoneOffset() *
-                                                60000
-                                    ),
-                                    'HH:mm:ss'
-                                )
+                            (timestamp) => formatTimestamp(timestamp)
                         );
                         timeStampViews.pop();
                         transcript.timeStampViews = timeStampViews;
@@ -136,12 +128,14 @@ export const useTranscriptStore = defineStore('transcripts', {
                 const processingTranscript = this.processingTranscription;
                 if (processingTranscript) {
                     if (
-                        ![
-                            TranscriptionState.queued,
-                            TranscriptionState.in_progress,
-                            TranscriptionState.processing_error,
-                            TranscriptionState.cancelled,
-                        ].includes(processingTranscript.currentState) ||
+                        ((!localStorage.getItem('cancelledWhileProcessing') ||
+                            processingTranscript.currentState ===
+                                TranscriptionState.completed_partially) &&
+                            ![
+                                TranscriptionState.queued,
+                                TranscriptionState.in_progress,
+                                TranscriptionState.processing_error,
+                            ].includes(processingTranscript.currentState)) ||
                         new Date().getTime() -
                             processingTranscript.updateDate.getTime() >
                             30 * 60 * 1000
@@ -157,43 +151,64 @@ export const useTranscriptStore = defineStore('transcripts', {
             this.processingTimerId = null;
             this.isProcessing = false;
             this.isCancelling = false;
+            localStorage.removeItem('cancelledWhileProcessing');
             this.processsingTicks = 0;
             setTimeout(() => (this.processingTranscriptionId = null));
         },
 
         checkProcessingTranscription() {
             if (!this.isProcessing) {
-                for (const transcription of this.transcriptsMap.values()) {
-                    if (
-                        transcription.currentState ===
-                            TranscriptionState.in_progress &&
-                        new Date().getTime() -
-                            transcription.updateDate.getTime() <
-                            30 * 60 * 1000
-                    ) {
-                        this.watchTranscriptionProcess(transcription.id);
-                        return transcription.id;
+                const cancelledWhileProcessing = localStorage.getItem(
+                    'cancelledWhileProcessing'
+                );
+                if (cancelledWhileProcessing) {
+                    this.watchTranscriptionProcess(+cancelledWhileProcessing);
+                    return +cancelledWhileProcessing;
+                } else {
+                    for (const transcription of this.transcriptsMap.values()) {
+                        if (
+                            [
+                                TranscriptionState.queued,
+                                TranscriptionState.in_progress,
+                            ].includes(transcription.currentState) &&
+                            new Date().getTime() -
+                                transcription.updateDate.getTime() <
+                                30 * 60 * 1000
+                        ) {
+                            this.watchTranscriptionProcess(transcription.id);
+                            return transcription.id;
+                        }
                     }
                 }
             }
         },
 
-        async cancelTranscriptionProcess(taskId?: number) {
-            const id = taskId || this.processingTranscriptionId;
-            if (id) {
+        async cancelTranscriptionProcess() {
+            if (
+                this.processingTranscription &&
+                this.processingTranscriptionId
+            ) {
                 const res = await TranscriptionsApi.cancelTranscriptionProcess(
-                    id
+                    this.processingTranscriptionId
                 );
                 if (res.successful) {
-                    if (id === this.processingTranscriptionId) {
-                        this.isCancelling = true;
-                    } else {
-                        const transcript = this.transcriptsMap.get(id);
-                        if (transcript) {
-                            transcript.currentState =
-                                TranscriptionState.cancelled;
-                        }
+                    if (
+                        this.processingTranscription.currentState ===
+                        TranscriptionState.in_progress
+                    ) {
+                        localStorage.setItem(
+                            'cancelledWhileProcessing',
+                            `${this.processingTranscriptionId}`
+                        );
+                    } else if (
+                        this.processingTranscription.currentState ===
+                        TranscriptionState.queued
+                    ) {
+                        this.processingTranscription.currentState =
+                            TranscriptionState.cancelled;
+                        return;
                     }
+                    this.isCancelling = true;
                 }
             }
         },

@@ -30,7 +30,12 @@ export default route(function (/* { store, ssrContext } */) {
             if (to.hash) {
                 return {
                     el: to.hash,
-                    top: 182,
+                    top:
+                        (+(
+                            document.querySelector(
+                                '.ui-transcript-page-progress-container'
+                            ) as HTMLElement
+                        )?.clientHeight || 0) + 92,
                     behavior: 'smooth',
                 };
             }

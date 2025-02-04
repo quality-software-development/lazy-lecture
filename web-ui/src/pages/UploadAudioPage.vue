@@ -16,9 +16,7 @@
             ]"
             accept=".mp3"
             field-name="audiofile"
-            max-file-size="209715200"
             @added="handleAudioAdd"
-            @removed="hintText = hintBeforeAdd"
             @uploaded="handleAudioUpload"
         />
     </q-page>
@@ -28,8 +26,8 @@
         "
         class="fit column items-center justify-center"
     >
-        <IconMessageItem icon="settings">
-            Идёт обработка аудио...
+        <IconMessageItem :rotating="true" icon="settings">
+            Нельзя загрузить - идёт обработка аудио.
         </IconMessageItem>
     </q-page>
     <q-page v-else class="fit column items-center justify-center">
@@ -92,10 +90,24 @@ const handleAudioAdd = (files: readonly any[]) => {
                     actions: [{ icon: 'close', color: 'white', round: true }],
                 });
             }
-            uploader.value?.removeFile(files[0]);
+            uploader.value?.reset();
+            hintText.value = hintBeforeAdd;
+            return;
         }
     };
     audio.src = URL.createObjectURL(files[0]);
+    if (files[0].size > 200 * 1024 * 1024) {
+        $q.notify({
+            type: 'negative',
+            icon: 'error',
+            position: 'bottom-right',
+            message: 'Размер аудио должен быть меньше 200 Мбайт.',
+            actions: [{ icon: 'close', color: 'white', round: true }],
+        });
+        uploader.value?.reset();
+        hintText.value = hintBeforeAdd;
+        return;
+    }
 
     hintText.value = hintAfterAdd;
     setTimeout(() => {
