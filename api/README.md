@@ -6,24 +6,29 @@ FastAPI, Postgres, Sqlalchemy, Pydantic v2, Docker
 API example with JWT Authentication.
 
 ### Requirements:
-
 ```
 docker
+```
+-   В директории проекта выполнить:
+
+``` bash
+docker-compose up -d api
 ```
 
 ### Run:
 
-```
+```bash
 cp config/.env.example config/.env
 docker compose up --build
 ```
 
 ### Docs:
 
-```
-OpenAPI: http://localhost:8000/docs
+
+OpenAPI: [спецификация API](http://localhost:8000/docs)
+
 Postman: postman_collection.json in the project root.
-```
+
 
 ### Endpoints:
 
@@ -43,9 +48,11 @@ GET    /                                 # health check
 
 ### Example Requests/Responses:
 
+- Авторизация
 #### Request:
+
 ```http request
-POST /auth/token
+POST /auth/login
 
 Body:
 {
@@ -85,6 +92,7 @@ Authorization: Bearer <access_token_string>
 }
 ```
 
+- Обновление сессии
 #### Request:
 ```http request
 POST /auth/refresh
@@ -127,7 +135,7 @@ POST /auth/refresh
 
 ### Migration:
 
-```
+``` bash
 docker exec api alembic revision --autogenerate -m "description"
 docker exec api alembic upgrade head
 ```
