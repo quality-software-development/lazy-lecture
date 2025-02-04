@@ -183,29 +183,26 @@ export const useTranscriptStore = defineStore('transcripts', {
             }
         },
 
-        async cancelTranscriptionProcess() {
-            if (
-                this.processingTranscription &&
-                this.processingTranscriptionId
-            ) {
+        async cancelTranscriptionProcess(taskId?: number) {
+            const id = taskId || this.processingTranscriptionId;
+            if (id) {
                 const res = await TranscriptionsApi.cancelTranscriptionProcess(
-                    this.processingTranscriptionId
+                    id
                 );
                 if (res.successful) {
+                    const transcript = this.transcriptsMap.get(id);
                     if (
-                        this.processingTranscription.currentState ===
+                        transcript?.currentState ===
                         TranscriptionState.in_progress
                     ) {
                         localStorage.setItem(
                             'cancelledWhileProcessing',
-                            `${this.processingTranscriptionId}`
+                            `${id}`
                         );
                     } else if (
-                        this.processingTranscription.currentState ===
-                        TranscriptionState.queued
+                        transcript?.currentState === TranscriptionState.queued
                     ) {
-                        this.processingTranscription.currentState =
-                            TranscriptionState.cancelled;
+                        transcript.currentState = TranscriptionState.cancelled;
                         return;
                     }
                     this.isCancelling = true;

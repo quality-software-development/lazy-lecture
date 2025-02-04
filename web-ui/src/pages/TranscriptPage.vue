@@ -68,7 +68,11 @@
                 flat
                 square
                 color="negative"
-                @click="transcriptStore.cancelTranscriptionProcess()"
+                @click="
+                    transcriptStore.cancelTranscriptionProcess(
+                        currentTranscript.id
+                    )
+                "
             >
                 Отменить обработку
             </q-btn>
