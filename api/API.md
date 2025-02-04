@@ -25,7 +25,7 @@ headingLevel: 2
 
 # Authentication
 
-- HTTP Authentication, scheme: bearer 
+- HTTP Authentication, scheme: bearer
 
 <h1 id="fastapi-jwt-auth-api-auth">auth</h1>
 
@@ -3102,4 +3102,3 @@ continued
 |---|---|---|---|---|
 |msg|string|true|none|none|
 |type|string|true|none|none|
-
