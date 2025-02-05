@@ -5,6 +5,7 @@ from pathlib import Path
 import time
 
 import pika.channel
+from pika.exceptions import AMQPConnectionError
 
 from .settings import object_storage_config
 from .transcribe import transcribe_audio_file
@@ -131,11 +132,10 @@ def process_transcription_job_messages(ch: pika.channel.Channel, method, body):
             # the file has been processed and therefore
             # not to be stored on our servers
             os.remove(user_audio_path)
-        try:
-            # TODO: fix the error by moving workload to the separate thread
-            ack(ch, method.delivery_tag)
-        except:
-            print("[x] W: Disconnected from rabbitmq due to healthcheck not sending during heavy processing")
+        ack(ch, method.delivery_tag)
+    except AMQPConnectionError as e:
+        print("[x] W: Disconnected from rabbitmq due to healthcheck not sending during heavy processing")
+        raise e
     except:
         print(f"[x] Processing Error!\n{traceback.format_exc()}")
         update_transcription_state(
