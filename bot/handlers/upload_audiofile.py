@@ -117,7 +117,6 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
                     errorr = data.get("detail")
                     if errorr is not None:
                         if data["detail"].split(" ")[0] == "Transcription":
-                            print("YOU ARE LOH EBANIY. WAIT UNTIL THE QUEUED WILL BE ANTIQUEUED")
                             await message.answer(
                                 "Невозможно обрабатывать более одного файла одновременно. Либо отмените обработку текущей транскрипции, либо дождитесь конца обработки."
                             )
