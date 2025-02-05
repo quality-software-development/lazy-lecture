@@ -1,7 +1,6 @@
 import os
 import typing as tp
 from dataclasses import dataclass
-import torch
 
 
 @dataclass(frozen=True)
