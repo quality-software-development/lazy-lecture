@@ -71,13 +71,15 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
     if audio is None or audio.mime_type.split("+")[-1] != "audio/mpeg":  # type: ignore
         await message.answer("Мы не получили .mp3 Файла. Присылайте только .mp3 файлы.")
         return
+    if audio.duration < 10 or audio.duration > 2 * 60 * 60:
+        await message.answer("Аудиозапись должна длиться от 10 секунд до 2 часов.")
+        return
     file_size_mb = int(audio.file_size * 1e-6)  # type: ignore
     if file_size_mb > 200:
         await message.answer(
             f"Файл слишком большой. Он весит {file_size_mb} Мб, а мы можем обработать только файлы размером до 200 Мб"
         )
         return
-
     file_id = audio.file_id
     file = await bot.get_file(file_id)
     file_path = file.file_path
@@ -111,34 +113,42 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
                     # print(upload_resp.status)
                     # print(await upload_resp.text())
                     data = await upload_resp.json()
-                    task_id = data["task_id"]
-                    # {"message":"File uploaded successfully","task_id":9,"file":"object_storage/4.mp3"}
-                    if upload_resp.status == 200:
-                        # Отправляем сообщение с кнопкой по нажатию на которую отсылаем запрос на отмену обработки
-                        #                      с кнопкой по нажатию на которую будет запрос на обновление статуса
-                        # В самом сообщении будет написпан статус текстом
-                        keyboard = []
-                        buttons = []
-                        buttons.append(
-                            InlineKeyboardButton(
-                                text="Обновить статус",
-                                callback_data=f"check_status_{task_id}",
+                    # print(f"WATAFAK{data}")
+                    errorr = data.get("detail")
+                    if errorr is not None:
+                        if data["detail"].split(" ")[0] == "Transcription":
+                            await message.answer(
+                                "Невозможно обрабатывать более одного файла одновременно. Либо отмените обработку текущей транскрипции, либо дождитесь конца обработки."
                             )
-                        )
-                        buttons.append(
-                            InlineKeyboardButton(
-                                text="Отменить обработку",
-                                callback_data=f"cancel_task_{task_id}",
-                            )
-                        )
-                        keyboard.append(buttons)
-                        inline_keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard)
-                        await message.answer(
-                            "Файл поступил в обработку",
-                            reply_markup=inline_keyboard,
-                        )
                     else:
-                        await message.answer("Ошибка при загрузке файла на сервер.")
+                        task_id = data["task_id"]
+                        # {"message":"File uploaded successfully","task_id":9,"file":"object_storage/4.mp3"}
+                        if upload_resp.status == 200:
+                            # Отправляем сообщение с кнопкой по нажатию на которую отсылаем запрос на отмену обработки
+                            #                      с кнопкой по нажатию на которую будет запрос на обновление статуса
+                            # В самом сообщении будет написпан статус текстом
+                            keyboard = []
+                            buttons = []
+                            buttons.append(
+                                InlineKeyboardButton(
+                                    text="Обновить статус",
+                                    callback_data=f"check_status_{task_id}",
+                                )
+                            )
+                            buttons.append(
+                                InlineKeyboardButton(
+                                    text="Отменить обработку",
+                                    callback_data=f"cancel_task_{task_id}",
+                                )
+                            )
+                            keyboard.append(buttons)
+                            inline_keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard)
+                            await message.answer(
+                                "Файл поступил в обработку",
+                                reply_markup=inline_keyboard,
+                            )
+                        else:
+                            await message.answer("Ошибка при загрузке файла на сервер.")
             else:
                 await message.answer("Ошибка при загрузке файла.")
 
