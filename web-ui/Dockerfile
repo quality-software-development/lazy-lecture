@@ -1,12 +1,13 @@
 FROM node:20.11.0 AS build
 
-ARG API_URL
-ENV VITE_API_URL=$API_URL
-
 WORKDIR /web-ui
 COPY package.json package-lock.json ./
 RUN npm i
 COPY . ./
+
+ARG API_URL
+ENV VITE_API_URL=$API_URL
+
 RUN npx quasar build
 
 FROM nginx:alpine
