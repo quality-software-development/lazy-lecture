@@ -63,8 +63,6 @@ services:
         API_URL: http://localhost:8000
     ports:
       - 9000:80
-    environment:
-      - NODE_ENV=production
 
   api:
     container_name: api
