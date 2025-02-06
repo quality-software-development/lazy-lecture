@@ -56,9 +56,11 @@ services:
           memory: 1Gb
 
   web-ui:
-    build: web-ui
-    expose:
-      - 9000
+    build:
+      context: ./web-ui
+      dockerfile: ./Dockerfile
+      args:
+        API_URL: http://localhost:8000
     ports:
       - 9000:80
     environment:
