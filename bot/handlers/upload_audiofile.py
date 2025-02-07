@@ -75,10 +75,8 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
         await message.answer("Аудиозапись должна длиться от 10 секунд до 2 часов.")
         return
     file_size_mb = int(audio.file_size * 1e-6)  # type: ignore
-    if file_size_mb > 200:
-        await message.answer(
-            f"Файл слишком большой. Он весит {file_size_mb} Мб, а мы можем обработать только файлы размером до 200 Мб"
-        )
+    if file_size_mb > 20:
+        await message.answer(f"Чтобы загружать файлы больше 20 мегабайт переходите на сайт Lazy Lecture.")
         return
     file_id = audio.file_id
     file = await bot.get_file(file_id)
