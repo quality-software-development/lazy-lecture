@@ -16,7 +16,9 @@
                             isCurrentTranscriptProcessing ||
                             isCurrentTranscriptCancelling
                                 ? '-processing'
-                                : '-complete'
+                                : currentTranscript.chunks[idx].text
+                                ? '-complete'
+                                : '-empty'
                         }`"
                         :rect-idx="idx"
                         :key="idx"
@@ -48,7 +50,9 @@
             </div>
             <div class="row q-mb-sm">
                 <span
-                    class="ui-transcript-page-progress-timestamp"
+                    :class="`ui-transcript-page-progress-timestamp${
+                        currentTranscript.chunks[idx].text ? '' : ' empty'
+                    }`"
                     v-for="(
                         chunkTimeStamp, idx
                     ) of currentTranscript.timeStampViews"
@@ -128,6 +132,26 @@
                     : 134
             }px; width: 56px; position: sticky`"
         >
+            <div class="q-py-md" flat square style="width: 56px">
+                {{
+                    (
+                        ((currentTranscript.chunksDurationArray?.length
+                            ? currentTranscript.chunksDurationArray[
+                                  currentTranscript.chunksDurationArray.length -
+                                      1
+                              ] > currentTranscript.audioLenSecs
+                                ? currentTranscript.audioLenSecs
+                                : currentTranscript.chunksDurationArray[
+                                      currentTranscript.chunksDurationArray
+                                          .length - 1
+                                  ]
+                            : 0) /
+                            currentTranscript.audioLenSecs) *
+                        100
+                    ).toFixed(1)
+                }}%
+            </div>
+            <q-separator inset />
             <q-btn
                 class="q-pa-md"
                 flat
@@ -139,7 +163,10 @@
             />
             <q-separator inset />
             <q-btn
-                :disable="!currentTranscript?.chunks.length"
+                :disable="
+                    !currentTranscript?.chunks.length ||
+                    !currentTranscript.chunks.find((chunk) => chunk.text)
+                "
                 class="q-pa-md"
                 flat
                 square
@@ -162,7 +189,10 @@
             </q-btn>
             <q-separator inset />
             <q-btn
-                :disable="!currentTranscript?.chunks.length"
+                :disable="
+                    !currentTranscript?.chunks.length ||
+                    !currentTranscript.chunks.find((chunk) => chunk.text)
+                "
                 class="q-pa-md"
                 flat
                 square
@@ -191,17 +221,19 @@
             class="q-pt-xl q-pl-xl"
             style="padding-right: 60px"
         >
-            <div
-                class="ui-transcript-page-text-timestamp text-h5"
-                :id="`chunk-${idx + 1}`"
-                @click="handleAnchorClick(idx)"
-            >
-                {{ timeStampView }}
+            <div v-if="currentTranscript.chunks[idx].text">
+                <div
+                    class="ui-transcript-page-text-timestamp text-h5"
+                    :id="`chunk-${idx + 1}`"
+                    @click="handleAnchorClick(idx)"
+                >
+                    {{ timeStampView }}
+                </div>
+                <p class="q-mb-lg">
+                    {{ currentTranscript.chunks[idx].text }}
+                </p>
+                <q-separator />
             </div>
-            <p class="q-mb-lg">
-                {{ currentTranscript.chunks[idx].text }}
-            </p>
-            <q-separator />
         </div>
     </div>
     <q-page v-else class="fit column items-center justify-center">
@@ -243,7 +275,9 @@ const progressMarksSvg = useTemplateRef<SVGSVGElement>('marks');
 const relativeMarkPositions = ref(currentTranscript.value?.markXPositions);
 
 const handleMarkClick = (idx: number) => {
-    router.push({ name: 'transcriptPage', hash: `#chunk-${idx + 1}` });
+    if (currentTranscript.value?.chunks[idx].text) {
+        router.push({ name: 'transcriptPage', hash: `#chunk-${idx + 1}` });
+    }
 };
 const handleAnchorClick = async (idx: number) => {
     handleMarkClick(idx);
@@ -279,7 +313,6 @@ const updateMarkPositions = () => {
     }
 };
 const updateTimeStampViews = () => {
-    console.time('timestamps update');
     if (currentTranscript.value) {
         for (
             let i = 0;
@@ -306,7 +339,6 @@ const updateTimeStampViews = () => {
             }
         }
     }
-    console.timeEnd('timestamps update');
 };
 
 const downloadFile = (format: 'doc' | 'plain') => {
@@ -327,7 +359,7 @@ const downloadFile = (format: 'doc' | 'plain') => {
             element.setAttribute(
                 'download',
                 `Транскрипция №${currentTranscript.value.id}${
-                    format === 'plain' ? '' : `.${format}`
+                    format === 'plain' ? '.txt' : `.${format}`
                 }`
             );
             element.click();
@@ -425,6 +457,7 @@ watch(
 .ui-trancscript-page-progress-bar-marks {
     position: absolute;
     rect {
+        cursor: pointer;
         &.ui-progress-mark {
             &-processing {
                 fill: $warning;
@@ -432,13 +465,20 @@ watch(
             &-complete {
                 fill: $primary;
             }
+            &-empty {
+                fill: lightgray;
+                cursor: default;
+            }
         }
-        cursor: pointer;
     }
 }
 .ui-transcript-page-progress-timestamp {
     position: relative;
     cursor: pointer;
+    &.empty {
+        color: lightgray;
+        cursor: default;
+    }
 }
 .ui-transcript-page-text-timestamp {
     cursor: pointer;

@@ -23,12 +23,12 @@
                     :type="isPassword ? 'password' : 'text'"
                     label="Пароль"
                 >
-                <template v-slot:append>
-                    <q-icon
-                        :name="isPassword ? 'visibility_off' : 'visibility'"
-                        class="cursor-pointer"
-                        @click="isPassword = !isPassword"
-                    />
+                    <template v-slot:append>
+                        <q-icon
+                            :name="isPassword ? 'visibility_off' : 'visibility'"
+                            class="cursor-pointer"
+                            @click="isPassword = !isPassword"
+                        />
                     </template>
                 </q-input>
                 <q-btn class="q-mt-lg full-width" color="primary" type="submit"
@@ -86,6 +86,7 @@ const submitHandler = async () => {
         const signUpRes = await AuthApi.signUp(login.value, password.value);
         if (!signUpRes?.successful) {
             setErrors(signUpRes as ResError);
+            return;
         }
     }
     const logInRes = await AuthApi.logIn(login.value, password.value);
