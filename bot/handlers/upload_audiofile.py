@@ -76,9 +76,7 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
         return
     file_size_mb = int(audio.file_size * 1e-6)  # type: ignore
     if file_size_mb > 20:
-        await message.answer(
-            f"Чтобы загружать файлы больше 20 мегабайт переходите на сайт Lazy Lecture."
-        )
+        await message.answer(f"Чтобы загружать файлы больше 20 мегабайт переходите на сайт Lazy Lecture.")
         return
     file_id = audio.file_id
     file = await bot.get_file(file_id)
@@ -86,9 +84,7 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
 
     # Download the file
     async with aiohttp.ClientSession() as session:
-        async with session.get(
-            f"https://api.telegram.org/file/bot{bot.token}/{file_path}"
-        ) as resp:
+        async with session.get(f"https://api.telegram.org/file/bot{bot.token}/{file_path}") as resp:
             if resp.status == 200:
                 user = message.from_user
                 user_id = user.id  # type: ignore
@@ -111,9 +107,7 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
                     content_type="audio/mpeg",
                 )
                 # Send the file to the server
-                async with session.post(
-                    f"{API_BASE_URL}/upload-audiofile", data=form, headers=headers
-                ) as upload_resp:
+                async with session.post(f"{API_BASE_URL}/upload-audiofile", data=form, headers=headers) as upload_resp:
                     # print(upload_resp.status)
                     # print(await upload_resp.text())
                     data = await upload_resp.json()
@@ -121,9 +115,7 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
                     errorr = data.get("detail")
                     if errorr is not None:
                         if data["detail"].split(" ")[0] == "Transcription":
-                            print(
-                                "YOU ARE LOH EBANIY. WAIT UNTIL THE QUEUED WILL BE ANTIQUEUED"
-                            )
+                            print("YOU ARE LOH EBANIY. WAIT UNTIL THE QUEUED WILL BE ANTIQUEUED")
                             await message.answer(
                                 "Невозможно обрабатывать более одного файла одновременно. Либо отмените обработку текущей транскрипции, либо дождитесь конца обработки."
                             )
@@ -149,9 +141,7 @@ async def get_file(message: Message, state: FSMContext, bot: Bot) -> None:
                                 )
                             )
                             keyboard.append(buttons)
-                            inline_keyboard = InlineKeyboardMarkup(
-                                inline_keyboard=keyboard
-                            )
+                            inline_keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard)
                             await message.answer(
                                 "Файл поступил в обработку",
                                 reply_markup=inline_keyboard,
