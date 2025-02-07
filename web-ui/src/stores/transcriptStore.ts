@@ -141,6 +141,7 @@ export const useTranscriptStore = defineStore('transcripts', {
                             30 * 60 * 1000
                     ) {
                         this.unwatchTranscriptionProcess();
+                        localStorage.removeItem('cancelledWhileProcessing');
                     }
                 }
             }, 2000);
@@ -151,7 +152,6 @@ export const useTranscriptStore = defineStore('transcripts', {
             this.processingTimerId = null;
             this.isProcessing = false;
             this.isCancelling = false;
-            localStorage.removeItem('cancelledWhileProcessing');
             this.processsingTicks = 0;
             setTimeout(() => (this.processingTranscriptionId = null));
         },
