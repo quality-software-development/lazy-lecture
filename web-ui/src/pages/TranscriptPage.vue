@@ -163,7 +163,10 @@
             />
             <q-separator inset />
             <q-btn
-                :disable="!currentTranscript?.chunks.length"
+                :disable="
+                    !currentTranscript?.chunks.length ||
+                    !currentTranscript.chunks.find((chunk) => chunk.text)
+                "
                 class="q-pa-md"
                 flat
                 square
@@ -186,7 +189,10 @@
             </q-btn>
             <q-separator inset />
             <q-btn
-                :disable="!currentTranscript?.chunks.length"
+                :disable="
+                    !currentTranscript?.chunks.length ||
+                    !currentTranscript.chunks.find((chunk) => chunk.text)
+                "
                 class="q-pa-md"
                 flat
                 square
