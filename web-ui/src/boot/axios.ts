@@ -15,7 +15,7 @@ declare module '@vue/runtime-core' {
 // "export default () => {}" function below (which runs individually
 // for each client)
 const api = axios.create({
-    baseURL: 'http://localhost:8000',
+    baseURL: import.meta.env.VITE_API_URL,
 });
 api.interceptors.request.use((config) => {
     const accessToken = localStorage.getItem('accessToken');
