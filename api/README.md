@@ -22,6 +22,12 @@ cp config/.env.example config/.env
 docker compose up --build
 ```
 
+### Run tests with coverage
+
+```bash
+docker compose run --build api pytest --cov=source
+```
+
 ### Docs:
 
 

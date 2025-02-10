@@ -47,4 +47,4 @@ async def validation_exception_handler(request: Request, exc: Exception):
 
 @app.get("/", response_model=HealthSchema, tags=["health"])
 async def health_check(db: AsyncSession = Depends(get_db)):
-    return {"api": True, "database": await database_health(db=db)}
+    return HealthSchema(api=True, database=await database_health(db=db))
