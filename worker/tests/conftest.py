@@ -1,10 +1,8 @@
-import typing as tp
 from pathlib import Path
 import random
 import shutil
 
 import pytest
-import pika
 import whisper
 
 from worker.settings import worker_config, object_storage_config
@@ -34,13 +32,6 @@ def clean_queue():
 @pytest.fixture()
 def sample_transcription_file_path():
     fpath = "sample_ru_120s.mp3"
-    assert Path(fpath).exists(), fpath
-    return fpath
-
-
-@pytest.fixture()
-def long_sample_transcription_file_path():
-    fpath = "sample_ru_long.mp3"
     assert Path(fpath).exists(), fpath
     return fpath
 

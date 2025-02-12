@@ -1,9 +1,11 @@
 import json
 import random
+import pytest
 
 from worker.task_queue import send_transcription_job_to_queue
 
 
+@pytest.mark.integration
 def test_send_receive_hello_world(clean_queue):
     connection, channel, queue = clean_queue
     body_sent = "Hello World!"
@@ -17,6 +19,7 @@ def test_send_receive_hello_world(clean_queue):
     assert body_received == body_sent, f"{body_received=} != {body_sent=}"
 
 
+@pytest.mark.integration
 def test_send_receive_single_job(clean_queue):
     connection, channel, queue = clean_queue
     job_sent = send_transcription_job_to_queue(

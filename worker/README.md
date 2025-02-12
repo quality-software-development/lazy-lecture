@@ -2,7 +2,8 @@
 
 Ядро системы обработки аудиозаписи
 
-Используем для транскрипции [Wisper](https://github.com/openai/whisper) от OpenAI
+Используем для транскрипции [Whisper](https://github.com/openai/whisper) от OpenAI
+
 ## Запуск
 
 Понадобится Docker.
@@ -11,6 +12,12 @@
 
 ```bsah
 $ docker-compose up -d worker
+```
+
+## Запуск модульных тестов с Coverage
+
+```bash
+docker compose run -it --build worker python -m pytest -m unit --cov=worker
 ```
 
 ## Параметры

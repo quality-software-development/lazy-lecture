@@ -10,6 +10,7 @@ from worker.worker_callback import process_transcription_job_messages
 
 
 @pytest.mark.ml
+@pytest.mark.integration
 def test_worker_callback(
     queue_with_single_task: tp.Tuple[pika.adapters.BlockingConnection, pika.channel.Channel, str, dict]
 ):
@@ -30,6 +31,7 @@ def test_worker_callback(
 
 
 @pytest.mark.ml
+@pytest.mark.integration
 def test_worker_callback_on_long(
     queue_with_single_long_task: tp.Tuple[pika.adapters.BlockingConnection, pika.channel.Channel, str, dict]
 ):
