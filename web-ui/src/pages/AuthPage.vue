@@ -4,7 +4,7 @@
             class="q-py-xl q-mx-lg column items-center justify-evenly"
             style="height: 500px; width: 500px"
         >
-            <div class="text-h3">
+            <div class="text-h3" data-test="ui-testing-auth-page-header">
                 {{ props.signUp ? 'Регистрация' : 'Вход' }}
             </div>
             <q-form

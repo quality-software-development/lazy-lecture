@@ -26,4 +26,10 @@
     ```
     $ npm run test:unit:ui
     ```
-    Перейти по адресу: http://localhost:51204/\_\_vitest__/#/
+    затем перейти по адресу: http://localhost:51204/\_\_vitest__/#/
+
+-   для расчета покрытия кода тестами:
+    ```
+    $ npm run test:unit:coverage
+    ```
+    затем ознакомиться с расчетами в консоли либо открыть в браузере файл `web-ui/coverage/index.html`
