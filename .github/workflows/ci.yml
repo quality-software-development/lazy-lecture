@@ -1,0 +1,113 @@
+name: Lazy Lecture CI
+
+on:
+  push:
+    branches:
+      - feature/ci_cd_integration
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: self-hosted  # Используем self-hosted runner для выполнения на сервере
+
+    services:
+      rabbitmq:
+        image: rabbitmq:3.8
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      # Установка зависимостей для worker
+      - name: Install Python dependencies for worker
+        run: |
+          pip install -r worker/requirements.txt
+
+      # Установка зависимостей для bot
+      - name: Install Python dependencies for bot
+        run: |
+          pip install -r bot/requirements.txt
+
+      # Установка зависимостей для API
+      - name: Install Python dependencies for API
+        run: |
+          pip install -r api/config/requirements.txt
+
+      # Установка зависимостей для web-ui
+      - name: Install Node.js dependencies for web-ui
+        run: |
+          cd web-ui
+          npm install
+
+      # Запуск тестов для worker
+      - name: Run Python tests for worker
+        run: |
+          pytest --cov=worker --cov-report=xml
+
+      # Запуск тестов для bot
+      - name: Run Python tests for bot
+        run: |
+          cd bot
+          pytest --cov=bot --cov-report=xml:bot_coverage.xml
+
+      # Запуск тестов для API
+      - name: Run API tests with Docker
+        run: |
+          cd api
+          docker compose up -d
+          docker compose run --build api pytest --cov=source --cov-report=xml:api_coverage.xml
+          docker compose down
+
+      # Запуск тестов для web-ui
+      - name: Run web-ui tests
+        run: |
+          cd web-ui
+          npm run test:unit:ci
+          npm run test:unit:coverage
+
+      # Отправка отчетов о покрытии кода в SonarQube
+      - name: Upload combined coverage to SonarQube
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          pip install sonar-scanner
+          sonar-scanner \
+            -Dsonar.projectKey=lazy-lecture \
+            -Dsonar.sources=worker,web-ui/src,bot,api/source \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.python.coverage.reportPaths=coverage.xml,bot_coverage.xml,api_coverage.xml \
+            -Dsonar.javascript.lcov.reportPaths=web-ui/coverage/lcov.info
