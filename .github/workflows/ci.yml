@@ -3,14 +3,46 @@ name: Lazy Lecture CI
 on:
   push:
     branches:
-      - feature/ci_cd_integration
+      - main
   pull_request:
     branches:
       - main
 
 jobs:
-  test:
-    runs-on: self-hosted  # Используем self-hosted runner для выполнения на сервере
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies for worker
+        run: pip install -r worker/requirements.txt
+
+      - name: Install dependencies for bot
+        run: pip install -r bot/requirements.txt
+
+      - name: Install dependencies for api
+        run: pip install -r api/config/requirements.txt
+
+      - name: Install dependencies for web-ui
+        run: |
+          cd web-ui
+          npm install
+
+  tests_worker:
+    needs: build
+    runs-on: self-hosted
 
     services:
       rabbitmq:
@@ -23,6 +55,27 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run tests for worker
+        run: |
+          pytest --cov=worker --cov-report=xml
+
+      - name: Upload worker coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-worker
+          path: coverage.xml
+
+  tests_parallel:
+    needs: tests_worker
+    runs-on: self-hosted
+    strategy:
+      matrix:
+        component: [api, web-ui, bot]
+    services:
       postgres:
         image: postgres:13
         env:
@@ -41,65 +94,45 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Run tests for ${{ matrix.component }}
+        run: |
+          if [ "${{ matrix.component }}" == "api" ]; then
+            cd api
+            docker compose up -d
+            docker compose run --build api pytest --cov=source --cov-report=xml:api_coverage.xml
+            docker compose down
+          elif [ "${{ matrix.component }}" == "web-ui" ]; then
+            cd web-ui
+            npm run test:unit:ci
+            npm run test:unit:coverage
+          elif [ "${{ matrix.component }}" == "bot" ]; then
+            cd bot
+            pytest --cov=bot --cov-report=xml:bot_coverage.xml
+          fi
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
         with:
-          python-version: 3.9
+          name: coverage-${{ matrix.component }}
+          path: |
+            api_coverage.xml
+            web-ui/coverage/lcov.info
+            bot_coverage.xml
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+  analyze:
+    needs: [tests_worker, tests_parallel]
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download all coverage reports
+        uses: actions/download-artifact@v3
         with:
-          node-version: 20
+          path: coverage_reports
 
-      # Установка зависимостей для worker
-      - name: Install Python dependencies for worker
-        run: |
-          pip install -r worker/requirements.txt
-
-      # Установка зависимостей для bot
-      - name: Install Python dependencies for bot
-        run: |
-          pip install -r bot/requirements.txt
-
-      # Установка зависимостей для API
-      - name: Install Python dependencies for API
-        run: |
-          pip install -r api/config/requirements.txt
-
-      # Установка зависимостей для web-ui
-      - name: Install Node.js dependencies for web-ui
-        run: |
-          cd web-ui
-          npm install
-
-      # Запуск тестов для worker
-      - name: Run Python tests for worker
-        run: |
-          pytest --cov=worker --cov-report=xml
-
-      # Запуск тестов для bot
-      - name: Run Python tests for bot
-        run: |
-          cd bot
-          pytest --cov=bot --cov-report=xml:bot_coverage.xml
-
-      # Запуск тестов для API
-      - name: Run API tests with Docker
-        run: |
-          cd api
-          docker compose up -d
-          docker compose run --build api pytest --cov=source --cov-report=xml:api_coverage.xml
-          docker compose down
-
-      # Запуск тестов для web-ui
-      - name: Run web-ui tests
-        run: |
-          cd web-ui
-          npm run test:unit:ci
-          npm run test:unit:coverage
-
-      # Отправка отчетов о покрытии кода в SonarQube
-      - name: Upload combined coverage to SonarQube
+      - name: Upload coverage to SonarQube
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
@@ -109,5 +142,5 @@ jobs:
             -Dsonar.sources=worker,web-ui/src,bot,api/source \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.python.coverage.reportPaths=coverage.xml,bot_coverage.xml,api_coverage.xml \
-            -Dsonar.javascript.lcov.reportPaths=web-ui/coverage/lcov.info
+            -Dsonar.python.coverage.reportPaths=coverage_reports/coverage-worker/coverage.xml,coverage_reports/coverage-api/api_coverage.xml,coverage_reports/coverage-bot/bot_coverage.xml \
+            -Dsonar.javascript.lcov.reportPaths=coverage_reports/coverage-web-ui/web-ui/coverage/lcov.info
