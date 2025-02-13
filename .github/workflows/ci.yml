@@ -60,9 +60,6 @@ jobs:
         run: |
           kubectl port-forward svc/rabbitmq 5672:5672 --namespace=my-namespace &
 
-      - name: Install dependencies for worker
-        run: pip install -r worker/requirements.txt
-
       - name: Run tests for worker
         run: pytest --rootdir=$PWD --cov=worker --cov-report=xml
 
