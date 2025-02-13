@@ -55,7 +55,145 @@ jobs:
           kubectl port-forward svc/rabbitmq 5672:5672 --namespace=my-namespace &
 
       - name: Checkout code
+        uses: actions/checkout@v3name: Lazy Lecture CI
+
+on:
+  push:
+    branches:
+      - main
+      - feature/ci_cd_integration
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Upgrade pip, setuptools, wheel
+        run: python -m pip install --upgrade pip setuptools wheel
+
+      - name: Install dependencies for all components
+        run: |
+          pip install -r worker/requirements.txt
+          pip install -r bot/requirements.txt
+          pip install -r api/config/requirements.txt
+
+      - name: Install dependencies for web-ui
+        run: |
+          cd web-ui
+          npm install
+
+  tests_worker:
+    needs: build
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
+
+      - name: Check if RabbitMQ is running
+        run: |
+          kubectl get pods -n my-namespace | grep rabbitmq || echo "RabbitMQ is not running!"
+
+      - name: Port-forward RabbitMQ
+        run: |
+          kubectl port-forward svc/rabbitmq 5672:5672 --namespace=my-namespace &
+
+      - name: Run tests for worker
+        run: pytest --rootdir=$PWD --cov=worker --cov-report=xml
+
+      - name: Upload worker coverage
+        uses: actions/upload-artifact@v4.6.0
+        with:
+          name: coverage-worker
+          path: coverage.xml
+
+  tests_parallel:
+    needs: tests_worker
+    runs-on: self-hosted
+    strategy:
+      matrix:
+        component: [api, web-ui, bot]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: |
+          pip install -r api/config/requirements.txt
+          pip install -r bot/requirements.txt
+          cd web-ui && npm install
+
+      - name: Run tests for ${{ matrix.component }}
+        run: |
+          if [ "${{ matrix.component }}" == "api" ]; then
+            cd api
+            pytest --rootdir=$PWD --cov=source --cov-report=xml:api_coverage.xml
+          elif [ "${{ matrix.component }}" == "web-ui" ]; then
+            cd web-ui
+            npm run test:unit:ci
+            npm run test:unit:coverage
+          elif [ "${{ matrix.component }}" == "bot" ]; then
+            cd bot
+            pytest --rootdir=$PWD --cov=bot --cov-report=xml:bot_coverage.xml
+          fi
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4.6.0
+        with:
+          name: coverage-${{ matrix.component }}
+          path: |
+            api_coverage.xml
+            web-ui/coverage/lcov.info
+            bot_coverage.xml
+
+  analyze:
+    needs: [tests_worker, tests_parallel]
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download all coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          path: coverage_reports
+
+      - name: Upload coverage to SonarQube
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          pip install sonar-scanner
+          sonar-scanner \
+            -Dsonar.projectKey=lazy-lecture \
+            -Dsonar.sources=worker,web-ui/src,bot,api/source \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.python.coverage.reportPaths=coverage_reports/coverage-worker/coverage.xml,coverage_reports/coverage-api/api_coverage.xml,coverage_reports/coverage-bot/bot_coverage.xml \
+            -Dsonar.javascript.lcov.reportPaths=coverage_reports/coverage-web-ui/web-ui/coverage/lcov.info
+
 
       - name: Run tests for worker
         run: pytest --cov=worker --cov-report=xml
