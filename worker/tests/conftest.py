@@ -5,9 +5,9 @@ import shutil
 import pytest
 import whisper
 
-from worker.settings import worker_config, object_storage_config
-from worker.task_queue import get_pika_connection, send_transcription_job_to_queue
-from worker.whisper_model import whisper_model as w_model
+from worker.core.settings import settings
+from worker.utils.task_queue import get_pika_connection, send_transcription_job_to_queue
+from worker.transcribe.whisper_model import whisper_model as w_model
 
 
 @pytest.fixture
@@ -23,9 +23,9 @@ def whisper_model() -> whisper.Whisper:
 @pytest.fixture()
 def clean_queue():
     connection, channel = get_pika_connection()
-    channel.queue_delete(queue=worker_config.PIKA_QUEUE)
-    channel.queue_declare(queue=worker_config.PIKA_QUEUE, durable=True)
-    yield (connection, channel, worker_config.PIKA_QUEUE)
+    channel.queue_delete(queue=settings.pika_queue)
+    channel.queue_declare(queue=settings.pika_queue, durable=True)
+    yield (connection, channel, settings.pika_queue)
     connection.close()
 
 
@@ -38,8 +38,8 @@ def sample_transcription_file_path():
 
 @pytest.fixture()
 def object_storage_dir():
-    assert Path(object_storage_config.PATH).exists(), object_storage_config.PATH
-    return object_storage_config.PATH
+    assert Path(settings.PATH).exists(), settings.PATH
+    return settings.PATH
 
 
 @pytest.fixture()

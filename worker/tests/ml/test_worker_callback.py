@@ -5,8 +5,7 @@ import pytest
 import pika
 import pika.channel
 
-from worker.settings import object_storage_config
-from worker.worker_callback import process_transcription_job_messages
+from worker.main import process_transcription_job_messages
 
 
 @pytest.mark.ml

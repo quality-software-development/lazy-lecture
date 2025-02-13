@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import whisper
 
-from worker.transcribe import transcribe_audio_file
+from worker.transcribe.transcribe import transcribe_audio_file
 
 
 @pytest.mark.ml
