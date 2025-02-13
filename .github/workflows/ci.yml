@@ -46,6 +46,12 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies for worker
+        run: pip install -r worker/requirements.txt 
+      
       - name: Check if RabbitMQ is running
         run: |
           kubectl get pods -n my-namespace | grep rabbitmq || echo "RabbitMQ is not running!"
