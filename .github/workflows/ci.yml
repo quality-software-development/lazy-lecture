@@ -45,16 +45,15 @@ jobs:
     needs: build
     runs-on: self-hosted
 
-    - name: Check if RabbitMQ is running
-      run: |
-        kubectl get pods -n my-namespace | grep rabbitmq || echo "RabbitMQ is not running!"
-    
-    - name: Port-forward RabbitMQ
-      run: |
-        kubectl port-forward svc/rabbitmq 5672:5672 --namespace=my-namespace &
-
-
     steps:
+      - name: Check if RabbitMQ is running
+        run: |
+          kubectl get pods -n my-namespace | grep rabbitmq || echo "RabbitMQ is not running!"
+
+      - name: Port-forward RabbitMQ
+        run: |
+          kubectl port-forward svc/rabbitmq 5672:5672 --namespace=my-namespace &
+
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -66,6 +65,7 @@ jobs:
         with:
           name: coverage-worker
           path: coverage.xml
+
 
   tests_parallel:
     needs: tests_worker
