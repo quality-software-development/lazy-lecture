@@ -128,18 +128,16 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Устанавливаем зависимости Bot (включая aiogram и проч.)
+      # Устанавливаем зависимости Bot (включая aiogram и прочее)
       - name: Установка зависимостей Bot
         run: pip install -r bot/requirements.txt
 
-      # Добавляем папку bot в PYTHONPATH для корректного импорта
+      # Добавляем папку bot в PYTHONPATH, чтобы корректно работали импорты из handlers
       - name: Установка PYTHONPATH для bot
         run: echo "PYTHONPATH=$GITHUB_WORKSPACE/bot:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
       - name: Запуск тестов Bot
-        run: |
-          # Запускаем тесты Bot из каталога bot/tests
-          pytest --rootdir=./bot/tests --cov=bot --cov-report=xml:bot_coverage.xml bot/tests
+        run: pytest bot/tests --cov=bot --cov-report=xml:bot_coverage.xml
 
       - name: Сохранить отчёт покрытия Bot
         uses: actions/upload-artifact@v4
@@ -181,3 +179,37 @@ jobs:
         with:
           name: coverage-web-ui
           path: web-ui/coverage/lcov.info
+
+#############################################
+# Job: Анализ покрытия и запуск SonarQube скана
+#############################################
+  analyze:
+    name: Анализ покрытия и SonarQube
+    runs-on: self-hosted
+    needs: [tests_worker, tests_api, tests_bot, tests_web_ui]
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
+
+      # Скачиваем все отчёты покрытия, загруженные предыдущими задачами
+      - name: Скачать все отчёты покрытия
+        uses: actions/download-artifact@v4
+        with:
+          path: coverage_reports
+
+      - name: Показать скачанные отчёты покрытия
+        run: ls -R coverage_reports
+
+      - name: Загрузить отчёт покрытия в SonarQube
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          pip install sonar-scanner
+          sonar-scanner \
+            -Dsonar.projectKey=lazy-lecture \
+            -Dsonar.sources=worker,web-ui/src,bot,api/source \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.login=$SONAR_TOKEN \
+            -Dsonar.python.coverage.reportPaths=coverage_reports/coverage-worker.xml,coverage_reports/api_coverage.xml,coverage_reports/bot_coverage.xml \
+            -Dsonar.javascript.lcov.reportPaths=coverage_reports/lcov.info
