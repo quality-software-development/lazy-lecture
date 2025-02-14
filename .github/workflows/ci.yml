@@ -150,7 +150,7 @@ jobs:
 #############################
 # Тесты web-ui
 #############################
-    tests_web_ui:
+  tests_web_ui:
     name: Тесты web-ui
     runs-on: self-hosted
     needs: build
