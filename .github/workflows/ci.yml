@@ -51,39 +51,41 @@ jobs:
 # Тесты worker
 #############################
   tests_worker:
-    name: Тесты worker
-    runs-on: self-hosted
-    needs: build
-    steps:
-      - name: Checkout кода
-        uses: actions/checkout@v4
+      name: Тесты worker
+      runs-on: self-hosted
+      needs: build
+      steps:
+        - name: Checkout кода
+          uses: actions/checkout@v4
 
-      # Создаём каталог для загрузок и переопределяем DOWNLOAD_ROOT,
-      # чтобы не пытаться записывать в /cache
-      - name: Создать каталог для модели
-        run: mkdir -p $GITHUB_WORKSPACE/cache
+        # Создаём каталог для загрузок и переопределяем DOWNLOAD_ROOT,
+        # чтобы модель не пыталась записываться в /cache (нет прав)
+        - name: Создать каталог для модели
+          run: mkdir -p $GITHUB_WORKSPACE/cache
 
-      - name: Установка переменной окружения DOWNLOAD_ROOT для worker
-        run: echo "DOWNLOAD_ROOT=$GITHUB_WORKSPACE/cache" >> $GITHUB_ENV
+        - name: Установка переменной окружения DOWNLOAD_ROOT для worker
+          run: echo "DOWNLOAD_ROOT=$GITHUB_WORKSPACE/cache" >> $GITHUB_ENV
 
-      # Установка зависимостей worker (на всякий случай, если требуется)
-      - name: Установка зависимостей worker
-        run: pip install -r worker/requirements.txt
+        # Устанавливаем зависимости worker (на всякий случай, если они не установлены)
+        - name: Установка зависимостей worker
+          run: pip install -r worker/requirements.txt
 
-      # Добавляем папку worker в PYTHONPATH
-      - name: Установка PYTHONPATH для worker
-        run: echo "PYTHONPATH=$GITHUB_WORKSPACE/worker:$GITHUB_WORKSPACE" >> $GITHUB_ENV
+        # Добавляем папку worker в PYTHONPATH для корректного импорта (например, worker.settings)
+        - name: Установка PYTHONPATH для worker
+          run: echo "PYTHONPATH=$GITHUB_WORKSPACE/worker:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
-      - name: Запуск тестов worker
-        run: |
-          # Запускаем тесты worker из корневой директории
-          pytest --rootdir=. worker/tests --cov=worker --cov-report=xml:coverage-worker.xml
+        # Копируем аудиофайл для тестов в корневую директорию, чтобы он был найден по относительному пути
+        - name: Подготовка аудиофайла для тестов
+          run: cp worker/sample_ru_120s.mp3 .
 
-      - name: Сохранить отчёт покрытия worker
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-worker
-          path: coverage-worker.xml
+        - name: Запуск тестов worker (пропускаем интеграционные тесты)
+          run: pytest --rootdir=. -m "not integration" worker/tests --cov=worker --cov-report=xml:coverage-worker.xml
+
+        - name: Сохранить отчёт покрытия worker
+          uses: actions/upload-artifact@v4
+          with:
+            name: coverage-worker
+            path: coverage-worker.xml
 
 #############################
 # Тесты API
@@ -137,7 +139,7 @@ jobs:
       - name: Запуск тестов Bot
         run: |
           # Запускаем тесты Bot из каталога bot/tests
-          pytest --rootdir=. --cov=bot --cov-report=xml:bot_coverage.xml bot/tests
+          pytest --rootdir=./bot/tests --cov=bot --cov-report=xml:bot_coverage.xml bot/tests
 
       - name: Сохранить отчёт покрытия Bot
         uses: actions/upload-artifact@v4
@@ -148,7 +150,7 @@ jobs:
 #############################
 # Тесты web-ui
 #############################
-  tests_web_ui:
+    tests_web_ui:
     name: Тесты web-ui
     runs-on: self-hosted
     needs: build
@@ -156,16 +158,21 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Устанавливаем Node.js 20, чтобы npm и npx были доступны
+      # Настраиваем Node.js, чтобы npm/npx были доступны
       - name: Настройка Node.js 20 для web-ui
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # Устанавливаем зависимости внутри каталога web-ui (npm ci гарантирует установку dev-зависимостей)
+      - name: Установка зависимостей web-ui
+        run: |
+          cd web-ui
+          npm ci
+
       - name: Запуск тестов web-ui
         run: |
           cd web-ui
-          # Используем npx для запуска локально установленного vitest
           npx vitest run
           npx vitest run --coverage
 
