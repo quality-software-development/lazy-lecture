@@ -91,7 +91,7 @@ jobs:
         run: cp worker/sample_ru_120s.mp3 .
 
       - name: Запуск тестов worker (пропускаем интеграционные тесты)
-        run: pytest --rootdir=. worker/tests --cov=worker --cov-report=xml:coverage-worker.xml
+        run: pytest --rootdir=. -m "not integration" worker/tests --cov=worker --cov-report=xml:coverage-worker.xml
 
       - name: Сохранить отчёт покрытия worker
         uses: actions/upload-artifact@v4
@@ -110,11 +110,11 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Настройка Python 3.10 для тестов API (для использования синтаксиса str | None)
-      - name: Настройка Python 3.10
+      # Настройка Python 3.11 для тестов API (для использования синтаксиса str | None)
+      - name: Настройка Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: 3.10
+          python-version: 3.11
 
       # Устанавливаем зависимости API
       - name: Установка зависимостей API
