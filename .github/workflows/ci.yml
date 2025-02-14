@@ -198,7 +198,9 @@ jobs:
     steps:
       - name: Checkout кода
         uses: actions/checkout@v4
-
+        with:
+          fetch-depth: 0
+          
       # Скачиваем все отчёты покрытия
       - name: Скачать все отчёты покрытия
         uses: actions/download-artifact@v4
