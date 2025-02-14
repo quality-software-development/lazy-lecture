@@ -202,7 +202,7 @@ jobs:
   analyze:
     name: Анализ покрытия и SonarQube
     runs-on: self-hosted
-    needs: [tests_worker, tests_api, tests_bot, tests_web_ui]
+    needs: [tests_worker, tests_api] #    needs: [tests_worker, tests_api, tests_bot, tests_web_ui]
     steps:
       - name: Checkout кода
         uses: actions/checkout@v4
