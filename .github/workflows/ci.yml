@@ -191,10 +191,10 @@ jobs:
 #############################################
 # Job: Анализ покрытия и запуск SonarQube скана
 #############################################
-  analyze:
+    analyze:
     name: Анализ покрытия и SonarQube
     runs-on: self-hosted
-    needs: [tests_worker, tests_bot, tests_web_ui] #    needs: [tests_worker, tests_api, tests_bot, tests_web_ui]
+    needs: [tests_worker, tests_bot, tests_web_ui]
     steps:
       - name: Checkout кода
         uses: actions/checkout@v4
@@ -208,17 +208,14 @@ jobs:
       - name: Показать скачанные отчёты покрытия
         run: ls -R coverage_reports
 
-      - name: Загрузить отчёт покрытия в SonarQube
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v4
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: |
-          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
-          unzip sonar-scanner-cli-4.8.0.2856-linux.zip
-          ./sonar-scanner-4.8.0.2856-linux/bin/sonar-scanner \
-            -Dsonar.projectKey=lazy-lecture \
-            -Dsonar.sources=worker,web-ui/src,bot,api/source \
-            -Dsonar.host.url=$SONAR_HOST_URL \
-            -Dsonar.login=$SONAR_TOKEN \
-            -Dsonar.python.coverage.reportPaths=coverage_reports/coverage-worker.xml,coverage_reports/api_coverage.xml,coverage_reports/bot_coverage.xml \
-            -Dsonar.javascript.lcov.reportPaths=coverage_reports/lcov.info
+        with:
+          projectKey: lazy-lecture
+          sources: worker,web-ui/src,bot,api/source
+          extraProperties: |
+            sonar.python.coverage.reportPaths=coverage_reports/coverage-worker.xml,coverage_reports/api_coverage.xml,coverage_reports/bot_coverage.xml
+            sonar.javascript.lcov.reportPaths=coverage_reports/lcov.info
