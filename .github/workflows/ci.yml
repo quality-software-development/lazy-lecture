@@ -62,14 +62,6 @@ jobs:
       - name: Установка ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      - name: Проверяем, что RabbitMQ запущен
-        run: |
-          kubectl get pods -n my-namespace | grep rabbitmq
-
-      - name: Порт-форвардим RabbitMQ (фоновый процесс)
-        run: |
-          kubectl port-forward svc/rabbitmq 5672:5672 --namespace=my-namespace &
-
       # Создаём каталог для загрузок и переопределяем DOWNLOAD_ROOT,
       # чтобы модель не записывалась в /cache (нет прав)
       - name: Создать каталог для модели
@@ -133,68 +125,68 @@ jobs:
           name: coverage-api
           path: api_coverage.xml
 
-# #############################
-# # Тесты Bot
-# #############################
-#   tests_bot:
-#     name: Тесты Bot
-#     runs-on: self-hosted
-#     needs: build
-#     steps:
-#       - name: Checkout кода
-#         uses: actions/checkout@v4
+#############################
+# Тесты Bot
+#############################
+  tests_bot:
+    name: Тесты Bot
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
 
-#       # Устанавливаем зависимости Bot (aiogram и т.д.)
-#       - name: Установка зависимостей Bot
-#         run: pip install -r bot/requirements.txt
+      # Устанавливаем зависимости Bot (aiogram и т.д.)
+      - name: Установка зависимостей Bot
+        run: pip install -r bot/requirements.txt
 
-#       # Добавляем папку bot в PYTHONPATH
-#       - name: Установка PYTHONPATH для bot
-#         run: echo "PYTHONPATH=$GITHUB_WORKSPACE/bot:$GITHUB_WORKSPACE" >> $GITHUB_ENV
+      # Добавляем папку bot в PYTHONPATH
+      - name: Установка PYTHONPATH для bot
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE/bot:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
-#       - name: Запуск тестов Bot
-#         run: pytest bot/tests --cov=bot --cov-report=xml:bot_coverage.xml
+      - name: Запуск тестов Bot
+        run: pytest bot/tests --cov=bot --cov-report=xml:bot_coverage.xml
 
-#       - name: Сохранить отчёт покрытия Bot
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: coverage-bot
-#           path: bot_coverage.xml
+      - name: Сохранить отчёт покрытия Bot
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-bot
+          path: bot_coverage.xml
 
-# #############################
-# # Тесты web-ui
-# #############################
-#   tests_web_ui:
-#     name: Тесты web-ui
-#     runs-on: self-hosted
-#     needs: build
-#     steps:
-#       - name: Checkout кода
-#         uses: actions/checkout@v4
+#############################
+# Тесты web-ui
+#############################
+  tests_web_ui:
+    name: Тесты web-ui
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
 
-#       # Настраиваем Node.js 20, чтобы npm/npx были доступны
-#       - name: Настройка Node.js 20 для web-ui
-#         uses: actions/setup-node@v4
-#         with:
-#           node-version: 20
+      # Настраиваем Node.js 20, чтобы npm/npx были доступны
+      - name: Настройка Node.js 20 для web-ui
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-#       # Устанавливаем зависимости внутри каталога web-ui
-#       - name: Установка зависимостей web-ui
-#         run: |
-#           cd web-ui
-#           npm ci
+      # Устанавливаем зависимости внутри каталога web-ui
+      - name: Установка зависимостей web-ui
+        run: |
+          cd web-ui
+          npm ci
 
-#       - name: Запуск тестов web-ui
-#         run: |
-#           cd web-ui
-#           npx vitest run
-#           npx vitest run --coverage
+      - name: Запуск тестов web-ui
+        run: |
+          cd web-ui
+          npx vitest run
+          npx vitest run --coverage
 
-#       - name: Сохранить отчёт покрытия web-ui
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: coverage-web-ui
-#           path: web-ui/coverage/lcov.info
+      - name: Сохранить отчёт покрытия web-ui
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-web-ui
+          path: web-ui/coverage/lcov.info
 
 #############################################
 # Job: Анализ покрытия и запуск SonarQube скана
@@ -202,7 +194,7 @@ jobs:
   analyze:
     name: Анализ покрытия и SonarQube
     runs-on: self-hosted
-    needs: [tests_worker, tests_api] #    needs: [tests_worker, tests_api, tests_bot, tests_web_ui]
+    needs: [tests_worker, tests_api, tests_bot, tests_web_ui]
     steps:
       - name: Checkout кода
         uses: actions/checkout@v4
