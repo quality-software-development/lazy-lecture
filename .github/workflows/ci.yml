@@ -63,8 +63,8 @@ jobs:
 
       - name: Запуск тестов worker
         run: |
-          # Параметр --rootdir указывает на корневую директорию lazy-lecture
-          pytest --rootdir=lazy-lecture worker/tests --cov=worker --cov-report=xml:coverage-worker.xml
+          # Запускаем тесты для worker из корневой директории
+          pytest --rootdir=. worker/tests --cov=worker --cov-report=xml:coverage-worker.xml
 
       # Сохранение отчёта покрытия для worker
       - name: Сохранить отчёт покрытия worker
@@ -86,8 +86,8 @@ jobs:
 
       - name: Запуск тестов API
         run: |
-          cd api
-          pytest --rootdir=lazy-lecture --cov=source --cov-report=xml:api_coverage.xml
+          # Запускаем тесты API из корневой директории
+          pytest --rootdir=. --cov=source --cov-report=xml:api_coverage.xml api
 
       # Сохранение отчёта покрытия для API
       - name: Сохранить отчёт покрытия API
@@ -109,8 +109,8 @@ jobs:
 
       - name: Запуск тестов Bot
         run: |
-          cd bot
-          pytest --rootdir=lazy-lecture --cov=bot --cov-report=xml:bot_coverage.xml
+          # Запускаем тесты Bot из корневой директории
+          pytest --rootdir=. --cov=bot --cov-report=xml:bot_coverage.xml bot
 
       # Сохранение отчёта покрытия для Bot
       - name: Сохранить отчёт покрытия Bot
@@ -130,7 +130,7 @@ jobs:
       - name: Запуск тестов web-ui
         run: |
           cd web-ui
-          # Запуск unit-тестов и генерация отчёта покрытия для web-ui
+          # Запускаем unit-тесты и генерацию отчёта покрытия для web-ui
           npm run test:unit:ci
           npm run test:unit:coverage
 
