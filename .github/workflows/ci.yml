@@ -20,7 +20,7 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Установка Python 3.9
+      # Установка Python 3.9 (используется для worker, bot и web-ui по умолчанию)
       - name: Настройка Python 3.9
         uses: actions/setup-python@v5
         with:
@@ -37,7 +37,7 @@ jobs:
         run: |
           pip install -r worker/requirements.txt
           pip install -r bot/requirements.txt
-          # Для API: если starlette==0.45.3 не доступна, то установим нужную версию заранее.
+          # Устанавливаем совместимую версию starlette, если нужная версия недоступна
           pip install starlette==0.18.0
           pip install -r api/config/requirements.txt
 
@@ -51,41 +51,45 @@ jobs:
 # Тесты worker
 #############################
   tests_worker:
-      name: Тесты worker
-      runs-on: self-hosted
-      needs: build
-      steps:
-        - name: Checkout кода
-          uses: actions/checkout@v4
+    name: Тесты worker
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
 
-        # Создаём каталог для загрузок и переопределяем DOWNLOAD_ROOT,
-        # чтобы модель не пыталась записываться в /cache (нет прав)
-        - name: Создать каталог для модели
-          run: mkdir -p $GITHUB_WORKSPACE/cache
+      # Устанавливаем ffmpeg (если он не установлен)
+      - name: Установка ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-        - name: Установка переменной окружения DOWNLOAD_ROOT для worker
-          run: echo "DOWNLOAD_ROOT=$GITHUB_WORKSPACE/cache" >> $GITHUB_ENV
+      # Создаём каталог для загрузок и переопределяем DOWNLOAD_ROOT,
+      # чтобы модель не записывалась в /cache (нет прав)
+      - name: Создать каталог для модели
+        run: mkdir -p $GITHUB_WORKSPACE/cache
 
-        # Устанавливаем зависимости worker (на всякий случай, если они не установлены)
-        - name: Установка зависимостей worker
-          run: pip install -r worker/requirements.txt
+      - name: Установка переменной окружения DOWNLOAD_ROOT для worker
+        run: echo "DOWNLOAD_ROOT=$GITHUB_WORKSPACE/cache" >> $GITHUB_ENV
 
-        # Добавляем папку worker в PYTHONPATH для корректного импорта (например, worker.settings)
-        - name: Установка PYTHONPATH для worker
-          run: echo "PYTHONPATH=$GITHUB_WORKSPACE/worker:$GITHUB_WORKSPACE" >> $GITHUB_ENV
+      # Дополнительная установка зависимостей worker (если нужны обновления)
+      - name: Установка зависимостей worker
+        run: pip install -r worker/requirements.txt
 
-        # Копируем аудиофайл для тестов в корневую директорию, чтобы он был найден по относительному пути
-        - name: Подготовка аудиофайла для тестов
-          run: cp worker/sample_ru_120s.mp3 .
+      # Добавляем папку worker в PYTHONPATH для корректного импорта (например, worker.settings)
+      - name: Установка PYTHONPATH для worker
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE/worker:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
-        - name: Запуск тестов worker (пропускаем интеграционные тесты)
-          run: pytest --rootdir=. -m "not integration" worker/tests --cov=worker --cov-report=xml:coverage-worker.xml
+      # Копируем аудиофайл для тестов в корневую директорию
+      - name: Подготовка аудиофайла для тестов
+        run: cp worker/sample_ru_120s.mp3 .
 
-        - name: Сохранить отчёт покрытия worker
-          uses: actions/upload-artifact@v4
-          with:
-            name: coverage-worker
-            path: coverage-worker.xml
+      - name: Запуск тестов worker (пропускаем интеграционные тесты)
+        run: pytest --rootdir=. -m "not integration" worker/tests --cov=worker --cov-report=xml:coverage-worker.xml
+
+      - name: Сохранить отчёт покрытия worker
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-worker
+          path: coverage-worker.xml
 
 #############################
 # Тесты API
@@ -98,7 +102,13 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Устанавливаем зависимости API (уже установлена версия starlette корректная)
+      # Настройка Python 3.10 для тестов API (для использования синтаксиса str | None)
+      - name: Настройка Python 3.10 для API
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.10
+
+      # Устанавливаем зависимости API
       - name: Установка зависимостей API
         run: pip install -r api/config/requirements.txt
 
@@ -107,9 +117,7 @@ jobs:
         run: echo "PYTHONPATH=$GITHUB_WORKSPACE/api:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
       - name: Запуск тестов API
-        run: |
-          # Запускаем тесты API из корневой директории
-          pytest --rootdir=. --cov=source --cov-report=xml:api_coverage.xml api
+        run: pytest --rootdir=. --cov=source --cov-report=xml:api_coverage.xml api
 
       - name: Сохранить отчёт покрытия API
         uses: actions/upload-artifact@v4
@@ -128,11 +136,11 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Устанавливаем зависимости Bot (включая aiogram и прочее)
+      # Устанавливаем зависимости Bot (aiogram и т.д.)
       - name: Установка зависимостей Bot
         run: pip install -r bot/requirements.txt
 
-      # Добавляем папку bot в PYTHONPATH, чтобы корректно работали импорты из handlers
+      # Добавляем папку bot в PYTHONPATH
       - name: Установка PYTHONPATH для bot
         run: echo "PYTHONPATH=$GITHUB_WORKSPACE/bot:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
@@ -156,13 +164,13 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Настраиваем Node.js, чтобы npm/npx были доступны
+      # Настраиваем Node.js 20, чтобы npm/npx были доступны
       - name: Настройка Node.js 20 для web-ui
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # Устанавливаем зависимости внутри каталога web-ui (npm ci гарантирует установку dev-зависимостей)
+      # Устанавливаем зависимости внутри каталога web-ui
       - name: Установка зависимостей web-ui
         run: |
           cd web-ui
@@ -191,7 +199,7 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Скачиваем все отчёты покрытия, загруженные предыдущими задачами
+      # Скачиваем все отчёты покрытия
       - name: Скачать все отчёты покрытия
         uses: actions/download-artifact@v4
         with:
