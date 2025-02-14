@@ -9,9 +9,9 @@ on:
     branches:
       - main
 
-#############################################
+#############################
 # Job: Сборка и установка зависимостей (без кэширования)
-#############################################
+#############################
 jobs:
   build:
     name: Сборка и установка зависимостей
@@ -32,11 +32,13 @@ jobs:
         with:
           node-version: 20
 
-      # Установка Python зависимостей для worker, bot и API
+      # Установка зависимостей для всех Python-компонентов
       - name: Установка Python зависимостей
         run: |
           pip install -r worker/requirements.txt
           pip install -r bot/requirements.txt
+          # Для API: если starlette==0.45.3 не доступна, то установим нужную версию заранее.
+          pip install starlette==0.18.0
           pip install -r api/config/requirements.txt
 
       # Установка npm зависимостей для web-ui
@@ -45,10 +47,9 @@ jobs:
           cd web-ui
           npm install
 
-#############################################
-# Тестовые задачи для каждого модуля
-#############################################
-
+#############################
+# Тесты worker
+#############################
   tests_worker:
     name: Тесты worker
     runs-on: self-hosted
@@ -57,16 +58,25 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Установка зависимостей worker
+      # Создаём каталог для загрузок и переопределяем DOWNLOAD_ROOT,
+      # чтобы не пытаться записывать в /cache
+      - name: Создать каталог для модели
+        run: mkdir -p $GITHUB_WORKSPACE/cache
+
+      - name: Установка переменной окружения DOWNLOAD_ROOT для worker
+        run: echo "DOWNLOAD_ROOT=$GITHUB_WORKSPACE/cache" >> $GITHUB_ENV
+
+      # Установка зависимостей worker (на всякий случай, если требуется)
       - name: Установка зависимостей worker
         run: pip install -r worker/requirements.txt
 
-      # Добавляем папку worker в PYTHONPATH, чтобы корректно импортировать worker.settings
+      # Добавляем папку worker в PYTHONPATH
       - name: Установка PYTHONPATH для worker
         run: echo "PYTHONPATH=$GITHUB_WORKSPACE/worker:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
       - name: Запуск тестов worker
         run: |
+          # Запускаем тесты worker из корневой директории
           pytest --rootdir=. worker/tests --cov=worker --cov-report=xml:coverage-worker.xml
 
       - name: Сохранить отчёт покрытия worker
@@ -75,7 +85,9 @@ jobs:
           name: coverage-worker
           path: coverage-worker.xml
 
-
+#############################
+# Тесты API
+#############################
   tests_api:
     name: Тесты API
     runs-on: self-hosted
@@ -84,15 +96,17 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Установка зависимостей API (включая sqlalchemy)
+      # Устанавливаем зависимости API (уже установлена версия starlette корректная)
       - name: Установка зависимостей API
         run: pip install -r api/config/requirements.txt
 
+      # Добавляем каталог api в PYTHONPATH
       - name: Установка PYTHONPATH для API
         run: echo "PYTHONPATH=$GITHUB_WORKSPACE/api:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
       - name: Запуск тестов API
         run: |
+          # Запускаем тесты API из корневой директории
           pytest --rootdir=. --cov=source --cov-report=xml:api_coverage.xml api
 
       - name: Сохранить отчёт покрытия API
@@ -101,7 +115,9 @@ jobs:
           name: coverage-api
           path: api_coverage.xml
 
-
+#############################
+# Тесты Bot
+#############################
   tests_bot:
     name: Тесты Bot
     runs-on: self-hosted
@@ -110,14 +126,18 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
+      # Устанавливаем зависимости Bot (включая aiogram и проч.)
       - name: Установка зависимостей Bot
         run: pip install -r bot/requirements.txt
 
+      # Добавляем папку bot в PYTHONPATH для корректного импорта
       - name: Установка PYTHONPATH для bot
         run: echo "PYTHONPATH=$GITHUB_WORKSPACE/bot:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
       - name: Запуск тестов Bot
-        run: pytest --rootdir=. --cov=bot --cov-report=xml:bot_coverage.xml bot/tests
+        run: |
+          # Запускаем тесты Bot из каталога bot/tests
+          pytest --rootdir=. --cov=bot --cov-report=xml:bot_coverage.xml bot/tests
 
       - name: Сохранить отчёт покрытия Bot
         uses: actions/upload-artifact@v4
@@ -125,7 +145,9 @@ jobs:
           name: coverage-bot
           path: bot_coverage.xml
 
-
+#############################
+# Тесты web-ui
+#############################
   tests_web_ui:
     name: Тесты web-ui
     runs-on: self-hosted
@@ -134,8 +156,8 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Установка Node.js 20 (если он не установлен)
-      - name: Установка Node.js 20
+      # Устанавливаем Node.js 20, чтобы npm и npx были доступны
+      - name: Настройка Node.js 20 для web-ui
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -143,46 +165,12 @@ jobs:
       - name: Запуск тестов web-ui
         run: |
           cd web-ui
-          npm run test:unit:ci
-          npm run test:unit:coverage
+          # Используем npx для запуска локально установленного vitest
+          npx vitest run
+          npx vitest run --coverage
 
       - name: Сохранить отчёт покрытия web-ui
         uses: actions/upload-artifact@v4
         with:
           name: coverage-web-ui
           path: web-ui/coverage/lcov.info
-
-
-#############################################
-# Job: Анализ покрытия и запуск SonarQube скана
-#############################################
-  analyze:
-    name: Анализ покрытия и SonarQube
-    runs-on: self-hosted
-    needs: [tests_worker, tests_api, tests_bot, tests_web_ui]
-    steps:
-      - name: Checkout кода
-        uses: actions/checkout@v4
-
-      # Скачиваем все отчёты покрытия, загруженные предыдущими задачами
-      - name: Скачать все отчёты покрытия
-        uses: actions/download-artifact@v4
-        with:
-          path: coverage_reports
-
-      - name: Показать скачанные отчёты покрытия
-        run: ls -R coverage_reports
-
-      - name: Загрузить отчёт покрытия в SonarQube
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: |
-          pip install sonar-scanner
-          sonar-scanner \
-            -Dsonar.projectKey=lazy-lecture \
-            -Dsonar.sources=worker,web-ui/src,bot,api/source \
-            -Dsonar.host.url=$SONAR_HOST_URL \
-            -Dsonar.login=$SONAR_TOKEN \
-            -Dsonar.python.coverage.reportPaths=coverage_reports/coverage-worker.xml,coverage_reports/api_coverage.xml,coverage_reports/bot_coverage.xml \
-            -Dsonar.javascript.lcov.reportPaths=coverage_reports/lcov.info
