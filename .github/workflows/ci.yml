@@ -213,8 +213,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
-          pip install sonar-scanner
-          sonar-scanner \
+          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+          unzip sonar-scanner-cli-4.8.0.2856-linux.zip
+          ./sonar-scanner-4.8.0.2856-linux/bin/sonar-scanner \
             -Dsonar.projectKey=lazy-lecture \
             -Dsonar.sources=worker,web-ui/src,bot,api/source \
             -Dsonar.host.url=$SONAR_HOST_URL \
