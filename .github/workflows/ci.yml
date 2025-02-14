@@ -10,130 +10,126 @@ on:
       - main
 
 jobs:
+  # Первоначальный job для установки общих зависимостей
   build:
+    name: Build & Install Dependencies
     runs-on: self-hosted
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      # Установка Python 3.9 (если необходимо для дальнейших шагов)
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
 
-      - name: Set up Node.js
+      # Установка Node.js 20 для web-ui
+      - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Upgrade pip, setuptools, wheel
-        run: python -m pip install --upgrade pip setuptools wheel
+      # Кэширование pip зависимостей (worker, api, bot)
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
-      - name: Install dependencies for all components
+      # Установка зависимостей для worker, bot и api
+      - name: Install Python Dependencies
         run: |
           pip install -r worker/requirements.txt
           pip install -r bot/requirements.txt
           pip install -r api/config/requirements.txt
 
-      - name: Install dependencies for web-ui
+      # Кэширование npm зависимостей для web-ui
+      - name: Cache npm dependencies for web-ui
+        uses: actions/cache@v3
+        with:
+          path: web-ui/node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('web-ui/package-lock.json') }}
+
+      - name: Install npm Dependencies for web-ui
         run: |
           cd web-ui
           npm install
 
-  tests_worker:
+  # Матричный запуск тестов для всех компонентов: worker, api, bot, web-ui
+  tests:
+    name: Run Tests for ${{ matrix.component }}
     needs: build
-    runs-on: self-hosted
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
-
-      - name: Check if RabbitMQ is running
-        run: |
-          kubectl get pods -n my-namespace | grep rabbitmq || echo "RabbitMQ is not running!"
-
-      - name: Port-forward RabbitMQ
-        run: |
-          kubectl port-forward svc/rabbitmq 5672:5672 --namespace=my-namespace &
-
-      - name: Run tests for worker
-        run: pytest --rootdir=$PWD --cov=worker --cov-report=xml
-
-      - name: Upload worker coverage
-        uses: actions/upload-artifact@v4.6.0
-        with:
-          name: coverage-worker
-          path: coverage.xml
-
-  tests_parallel:
-    needs: tests_worker
     runs-on: self-hosted
     strategy:
       matrix:
-        component: [api, web-ui, bot]
-
+        component: [worker, api, bot, web-ui]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Set PYTHONPATH
+      # Устанавливаем PYTHONPATH, чтобы модули находились корректно
+      - name: Set PYTHONPATH environment variable
         run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
 
-      - name: Install dependencies
+      # Для каждого компонента своя установка зависимостей и запуск тестов
+      - name: Run Tests for ${{ matrix.component }}
         run: |
-          pip install -r api/config/requirements.txt
-          pip install -r bot/requirements.txt
-          cd web-ui && npm install
-
-      - name: Run tests for ${{ matrix.component }}
-        run: |
-          if [ "${{ matrix.component }}" == "api" ]; then
+          if [ "${{ matrix.component }}" == "worker" ]; then
+            pytest worker/tests --rootdir=worker --cov=worker --cov-report=xml:coverage-worker.xml
+          elif [ "${{ matrix.component }}" == "api" ]; then
             cd api
             pytest --rootdir=$PWD --cov=source --cov-report=xml:api_coverage.xml
+          elif [ "${{ matrix.component }}" == "bot" ]; then
+            cd bot
+            pytest --rootdir=$PWD --cov=bot --cov-report=xml:bot_coverage.xml
           elif [ "${{ matrix.component }}" == "web-ui" ]; then
             cd web-ui
             npm run test:unit:ci
             npm run test:unit:coverage
-          elif [ "${{ matrix.component }}" == "bot" ]; then
-            cd bot
-            pytest --rootdir=$PWD --cov=bot --cov-report=xml:bot_coverage.xml
           fi
 
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4.6.0
+      # Сохраняем артефакт покрытия для каждого компонента
+      - name: Upload Coverage Report for ${{ matrix.component }}
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.component }}
           path: |
-            api_coverage.xml
-            web-ui/coverage/lcov.info
-            bot_coverage.xml
+            ${{ runner.os == 'web-ui' && 'web-ui/coverage/lcov.info' || (
+              ${{ matrix.component == 'worker' && 'coverage-worker.xml' || (
+                ${{ matrix.component == 'api' && 'api_coverage.xml' || (
+                  ${{ matrix.component == 'bot' && 'bot_coverage.xml' }}
+                )}}
+              )}}
+            ) }}
 
+  # Финальный job для анализа и загрузки покрытия в SonarQube
   analyze:
-    needs: [tests_worker, tests_parallel]
+    name: Analyze Coverage & Run SonarQube Scan
+    needs: tests
     runs-on: self-hosted
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Download all coverage reports
+      - name: Download All Coverage Reports
         uses: actions/download-artifact@v4
         with:
           path: coverage_reports
 
-      - name: Upload coverage to SonarQube
+      - name: List downloaded coverage reports
+        run: ls -R coverage_reports
+
+      - name: Upload Coverage to SonarQube
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
           pip install sonar-scanner
           sonar-scanner \
             -Dsonar.projectKey=lazy-lecture \
             -Dsonar.sources=worker,web-ui/src,bot,api/source \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.python.coverage.reportPaths=coverage_reports/coverage-worker/coverage.xml,coverage_reports/coverage-api/api_coverage.xml,coverage_reports/coverage-bot/bot_coverage.xml \
-            -Dsonar.javascript.lcov.reportPaths=coverage_reports/coverage-web-ui/web-ui/coverage/lcov.info
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.login=$SONAR_TOKEN \
+            -Dsonar.python.coverage.reportPaths=coverage_reports/coverage-worker.xml,coverage_reports/api_coverage.xml,coverage_reports/bot_coverage.xml \
+            -Dsonar.javascript.lcov.reportPaths=coverage_reports/lcov.info
