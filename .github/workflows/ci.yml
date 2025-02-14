@@ -57,21 +57,24 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Устанавливаем PYTHONPATH для корректного поиска модулей
-      - name: Установка переменной окружения PYTHONPATH
-        run: echo "PYTHONPATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+      # Установка зависимостей worker
+      - name: Установка зависимостей worker
+        run: pip install -r worker/requirements.txt
+
+      # Добавляем папку worker в PYTHONPATH, чтобы корректно импортировать worker.settings
+      - name: Установка PYTHONPATH для worker
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE/worker:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
       - name: Запуск тестов worker
         run: |
-          # Запускаем тесты для worker из корневой директории
           pytest --rootdir=. worker/tests --cov=worker --cov-report=xml:coverage-worker.xml
 
-      # Сохранение отчёта покрытия для worker
       - name: Сохранить отчёт покрытия worker
         uses: actions/upload-artifact@v4
         with:
           name: coverage-worker
           path: coverage-worker.xml
+
 
   tests_api:
     name: Тесты API
@@ -81,20 +84,23 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      - name: Установка переменной окружения PYTHONPATH
-        run: echo "PYTHONPATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+      # Установка зависимостей API (включая sqlalchemy)
+      - name: Установка зависимостей API
+        run: pip install -r api/config/requirements.txt
+
+      - name: Установка PYTHONPATH для API
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE/api:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
       - name: Запуск тестов API
         run: |
-          # Запускаем тесты API из корневой директории
           pytest --rootdir=. --cov=source --cov-report=xml:api_coverage.xml api
 
-      # Сохранение отчёта покрытия для API
       - name: Сохранить отчёт покрытия API
         uses: actions/upload-artifact@v4
         with:
           name: coverage-api
           path: api_coverage.xml
+
 
   tests_bot:
     name: Тесты Bot
@@ -104,17 +110,14 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Установка зависимостей для bot (включая aiogram)
-      - name: Установка зависимостей для bot
+      - name: Установка зависимостей Bot
         run: pip install -r bot/requirements.txt
 
-      # Добавляем папку bot в PYTHONPATH, чтобы импорты (например, handlers.echo) работали корректно
       - name: Установка PYTHONPATH для bot
         run: echo "PYTHONPATH=$GITHUB_WORKSPACE/bot:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
       - name: Запуск тестов Bot
-        run: |
-          pytest --rootdir=. --cov=bot --cov-report=xml:bot_coverage.xml bot/tests
+        run: pytest --rootdir=. --cov=bot --cov-report=xml:bot_coverage.xml bot/tests
 
       - name: Сохранить отчёт покрытия Bot
         uses: actions/upload-artifact@v4
@@ -131,19 +134,24 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
+      # Установка Node.js 20 (если он не установлен)
+      - name: Установка Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Запуск тестов web-ui
         run: |
           cd web-ui
-          # Запускаем unit-тесты и генерацию отчёта покрытия для web-ui
           npm run test:unit:ci
           npm run test:unit:coverage
 
-      # Сохранение отчёта покрытия для web-ui
       - name: Сохранить отчёт покрытия web-ui
         uses: actions/upload-artifact@v4
         with:
           name: coverage-web-ui
           path: web-ui/coverage/lcov.info
+
 
 #############################################
 # Job: Анализ покрытия и запуск SonarQube скана
