@@ -9,133 +9,175 @@ on:
     branches:
       - main
 
+#############################
+# Задача сборки и установки #
+#############################
 jobs:
-  # Первоначальный job для установки общих зависимостей
   build:
-    name: Build & Install Dependencies
+    name: Сборка и установка зависимостей
     runs-on: self-hosted
+    outputs:
+      build_status: success
     steps:
-      - name: Checkout Code
+      - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Установка Python 3.9 (если необходимо для дальнейших шагов)
-      - name: Set up Python 3.9
+      # Установка Python 3.9
+      - name: Настройка Python 3.9
         uses: actions/setup-python@v5
         with:
           python-version: 3.9
 
-      # Установка Node.js 20 для web-ui
-      - name: Set up Node.js 20
+      # Установка Node.js версии 20 для web-ui
+      - name: Настройка Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # Кэширование pip зависимостей (worker, api, bot)
-      - name: Cache pip dependencies
+      # Кэширование pip зависимостей для Python (используется для worker, bot, api)
+      - name: Кэширование pip зависимостей
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
-      # Установка зависимостей для worker, bot и api
-      - name: Install Python Dependencies
+      # Установка Python зависимостей
+      - name: Установка Python зависимостей
         run: |
           pip install -r worker/requirements.txt
           pip install -r bot/requirements.txt
           pip install -r api/config/requirements.txt
 
       # Кэширование npm зависимостей для web-ui
-      - name: Cache npm dependencies for web-ui
+      - name: Кэширование npm зависимостей для web-ui
         uses: actions/cache@v3
         with:
           path: web-ui/node_modules
           key: ${{ runner.os }}-npm-${{ hashFiles('web-ui/package-lock.json') }}
 
-      - name: Install npm Dependencies for web-ui
+      # Установка npm зависимостей для web-ui
+      - name: Установка npm зависимостей для web-ui
         run: |
           cd web-ui
           npm install
 
-  # Матричный запуск тестов для всех компонентов: worker, api, bot, web-ui
-  tests:
-    name: Run Tests for ${{ matrix.component }}
-    needs: build
+#########################################
+# Задачи запуска тестов для каждого модуля #
+#########################################
+
+  tests_worker:
+    name: Тесты worker
     runs-on: self-hosted
-    strategy:
-      matrix:
-        component: [worker, api, bot, web-ui]
+    needs: build
     steps:
-      - name: Checkout Code
+      - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Устанавливаем PYTHONPATH, чтобы модули находились корректно
-      - name: Set PYTHONPATH environment variable
+      # Устанавливаем PYTHONPATH для корректного поиска модулей
+      - name: Установка переменной окружения PYTHONPATH
         run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
 
-      # Для каждого компонента своя установка зависимостей и запуск тестов
-      - name: Run Tests for ${{ matrix.component }}
+      - name: Запуск тестов worker
         run: |
-          if [ "${{ matrix.component }}" == "worker" ]; then
-            pytest worker/tests --rootdir=worker --cov=worker --cov-report=xml:coverage-worker.xml
-          elif [ "${{ matrix.component }}" == "api" ]; then
-            cd api
-            pytest --rootdir=$PWD --cov=source --cov-report=xml:api_coverage.xml
-          elif [ "${{ matrix.component }}" == "bot" ]; then
-            cd bot
-            pytest --rootdir=$PWD --cov=bot --cov-report=xml:bot_coverage.xml
-          elif [ "${{ matrix.component }}" == "web-ui" ]; then
-            cd web-ui
-            npm run test:unit:ci
-            npm run test:unit:coverage
-          fi
+          # Запускаем тесты для worker (unit, ml, integration)
+          pytest worker/tests --rootdir=worker --cov=worker --cov-report=xml:coverage-worker.xml
 
-      # Сохраняем артефакт покрытия для каждого компонента
-      - name: Upload Coverage Report for worker
-        if: matrix.component == 'worker'
+      # Сохранение отчёта покрытия для worker
+      - name: Сохранить отчёт покрытия worker
         uses: actions/upload-artifact@v4
         with:
           name: coverage-worker
           path: coverage-worker.xml
 
-      - name: Upload Coverage Report for api
-        if: matrix.component == 'api'
+  tests_api:
+    name: Тесты API
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
+
+      - name: Установка переменной окружения PYTHONPATH
+        run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
+
+      - name: Запуск тестов API
+        run: |
+          cd api
+          pytest --rootdir=$PWD --cov=source --cov-report=xml:api_coverage.xml
+
+      # Сохранение отчёта покрытия для API
+      - name: Сохранить отчёт покрытия API
         uses: actions/upload-artifact@v4
         with:
           name: coverage-api
           path: api_coverage.xml
 
-      - name: Upload Coverage Report for bot
-        if: matrix.component == 'bot'
+  tests_bot:
+    name: Тесты Bot
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
+
+      - name: Установка переменной окружения PYTHONPATH
+        run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
+
+      - name: Запуск тестов Bot
+        run: |
+          cd bot
+          pytest --rootdir=$PWD --cov=bot --cov-report=xml:bot_coverage.xml
+
+      # Сохранение отчёта покрытия для Bot
+      - name: Сохранить отчёт покрытия Bot
         uses: actions/upload-artifact@v4
         with:
           name: coverage-bot
           path: bot_coverage.xml
 
-      - name: Upload Coverage Report for web-ui
-        if: matrix.component == 'web-ui'
+  tests_web_ui:
+    name: Тесты web-ui
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
+
+      - name: Запуск тестов web-ui
+        run: |
+          cd web-ui
+          # Запуск unit-тестов и генерация отчёта покрытия для web-ui
+          npm run test:unit:ci
+          npm run test:unit:coverage
+
+      # Сохранение отчёта покрытия для web-ui
+      - name: Сохранить отчёт покрытия web-ui
         uses: actions/upload-artifact@v4
         with:
           name: coverage-web-ui
           path: web-ui/coverage/lcov.info
 
-  # Финальный job для анализа и загрузки покрытия в SonarQube
+#############################################
+# Задача анализа покрытия и SonarQube скан #
+#############################################
   analyze:
-    name: Analyze Coverage & Run SonarQube Scan
-    needs: tests
+    name: Анализ покрытия и SonarQube
     runs-on: self-hosted
+    needs: [tests_worker, tests_api, tests_bot, tests_web_ui]
     steps:
-      - name: Checkout Code
+      - name: Checkout кода
         uses: actions/checkout@v4
 
-      - name: Download All Coverage Reports
+      # Скачиваем все отчёты покрытия, загруженные предыдущими задачами
+      - name: Скачать все отчёты покрытия
         uses: actions/download-artifact@v4
         with:
           path: coverage_reports
 
-      - name: List downloaded coverage reports
+      - name: Показать скачанные отчёты покрытия
         run: ls -R coverage_reports
 
-      - name: Upload Coverage to SonarQube
+      - name: Загрузить отчёт покрытия в SonarQube
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
