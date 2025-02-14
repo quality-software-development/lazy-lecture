@@ -213,11 +213,3 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          args: >
-            -Dsonar.projectKey=lazy-lecture
-            -Dsonar.sources=worker,web-ui/src,bot,api/source
-            -Dsonar.host.url=$SONAR_HOST_URL
-            -Dsonar.login=$SONAR_TOKEN
-            -Dsonar.python.coverage.reportPaths=coverage_reports/coverage-worker.xml,coverage_reports/api_coverage.xml,coverage_reports/bot_coverage.xml
-            -Dsonar.javascript.lcov.reportPaths=coverage_reports/lcov.info
