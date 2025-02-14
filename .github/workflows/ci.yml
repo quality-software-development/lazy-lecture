@@ -90,18 +90,33 @@ jobs:
           fi
 
       # Сохраняем артефакт покрытия для каждого компонента
-      - name: Upload Coverage Report for ${{ matrix.component }}
+      - name: Upload Coverage Report for worker
+        if: matrix.component == 'worker'
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ matrix.component }}
-          path: |
-            ${{ runner.os == 'web-ui' && 'web-ui/coverage/lcov.info' || (
-              ${{ matrix.component == 'worker' && 'coverage-worker.xml' || (
-                ${{ matrix.component == 'api' && 'api_coverage.xml' || (
-                  ${{ matrix.component == 'bot' && 'bot_coverage.xml' }}
-                )}}
-              )}}
-            ) }}
+          name: coverage-worker
+          path: coverage-worker.xml
+
+      - name: Upload Coverage Report for api
+        if: matrix.component == 'api'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-api
+          path: api_coverage.xml
+
+      - name: Upload Coverage Report for bot
+        if: matrix.component == 'bot'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-bot
+          path: bot_coverage.xml
+
+      - name: Upload Coverage Report for web-ui
+        if: matrix.component == 'web-ui'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-web-ui
+          path: web-ui/coverage/lcov.info
 
   # Финальный job для анализа и загрузки покрытия в SonarQube
   analyze:
