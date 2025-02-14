@@ -83,7 +83,7 @@ jobs:
         run: cp worker/sample_ru_120s.mp3 .
 
       - name: Запуск тестов worker (пропускаем интеграционные тесты)
-        run: pytest --rootdir=. -m "not integration" worker/tests --cov=worker --cov-report=xml:coverage-worker.xml
+        run: pytest --rootdir=. worker/tests --cov=worker --cov-report=xml:coverage-worker.xml
 
       - name: Сохранить отчёт покрытия worker
         uses: actions/upload-artifact@v4
