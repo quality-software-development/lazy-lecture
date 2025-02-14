@@ -191,7 +191,7 @@ jobs:
 #############################################
 # Job: Анализ покрытия и запуск SonarQube скана
 #############################################
-    analyze:
+  analyze:
     name: Анализ покрытия и SonarQube
     runs-on: self-hosted
     needs: [tests_worker, tests_bot, tests_web_ui]
