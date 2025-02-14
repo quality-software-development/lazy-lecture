@@ -104,13 +104,16 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Для bot нужно добавить папку bot в PYTHONPATH, чтобы импортировать модуль handlers
+      # Установка зависимостей для bot (включая aiogram)
+      - name: Установка зависимостей для bot
+        run: pip install -r bot/requirements.txt
+
+      # Добавляем папку bot в PYTHONPATH, чтобы импорты (например, handlers.echo) работали корректно
       - name: Установка PYTHONPATH для bot
         run: echo "PYTHONPATH=$GITHUB_WORKSPACE/bot:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
       - name: Запуск тестов Bot
         run: |
-          # Запускаем тесты Bot из корневой директории, указывая путь к тестам
           pytest --rootdir=. --cov=bot --cov-report=xml:bot_coverage.xml bot/tests
 
       - name: Сохранить отчёт покрытия Bot
@@ -118,6 +121,7 @@ jobs:
         with:
           name: coverage-bot
           path: bot_coverage.xml
+
 
   tests_web_ui:
     name: Тесты web-ui
