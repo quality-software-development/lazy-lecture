@@ -104,15 +104,15 @@ jobs:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      - name: Установка переменной окружения PYTHONPATH
-        run: echo "PYTHONPATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+      # Для bot нужно добавить папку bot в PYTHONPATH, чтобы импортировать модуль handlers
+      - name: Установка PYTHONPATH для bot
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE/bot:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
       - name: Запуск тестов Bot
         run: |
-          # Запускаем тесты Bot из корневой директории
-          pytest --rootdir=. --cov=bot --cov-report=xml:bot_coverage.xml bot
+          # Запускаем тесты Bot из корневой директории, указывая путь к тестам
+          pytest --rootdir=. --cov=bot --cov-report=xml:bot_coverage.xml bot/tests
 
-      # Сохранение отчёта покрытия для Bot
       - name: Сохранить отчёт покрытия Bot
         uses: actions/upload-artifact@v4
         with:
