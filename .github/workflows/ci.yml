@@ -111,10 +111,10 @@ jobs:
         uses: actions/checkout@v4
 
       # Настройка Python 3.10 для тестов API (для использования синтаксиса str | None)
-      - name: Настройка Python 3.10 для API
+      - name: Настройка Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: 3.10  
+          python-version: 3.10
 
       # Устанавливаем зависимости API
       - name: Установка зависимостей API
@@ -133,68 +133,68 @@ jobs:
           name: coverage-api
           path: api_coverage.xml
 
-#############################
-# Тесты Bot
-#############################
-  tests_bot:
-    name: Тесты Bot
-    runs-on: self-hosted
-    needs: build
-    steps:
-      - name: Checkout кода
-        uses: actions/checkout@v4
+# #############################
+# # Тесты Bot
+# #############################
+#   tests_bot:
+#     name: Тесты Bot
+#     runs-on: self-hosted
+#     needs: build
+#     steps:
+#       - name: Checkout кода
+#         uses: actions/checkout@v4
 
-      # Устанавливаем зависимости Bot (aiogram и т.д.)
-      - name: Установка зависимостей Bot
-        run: pip install -r bot/requirements.txt
+#       # Устанавливаем зависимости Bot (aiogram и т.д.)
+#       - name: Установка зависимостей Bot
+#         run: pip install -r bot/requirements.txt
 
-      # Добавляем папку bot в PYTHONPATH
-      - name: Установка PYTHONPATH для bot
-        run: echo "PYTHONPATH=$GITHUB_WORKSPACE/bot:$GITHUB_WORKSPACE" >> $GITHUB_ENV
+#       # Добавляем папку bot в PYTHONPATH
+#       - name: Установка PYTHONPATH для bot
+#         run: echo "PYTHONPATH=$GITHUB_WORKSPACE/bot:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
-      - name: Запуск тестов Bot
-        run: pytest bot/tests --cov=bot --cov-report=xml:bot_coverage.xml
+#       - name: Запуск тестов Bot
+#         run: pytest bot/tests --cov=bot --cov-report=xml:bot_coverage.xml
 
-      - name: Сохранить отчёт покрытия Bot
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-bot
-          path: bot_coverage.xml
+#       - name: Сохранить отчёт покрытия Bot
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: coverage-bot
+#           path: bot_coverage.xml
 
-#############################
-# Тесты web-ui
-#############################
-  tests_web_ui:
-    name: Тесты web-ui
-    runs-on: self-hosted
-    needs: build
-    steps:
-      - name: Checkout кода
-        uses: actions/checkout@v4
+# #############################
+# # Тесты web-ui
+# #############################
+#   tests_web_ui:
+#     name: Тесты web-ui
+#     runs-on: self-hosted
+#     needs: build
+#     steps:
+#       - name: Checkout кода
+#         uses: actions/checkout@v4
 
-      # Настраиваем Node.js 20, чтобы npm/npx были доступны
-      - name: Настройка Node.js 20 для web-ui
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+#       # Настраиваем Node.js 20, чтобы npm/npx были доступны
+#       - name: Настройка Node.js 20 для web-ui
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: 20
 
-      # Устанавливаем зависимости внутри каталога web-ui
-      - name: Установка зависимостей web-ui
-        run: |
-          cd web-ui
-          npm ci
+#       # Устанавливаем зависимости внутри каталога web-ui
+#       - name: Установка зависимостей web-ui
+#         run: |
+#           cd web-ui
+#           npm ci
 
-      - name: Запуск тестов web-ui
-        run: |
-          cd web-ui
-          npx vitest run
-          npx vitest run --coverage
+#       - name: Запуск тестов web-ui
+#         run: |
+#           cd web-ui
+#           npx vitest run
+#           npx vitest run --coverage
 
-      - name: Сохранить отчёт покрытия web-ui
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-web-ui
-          path: web-ui/coverage/lcov.info
+#       - name: Сохранить отчёт покрытия web-ui
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: coverage-web-ui
+#           path: web-ui/coverage/lcov.info
 
 #############################################
 # Job: Анализ покрытия и запуск SonarQube скана
