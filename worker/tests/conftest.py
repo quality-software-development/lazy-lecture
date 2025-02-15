@@ -6,8 +6,9 @@ import pytest
 import whisper
 
 from worker.core.settings import settings
-from worker.utils.task_queue import get_pika_connection, send_transcription_job_to_queue
+from worker.utils.task_queue import get_pika_connection
 from worker.transcribe.whisper_model import whisper_model as w_model
+from tests.utils.task_queue import send_transcription_job_to_queue
 
 
 @pytest.fixture

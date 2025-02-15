@@ -2,7 +2,7 @@ import json
 import random
 import pytest
 
-from worker.utils.task_queue import send_transcription_job_to_queue
+from tests.utils.task_queue import send_transcription_job_to_queue
 
 
 @pytest.mark.integration
