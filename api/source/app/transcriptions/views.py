@@ -94,6 +94,19 @@ async def worker_post_transcription_state(
     return {"transcription": transcription}
 
 
+@transcriptions_router.get(
+    "/worker/transcription_status",
+)
+async def worker_get_transcription_state(
+    transcription_id: int,
+    secret_worker_token: str = Depends(validate_worker_token),
+    db: AsyncSession = Depends(get_db),
+):
+    data = TranscriptionStatusUpdateRequest(transcription_id=transcription_id)
+    transcription = await update_transcription_state(data, db)
+    return {"transcription": transcription}
+
+
 @transcriptions_router.post(
     "/upload-audiofile",
 )

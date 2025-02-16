@@ -1,6 +1,13 @@
-from worker.core.queue_worker import LazyLectureQueueWorker
+import asyncio
+
+from worker.core.worker import LazyLectureWorker
 from worker.core.settings import settings
 
+
+async def main():
+    worker = LazyLectureWorker(settings)
+    await worker.start()
+
+
 if __name__ == "__main__":
-    worker = LazyLectureQueueWorker(settings)
-    worker.start()
+    asyncio.run(main())

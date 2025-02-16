@@ -1,6 +1,5 @@
 import typing as tp
 
-import pika
 import whisper
 from pydantic import AnyHttpUrl, DirectoryPath, PositiveInt, field_validator
 from pydantic_settings import BaseSettings
@@ -49,14 +48,8 @@ class Settings(BaseSettings):
         return v
 
     @property
-    def pika_connection_params(self) -> pika.ConnectionParameters:
-        return pika.ConnectionParameters(
-            host=self.pika_host,
-            port=self.pika_port,
-            credentials=pika.PlainCredentials(username=self.pika_user, password=self.pika_pass),
-            connection_attempts=3,
-            retry_delay=5,
-        )
+    def aio_pika_connection_string(self) -> str:
+        return f"amqp://{self.pika_user}:{self.pika_pass}@{self.pika_host}:{self.pika_port}/"
 
 
 settings = Settings()
