@@ -41,10 +41,6 @@ def fake_invalid_user_request():
     return {"username": "123", "password": "StrongPass1!"}
 
 
-# Техника тест-дизайна: #1 Классы эквивалентности
-# Описание:
-#   - Создание типового тестового пользователя.
-#     • Классы: экземпляр модели User с корректными начальными значениями.
 def fake_user():
     test_user = User()
     test_user.username = "testuser"
@@ -55,10 +51,6 @@ def fake_user():
     return test_user
 
 
-# Техника тест-дизайна: #1 Классы эквивалентности
-# Описание:
-#   - Замоканная сессия БД для типичных сценариев.
-#     • Классы: типичный объект БД с необходимыми методами (add, commit, refresh, get_one, scalar, scalars, delete).
 @pytest.fixture
 def fake_db_session():
     db = MagicMock()
@@ -68,7 +60,7 @@ def fake_db_session():
     db.get_one = AsyncMock()
     db.scalar = AsyncMock()
     db.scalars = MagicMock()
-    db.delete = AsyncMock()  # используем AsyncMock, чтобы можно было await
+    db.delete = AsyncMock()
     return db
 
 

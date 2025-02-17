@@ -42,10 +42,6 @@ def test_user_create_validator(monkeypatch):
 
     user_create = UserCreate(**data)
     assert user_create.password == f"hashed_{raw_password}"
-    # Техника тест-дизайна: #2 Граничные значения
-    # Описание:
-    #   - Проверяем, что временная метка пароля (password_timestamp) установлена и больше нуля.
-    #     • Границы: минимальное допустимое значение timestamp.
     assert user_create.password_timestamp > 0
 
 
