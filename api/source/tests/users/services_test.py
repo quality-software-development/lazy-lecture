@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from math import ceil
+
 # Для асинхронных тестов используем AsyncMock
 from unittest.mock import AsyncMock, MagicMock
 
@@ -20,6 +21,7 @@ from source.app.users.services import (
     list_users,
 )
 
+
 # Техника тест-дизайна: #1 Классы эквивалентности
 # Автор: Юлиана Мирочнук
 # Классы:
@@ -27,6 +29,7 @@ from source.app.users.services import (
 @pytest.fixture
 def fake_user_request():
     return UserRequest(username="testuser", password="StrongPass1!")
+
 
 # Техника тест-дизайна: #4 Прогнозирование ошибок
 # Автор: Юлиана Мирочнук
@@ -36,6 +39,7 @@ def fake_user_request():
 def fake_invalid_user_request():
     # Возвращаем словарь с невалидными данными
     return {"username": "123", "password": "StrongPass1!"}
+
 
 # Техника тест-дизайна: #1 Классы эквивалентности
 # Автор: Юлиана Мирочнук
@@ -49,6 +53,7 @@ def fake_user():
     test_user.role = "user"
     test_user.can_interact = False
     return test_user
+
 
 # Техника тест-дизайна: #1 Классы эквивалентности
 # Автор: Юлиана Мирочнук
@@ -66,7 +71,9 @@ def fake_db_session():
     db.delete = AsyncMock()  # используем AsyncMock, чтобы можно было await
     return db
 
+
 # =================== Тесты для create_user ===================
+
 
 @pytest.mark.asyncio
 async def test_create_user_success(fake_user_request, fake_db_session, monkeypatch):
@@ -76,6 +83,7 @@ async def test_create_user_success(fake_user_request, fake_db_session, monkeypat
     # - Типовой сценарий успешного создания пользователя
     def fake_hash(pw: str) -> str:
         return f"hashed_{pw}"
+
     monkeypatch.setattr("source.app.users.schemas.get_password_hash", fake_hash)
 
     fake_db_session.commit.return_value = None
@@ -84,6 +92,7 @@ async def test_create_user_success(fake_user_request, fake_db_session, monkeypat
     created_user = await create_user(user=fake_user_request, db=fake_db_session)
     assert isinstance(created_user, User)
     assert created_user.password == f"hashed_{fake_user_request.password}"
+
 
 @pytest.mark.asyncio
 async def test_create_user_integrity_error(fake_user_request, fake_db_session):
@@ -95,6 +104,7 @@ async def test_create_user_integrity_error(fake_user_request, fake_db_session):
     result = await create_user(user=fake_user_request, db=fake_db_session)
     assert result is None
 
+
 @pytest.mark.asyncio
 async def test_create_user_invalid_input(fake_invalid_user_request, fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
@@ -104,7 +114,9 @@ async def test_create_user_invalid_input(fake_invalid_user_request, fake_db_sess
     with pytest.raises(Exception):
         await create_user(user=fake_invalid_user_request, db=fake_db_session)
 
+
 # =================== Тесты для get_user_by_id ===================
+
 
 @pytest.mark.asyncio
 async def test_get_user_by_id_found(fake_db_session):
@@ -120,6 +132,7 @@ async def test_get_user_by_id_found(fake_db_session):
     fake_db_session.get_one.assert_called_once_with(User, 1)
     assert user.username == "testuser"
 
+
 @pytest.mark.asyncio
 async def test_get_user_by_id_not_found(fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
@@ -130,7 +143,9 @@ async def test_get_user_by_id_not_found(fake_db_session):
     user = await get_user_by_id(user_id=999, db=fake_db_session)
     assert user is None
 
+
 # =================== Тесты для update_user ===================
+
 
 @pytest.mark.asyncio
 async def test_update_user_success(fake_db_session, monkeypatch):
@@ -147,11 +162,13 @@ async def test_update_user_success(fake_db_session, monkeypatch):
 
     def fake_hash(pw: str) -> str:
         return f"hashed_{pw}"
+
     monkeypatch.setattr("source.app.users.schemas.get_password_hash", fake_hash)
 
     updated_user = await update_user(user=test_user, request=update_request, db=fake_db_session)
     assert updated_user.password == f"hashed_{update_data['password']}"
     assert updated_user.can_interact is True
+
 
 @pytest.mark.asyncio
 async def test_update_user_no_changes(fake_db_session):
@@ -176,6 +193,7 @@ async def test_update_user_no_changes(fake_db_session):
     assert updated_user.password == "old_hash"
     assert updated_user.can_interact is False
 
+
 @pytest.mark.asyncio
 async def test_update_user_integrity_error(fake_db_session, monkeypatch):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
@@ -190,12 +208,15 @@ async def test_update_user_integrity_error(fake_db_session, monkeypatch):
 
     def fake_hash(pw: str) -> str:
         return f"hashed_{pw}"
+
     monkeypatch.setattr("source.app.users.schemas.get_password_hash", fake_hash)
 
     result = await update_user(user=test_user, request=update_request, db=fake_db_session)
     assert result is None
 
+
 # =================== Тесты для delete_user ===================
+
 
 @pytest.mark.asyncio
 async def test_delete_user_success(fake_db_session):
@@ -208,6 +229,7 @@ async def test_delete_user_success(fake_db_session):
     fake_db_session.delete.assert_called_once_with(test_user)
     fake_db_session.commit.assert_called_once()
 
+
 @pytest.mark.asyncio
 async def test_delete_user_exception(fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
@@ -219,7 +241,9 @@ async def test_delete_user_exception(fake_db_session):
     with pytest.raises(Exception, match="Delete error"):
         await delete_user(user=test_user, db=fake_db_session)
 
+
 # =================== Тесты для list_users ===================
+
 
 @pytest.mark.asyncio
 async def test_list_users_success(fake_db_session):
@@ -232,7 +256,9 @@ async def test_list_users_success(fake_db_session):
     user1.create_date = now
     user1.update_date = now
 
-    user2 = User(id=2, username="UserTwo", active=True, can_interact=False, role=Roles.USER, password_timestamp=123456.0)
+    user2 = User(
+        id=2, username="UserTwo", active=True, can_interact=False, role=Roles.USER, password_timestamp=123456.0
+    )
     user2.create_date = now
     user2.update_date = now
 
@@ -242,6 +268,7 @@ async def test_list_users_success(fake_db_session):
     class FakeScalars:
         async def all(self):
             return users_list
+
         def __await__(self):
             return self.all().__await__()
 
@@ -264,6 +291,7 @@ async def test_list_users_success(fake_db_session):
     actual = [r.dict() for r in user_page.users]
     assert actual == expected
 
+
 @pytest.mark.asyncio
 async def test_list_users_empty(fake_db_session):
     # Техника тест-дизайна: #2 Граничные значения
@@ -274,6 +302,7 @@ async def test_list_users_empty(fake_db_session):
         @staticmethod
         async def all():
             return []
+
         def __await__(self):
             return self.all().__await__()
 
@@ -294,6 +323,7 @@ async def test_list_users_empty(fake_db_session):
     assert user_page.pages == 0
     assert user_page.users == []
 
+
 @pytest.mark.asyncio
 async def test_list_users_count_exception(fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
@@ -304,8 +334,10 @@ async def test_list_users_count_exception(fake_db_session):
         @staticmethod
         async def all():
             return []
+
         def __await__(self):
             return self.all().__await__()
+
     fake_db_session.scalars.return_value = FakeScalars()
     fake_db_session.scalar.side_effect = Exception("Count error")
 

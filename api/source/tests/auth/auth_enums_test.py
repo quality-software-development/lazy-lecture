@@ -1,5 +1,6 @@
 from source.app.auth.enums import TokenType
 
+
 # Техника тест-дизайна: #1 Классы эквивалентности
 # Автор: Юлиана Мирочнук
 # Классы:
@@ -8,6 +9,7 @@ def test_token_type_values():
     # Проверяем, что значения Enum TokenType корректны для типичных (эквивалентных) входных данных.
     assert TokenType.ACCESS.value == "access"
     assert TokenType.REFRESH.value == "refresh"
+
 
 # Техника тест-дизайна: #1 Классы эквивалентности
 # Автор: Юлиана Мирочнук

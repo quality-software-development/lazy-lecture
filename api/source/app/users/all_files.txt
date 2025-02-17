@@ -298,4 +298,3 @@ async def user_update(
     return conflict(f"User '{request.username}' already exists")
 
 ------------------------------------
-

@@ -317,4 +317,3 @@ async def refresh(request: Refresh, db: AsyncSession = Depends(get_db)) -> dict:
     return unauthorized("Invalid or expired token")
 
 ------------------------------------
-

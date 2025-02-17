@@ -1,5 +1,6 @@
 from source.app.users.models import User
 
+
 # Техника тест-дизайна: #1 Классы эквивалентности
 # Автор: Юлиана Мирочнук
 # Классы:
@@ -21,6 +22,7 @@ def test_user_model_attributes():
     assert user.role == "user"
     assert user.password_timestamp == 1234567890.0
     assert user.can_interact is True
+
 
 # Техника тест-дизайна: #7 Таблица принятия решений
 # Автор: Юлиана Мирочнук

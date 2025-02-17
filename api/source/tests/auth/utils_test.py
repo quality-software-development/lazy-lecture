@@ -1,5 +1,6 @@
 from source.app.auth.utils import verify_password, get_password_hash
 
+
 def test_get_password_hash_returns_non_empty_string():
     # Техника тест-дизайна: #1 Классы эквивалентности
     # Автор: Юлиана Мирочнук
@@ -12,6 +13,7 @@ def test_get_password_hash_returns_non_empty_string():
     assert len(hashed) > 0
     assert hashed != password
 
+
 def test_verify_password_success():
     # Техника тест-дизайна: #1 Классы эквивалентности
     # Автор: Юлиана Мирочнук
@@ -20,6 +22,7 @@ def test_verify_password_success():
     password = "StrongPass1!"
     hashed = get_password_hash(password)
     assert verify_password(password, hashed) is True
+
 
 def test_verify_password_failure():
     # Техника тест-дизайна: #4 Прогнозирование ошибок
@@ -30,6 +33,7 @@ def test_verify_password_failure():
     wrong_password = "WrongPass1!"
     hashed = get_password_hash(password)
     assert verify_password(wrong_password, hashed) is False
+
 
 def test_hash_is_different_for_same_password_due_to_salt():
     # Техника тест-дизайна: #2 Граничные значения и #3 Причинно-следственный анализ
