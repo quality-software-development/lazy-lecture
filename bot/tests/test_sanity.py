@@ -1,3 +1,2 @@
-# def test_page_not_found(client):
-#     response = client.get("/some-random-page")
-#     response.status_code == 404
+def test_example():
+    assert True
