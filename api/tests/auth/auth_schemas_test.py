@@ -17,16 +17,25 @@ def test_token_defaults():
     assert token.token_type == "bearer"  # Значение по умолчанию
 
 
+@pytest.mark.parametrize(
+    "access_token, refresh_token, token_type, expected_token_type",
+    [
+        ("access123", "refresh123", "custom", "custom"),
+        ("access123", "refresh456", "custom", "custom"),
+        ("access456", "refresh123", "Bearer", "Bearer"),
+        ("access456", "refresh456", "Bearer", "Bearer"),
+    ],
+)
+
 # Техника тест-дизайна: #5 Попарное тестирование
 # Автор: Юлиана Мирочнук
 # Описание:
 #   - Тест для модели Token с попарным перебором значений token_type.
 #   - Таблица: комбинации "custom" и стандартного значения; проверяем, что при наличии явного token_type модель использует его.
-def test_token_custom_token_type():
-    # При наличии явного указания token_type модель должна использовать переданное значение.
-    token_data = {"access_token": "access123", "refresh_token": "refresh123", "token_type": "custom"}
+def test_token_custom_token_type(access_token, refresh_token, token_type, expected_token_type):
+    token_data = {"access_token": access_token, "refresh_token": refresh_token, "token_type": token_type}
     token = Token(**token_data)
-    assert token.token_type == "custom"
+    assert token.token_type == expected_token_type
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности

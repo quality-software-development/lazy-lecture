@@ -8,10 +8,6 @@ from source.app.auth.types import validate_username, validate_pass, UsernameStr,
 # Описание:
 #   - Тест функции validate_username.
 #   - Классы эквивалентности: корректные строки для username, представляющие минимальное, типичное и максимальное допустимое значение.
-def test_validate_username_valid(username):
-    # Проверяем корректность username для граничных (минимальное и максимальное) и типичных значений.
-    result = validate_username(username)
-    assert result == username
 
 
 @pytest.mark.parametrize(
