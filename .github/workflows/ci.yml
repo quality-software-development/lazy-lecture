@@ -94,36 +94,36 @@ jobs:
 # #############################
 # # Тесты API
 # #############################
-#   tests_api:
-#     name: Тесты API
-#     runs-on: self-hosted
-#     needs: build
-#     steps:
-#       - name: Checkout кода
-#         uses: actions/checkout@v4
+  tests_api:
+    name: Тесты API
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
 
-#       # Настройка Python 3.11 для тестов API (для использования синтаксиса str | None)
-#       - name: Настройка Python 3.11
-#         uses: actions/setup-python@v5
-#         with:
-#           python-version: 3.11
+      # Настройка Python 3.11 для тестов API (для использования синтаксиса str | None)
+      - name: Настройка Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
 
-#       # Устанавливаем зависимости API
-#       - name: Установка зависимостей API
-#         run: pip install -r api/config/requirements.txt
+      # Устанавливаем зависимости API
+      - name: Установка зависимостей API
+        run: pip install -r api/config/requirements.txt
 
-#       # Добавляем каталог api в PYTHONPATH
-#       - name: Установка PYTHONPATH для API
-#         run: echo "PYTHONPATH=$GITHUB_WORKSPACE/api:$GITHUB_WORKSPACE" >> $GITHUB_ENV
+      # Добавляем каталог api в PYTHONPATH
+      - name: Установка PYTHONPATH для API
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE/api:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
-#       - name: Запуск тестов API
-#         run: pytest --rootdir=. --cov=source --cov-report=xml:api_coverage.xml api
+      - name: Запуск тестов API
+        run: pytest --rootdir=. --cov=source --cov-report=xml:api_coverage.xml api
 
-#       - name: Сохранить отчёт покрытия API
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: coverage-api
-#           path: api_coverage.xml
+      - name: Сохранить отчёт покрытия API
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-api
+          path: api_coverage.xml
 
 #############################
 # Тесты Bot
@@ -194,14 +194,13 @@ jobs:
   analyze:
     name: Анализ покрытия и SonarQube
     runs-on: self-hosted
-    needs: [tests_worker, tests_bot, tests_web_ui]
+    needs: [tests_worker, tests_bot, tests_web_ui, tests_api]
     steps:
       - name: Checkout кода
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          
-      # Скачиваем все отчёты покрытия
+
       - name: Скачать все отчёты покрытия
         uses: actions/download-artifact@v4
         with:
