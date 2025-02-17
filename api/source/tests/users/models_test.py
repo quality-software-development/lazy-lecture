@@ -1,9 +1,12 @@
 from source.app.users.models import User
 
-
+# Техника тест-дизайна: #1 Классы эквивалентности
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Модель пользователя с корректно заданными полями
 def test_user_model_attributes():
     user = User()
-    # Задаём поля вручную
+    # Задаём поля вручную (типовой сценарий)
     user.username = "testuser"
     user.password = "hashed_password"
     user.active = True
@@ -19,8 +22,11 @@ def test_user_model_attributes():
     assert user.password_timestamp == 1234567890.0
     assert user.can_interact is True
 
-
+# Техника тест-дизайна: #7 Таблица принятия решений
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Проверка значения __tablename__
 def test_user_model_tablename():
     user = User()
-    # __tablename__ должно быть "User"
+    # Ожидаем, что __tablename__ равно "User"
     assert user.__tablename__ == "User"

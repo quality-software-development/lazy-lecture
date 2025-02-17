@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 import pytest
 from pydantic import ValidationError
-
 from source.app.users.schemas import (
     UserRequest,
     UserCreate,
@@ -16,7 +15,10 @@ from source.app.users.schemas import (
 from source.app.users.enums import Roles
 
 
-# Тест для UserRequest (эквивалент Credentials)
+# Техника тест-дизайна: #1 Классы эквивалентности
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Корректные данные для UserRequest (эквивалент Credentials)
 def test_user_request_valid():
     data = {"username": "ValidUser", "password": "StrongPass1!"}
     req = UserRequest(**data)
@@ -24,25 +26,31 @@ def test_user_request_valid():
     assert req.password == "StrongPass1!"
 
 
-# Тест для UserCreate – проверка работы валидатора, который должен заменить пароль на его хэш.
+# Техника тест-дизайна: #3 Причинно-следственный анализ
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Проверка работы валидатора в UserCreate, преобразующего пароль
 def test_user_create_validator(monkeypatch):
     raw_password = "StrongPass1!"
     data = {"username": "ValidUser", "password": raw_password}
 
-    # Патчим не source.app.auth.utils.get_password_hash, а имя, импортированное в users.schemas
+    # Патчим функцию хеширования (fake), чтобы отследить преобразование
     def fake_hash(pw: str) -> str:
         return f"hashed_{pw}"
 
     monkeypatch.setattr("source.app.users.schemas.get_password_hash", fake_hash)
 
     user_create = UserCreate(**data)
-    # Проверяем, что поле password преобразовано в наш "фейковый" хэш
     assert user_create.password == f"hashed_{raw_password}"
-    # Проверяем, что password_timestamp установлен
+    # Техника тест-дизайна: #2 Граничные значения
+    # Проверяем, что временная метка пароля установлена (больше нуля)
     assert user_create.password_timestamp > 0
 
 
-# Тест для UserResponse – поскольку ResponseSchema требует поле id, добавляем его
+# Техника тест-дизайна: #1 Классы эквивалентности
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Корректное создание UserResponse с обязательными полями
 def test_user_response():
     now = datetime.now(timezone.utc)
     data = {
@@ -63,7 +71,10 @@ def test_user_response():
     assert response.update_date == now
 
 
-# Тест для UserUpdate – если password задан, то после валидатора он должен быть захеширован
+# Техника тест-дизайна: #3 Причинно-следственный анализ
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Проверка работы валидатора в UserUpdate: при наличии пароля он должен быть захеширован
 def test_user_update(monkeypatch):
     raw_password = "NewStrongPass1!"
     data = {"password": raw_password, "can_interact": True}
@@ -79,19 +90,25 @@ def test_user_update(monkeypatch):
     assert update_req.can_interact is True
 
 
-# Тест для пагинационных моделей: UserPagination
+# Техника тест-дизайна: #1 Классы эквивалентности
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Типовой сценарий для пагинационных настроек
 def test_user_pagination_defaults():
     pagination = UserPagination()
     assert pagination.sort == "id"
     assert pagination.order == "asc"
 
 
-# Тест для UserPage – проверяем, что список пользователей корректно создаётся.
+# Техника тест-дизайна: #7 Таблица принятия решений
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Проверка создания UserPage с корректным списком пользователей
 def test_user_page():
     now = datetime.now(timezone.utc)
     user_resp = {
         "id": 10,
-        "username": "UserTest",  # проходит валидацию (только буквы)
+        "username": "UserTest",  # корректное значение
         "active": True,
         "can_interact": True,
         "role": Roles.USER,
@@ -111,7 +128,10 @@ def test_user_page():
     assert page.users[0].username == "UserTest"
 
 
-# Тест для UserId и Username
+# Техника тест-дизайна: #1 Классы эквивалентности
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Корректное создание моделей UserId и Username
 def test_userid_and_username():
     uid = UserId(user_id=42)
     assert uid.user_id == 42

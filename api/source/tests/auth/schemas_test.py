@@ -1,16 +1,13 @@
 import pytest
 from pydantic import ValidationError
-
 from source.app.auth.schemas import Token, Credentials, Refresh
 
-
-# Для тестирования аннотированных типов мы можем использовать корректные строковые значения,
-# так как UsernameStr и PasswordStr определяются в types.py.
-
-# --- Тесты для модели Token ---
-
+# Техника тест-дизайна: #1 Классы эквивалентности
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Стандартное поведение модели Token (без явного указания token_type)
 def test_token_defaults():
-    # Если не передавать token_type, то по умолчанию должен быть "bearer"
+    # Если token_type не передан, должен использоваться дефолтный "bearer"
     token_data = {
         "access_token": "access123",
         "refresh_token": "refresh123"
@@ -18,11 +15,15 @@ def test_token_defaults():
     token = Token(**token_data)
     assert token.access_token == "access123"
     assert token.refresh_token == "refresh123"
-    assert token.token_type == "bearer"  # значение по умолчанию
+    assert token.token_type == "bearer"  # Значение по умолчанию
 
 
+# Техника тест-дизайна: #5 Попарное тестирование
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Разные значения token_type (custom и стандартное)
 def test_token_custom_token_type():
-    # Если явно указать token_type, то модель должна использовать его
+    # Если явно указан token_type, модель должна его использовать
     token_data = {
         "access_token": "access123",
         "refresh_token": "refresh123",
@@ -31,38 +32,42 @@ def test_token_custom_token_type():
     token = Token(**token_data)
     assert token.token_type == "custom"
 
-
-# --- Тесты для модели Credentials ---
-
+# Техника тест-дизайна: #1 Классы эквивалентности
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Корректные учетные данные
 def test_credentials_valid():
-    # Корректные учетные данные должны создаваться без ошибок
     creds_data = {
-        "username": "ValidUser",  # предполагается, что валидация UsernameStr допускает данное значение
-        "password": "StrongPass1!"  # аналогично для PasswordStr
+        "username": "ValidUser",  # Допустимое значение для UsernameStr
+        "password": "StrongPass1!"  # Допустимое значение для PasswordStr
     }
     creds = Credentials(**creds_data)
     assert creds.username == "ValidUser"
     assert creds.password == "StrongPass1!"
 
-
+# Техника тест-дизайна: #4 Прогнозирование ошибок
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Отсутствие обязательных полей (username или password)
 def test_credentials_invalid():
-    # Если не передать необходимые поля, должна возникать ошибка валидации
     with pytest.raises(ValidationError):
-        Credentials(username="ValidUser")  # отсутствует password
+        Credentials(username="ValidUser")  # password отсутствует
     with pytest.raises(ValidationError):
-        Credentials(password="StrongPass1!")  # отсутствует username
+        Credentials(password="StrongPass1!")  # username отсутствует
 
-
-# --- Тесты для модели Refresh ---
-
+# Техника тест-дизайна: #1 Классы эквивалентности
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Корректное значение refresh_token
 def test_refresh_valid():
-    # Корректное значение refresh_token должно создаваться без ошибок
     data = {"refresh_token": "refresh_token_value"}
     refresh = Refresh(**data)
     assert refresh.refresh_token == "refresh_token_value"
 
-
+# Техника тест-дизайна: #4 Прогнозирование ошибок
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Отсутствие refresh_token
 def test_refresh_invalid():
-    # Если refresh_token отсутствует, должна быть ошибка валидации
     with pytest.raises(ValidationError):
         Refresh()

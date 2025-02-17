@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from sqlalchemy.exc import IntegrityError
-
 from source.app.users.enums import Sort, Order, Roles
 from source.app.users.models import User
 from source.app.users.schemas import (
@@ -21,20 +20,27 @@ from source.app.users.services import (
     list_users,
 )
 
-
-# Фикстура для корректного UserRequest – передаем Pydantic‑модель
+# Техника тест-дизайна: #1 Классы эквивалентности
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Корректный запрос для создания пользователя (валидный UserRequest)
 @pytest.fixture
 def fake_user_request():
     return UserRequest(username="testuser", password="StrongPass1!")
 
-
-# Фикстура для невалидного UserRequest (например, недопустимый username)
+# Техника тест-дизайна: #4 Прогнозирование ошибок
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Невалидный запрос для создания пользователя (username не соответствует требованиям)
 @pytest.fixture
 def fake_invalid_user_request():
     # Возвращаем словарь с невалидными данными
     return {"username": "123", "password": "StrongPass1!"}
 
-
+# Техника тест-дизайна: #1 Классы эквивалентности
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Типичный тестовый пользователь
 def fake_user():
     test_user = User()
     test_user.username = "testuser"
@@ -44,7 +50,10 @@ def fake_user():
     test_user.can_interact = False
     return test_user
 
-
+# Техника тест-дизайна: #1 Классы эквивалентности
+# Автор: Юлиана Мирочнук
+# Классы:
+# - Замоканная сессия БД для типичных сценариев
 @pytest.fixture
 def fake_db_session():
     db = MagicMock()
@@ -57,15 +66,16 @@ def fake_db_session():
     db.delete = AsyncMock()  # используем AsyncMock, чтобы можно было await
     return db
 
-
 # =================== Тесты для create_user ===================
 
 @pytest.mark.asyncio
 async def test_create_user_success(fake_user_request, fake_db_session, monkeypatch):
+    # Техника тест-дизайна: #1 Классы эквивалентности
+    # Автор: Юлиана Мирочнук
+    # Классы:
+    # - Типовой сценарий успешного создания пользователя
     def fake_hash(pw: str) -> str:
         return f"hashed_{pw}"
-
-    # Подменяем get_password_hash там, где она используется в UserCreate
     monkeypatch.setattr("source.app.users.schemas.get_password_hash", fake_hash)
 
     fake_db_session.commit.return_value = None
@@ -75,26 +85,33 @@ async def test_create_user_success(fake_user_request, fake_db_session, monkeypat
     assert isinstance(created_user, User)
     assert created_user.password == f"hashed_{fake_user_request.password}"
 
-
 @pytest.mark.asyncio
 async def test_create_user_integrity_error(fake_user_request, fake_db_session):
+    # Техника тест-дизайна: #4 Прогнозирование ошибок
+    # Автор: Юлиана Мирочнук
+    # Классы:
+    # - Ситуация, когда commit выбрасывает IntegrityError
     fake_db_session.commit.side_effect = IntegrityError("dummy", "params", Exception("dummy"))
     result = await create_user(user=fake_user_request, db=fake_db_session)
     assert result is None
 
-
-# Дополнительный тест: неверный вход (невалидные данные)
 @pytest.mark.asyncio
 async def test_create_user_invalid_input(fake_invalid_user_request, fake_db_session):
-    with pytest.raises(Exception):  # или конкретно ValidationError
-        # Попытка создать пользователя с невалидными данными должна вызывать ошибку
+    # Техника тест-дизайна: #4 Прогнозирование ошибок
+    # Автор: Юлиана Мирочнук
+    # Классы:
+    # - Попытка создания пользователя с невалидными данными должна вызвать ошибку
+    with pytest.raises(Exception):
         await create_user(user=fake_invalid_user_request, db=fake_db_session)
-
 
 # =================== Тесты для get_user_by_id ===================
 
 @pytest.mark.asyncio
 async def test_get_user_by_id_found(fake_db_session):
+    # Техника тест-дизайна: #1 Классы эквивалентности
+    # Автор: Юлиана Мирочнук
+    # Классы:
+    # - Типовой сценарий: пользователь найден в БД
     test_user = User()
     test_user.username = "testuser"
     fake_db_session.get_one.return_value = test_user
@@ -103,21 +120,25 @@ async def test_get_user_by_id_found(fake_db_session):
     fake_db_session.get_one.assert_called_once_with(User, 1)
     assert user.username == "testuser"
 
-
 @pytest.mark.asyncio
 async def test_get_user_by_id_not_found(fake_db_session):
-    # Если db.get_one возвращает None, функция должна вернуть None
+    # Техника тест-дизайна: #4 Прогнозирование ошибок
+    # Автор: Юлиана Мирочнук
+    # Классы:
+    # - Сценарий отсутствия пользователя в БД (get_one возвращает None)
     fake_db_session.get_one.return_value = None
     user = await get_user_by_id(user_id=999, db=fake_db_session)
     assert user is None
-
 
 # =================== Тесты для update_user ===================
 
 @pytest.mark.asyncio
 async def test_update_user_success(fake_db_session, monkeypatch):
+    # Техника тест-дизайна: #3 Причинно-следственный анализ
+    # Автор: Юлиана Мирочнук
+    # Классы:
+    # - Типовой сценарий обновления: изменение пароля и поля can_interact
     test_user = fake_user()
-
     update_data = {"password": "NewStrongPass1!", "can_interact": True}
     update_request = UserUpdateRequest(**update_data)
 
@@ -126,18 +147,18 @@ async def test_update_user_success(fake_db_session, monkeypatch):
 
     def fake_hash(pw: str) -> str:
         return f"hashed_{pw}"
-
     monkeypatch.setattr("source.app.users.schemas.get_password_hash", fake_hash)
 
     updated_user = await update_user(user=test_user, request=update_request, db=fake_db_session)
     assert updated_user.password == f"hashed_{update_data['password']}"
     assert updated_user.can_interact is True
 
-
-# Дополнительный тест: пустой запрос на обновление (все поля None)
 @pytest.mark.asyncio
 async def test_update_user_no_changes(fake_db_session):
-    # Создаем пользователя с начальными значениями
+    # Техника тест-дизайна: #2 Граничные значения и #4 Прогнозирование ошибок
+    # Автор: Юлиана Мирочнук
+    # Классы:
+    # - Граничный сценарий: пустой запрос обновления не должен изменять пользователя
     test_user = User()
     test_user.username = "testuser"
     test_user.password = "old_hash"
@@ -145,24 +166,23 @@ async def test_update_user_no_changes(fake_db_session):
     test_user.role = "user"
     test_user.can_interact = False
 
-    # Передаем пустой запрос: все поля None
-    update_data = {}  # Пустой запрос
+    update_data = {}  # пустой запрос
     update_request = UserUpdateRequest(**update_data)
 
     fake_db_session.commit.return_value = None
     fake_db_session.refresh.return_value = None
 
     updated_user = await update_user(user=test_user, request=update_request, db=fake_db_session)
-    # Ожидаем, что никаких изменений не произойдет
     assert updated_user.password == "old_hash"
     assert updated_user.can_interact is False
 
-
-# Дополнительный тест: IntegrityError при обновлении
 @pytest.mark.asyncio
 async def test_update_user_integrity_error(fake_db_session, monkeypatch):
+    # Техника тест-дизайна: #4 Прогнозирование ошибок
+    # Автор: Юлиана Мирочнук
+    # Классы:
+    # - Сценарий, когда при обновлении возникает IntegrityError, функция должна вернуть None
     test_user = fake_user()
-
     update_data = {"password": "NewStrongPass1!", "can_interact": True}
     update_request = UserUpdateRequest(**update_data)
 
@@ -170,37 +190,43 @@ async def test_update_user_integrity_error(fake_db_session, monkeypatch):
 
     def fake_hash(pw: str) -> str:
         return f"hashed_{pw}"
-
     monkeypatch.setattr("source.app.users.schemas.get_password_hash", fake_hash)
 
     result = await update_user(user=test_user, request=update_request, db=fake_db_session)
     assert result is None
 
-
 # =================== Тесты для delete_user ===================
 
 @pytest.mark.asyncio
 async def test_delete_user_success(fake_db_session):
+    # Техника тест-дизайна: #1 Классы эквивалентности
+    # Автор: Юлиана Мирочнук
+    # Классы:
+    # - Типовой сценарий успешного удаления пользователя
     test_user = User()
     await delete_user(user=test_user, db=fake_db_session)
     fake_db_session.delete.assert_called_once_with(test_user)
     fake_db_session.commit.assert_called_once()
 
-
-# Дополнительный тест: исключение при удалении (например, если commit выбрасывает ошибку)
 @pytest.mark.asyncio
 async def test_delete_user_exception(fake_db_session):
+    # Техника тест-дизайна: #4 Прогнозирование ошибок
+    # Автор: Юлиана Мирочнук
+    # Классы:
+    # - Сценарий, когда метод удаления выбрасывает исключение (например, commit)
     test_user = User()
     fake_db_session.delete.side_effect = Exception("Delete error")
     with pytest.raises(Exception, match="Delete error"):
         await delete_user(user=test_user, db=fake_db_session)
 
-
 # =================== Тесты для list_users ===================
 
 @pytest.mark.asyncio
 async def test_list_users_success(fake_db_session):
-    # Создаем корректно заполненные объекты User
+    # Техника тест-дизайна: #1 Классы эквивалентности и #7 Таблица принятия решений
+    # Автор: Юлиана Мирочнук
+    # Классы:
+    # - Типовой сценарий: База содержит два пользователя
     now = datetime.now(timezone.utc)
     user1 = User(
         id=1,
@@ -226,12 +252,10 @@ async def test_list_users_success(fake_db_session):
 
     users_list = [user1, user2]
 
-    # Создаем фиктивный объект, который реализует асинхронный метод all() и является awaitable,
-    # при await возвращает результат метода all(), то есть users_list.
+    # Фиктивный объект, возвращающий список пользователей при await
     class FakeScalars:
         async def all(self):
             return users_list
-
         def __await__(self):
             return self.all().__await__()
 
@@ -248,21 +272,22 @@ async def test_list_users_success(fake_db_session):
     assert user_page.size == size
     assert user_page.total == 2
     assert user_page.pages == ceil(2 / size)
-    # Сравниваем представления в виде словарей:
+    # Техника тест-дизайна: #3 Причинно-следственный анализ
+    # Сравниваем представления ORM-объектов и схемы UserResponse
     expected = [UserResponse.from_orm(u).dict() for u in users_list]
     actual = [r.dict() for r in user_page.users]
     assert actual == expected
 
-
-# Дополнительный тест: пустой результат – нет пользователей
 @pytest.mark.asyncio
 async def test_list_users_empty(fake_db_session):
-    # Если пользователей нет, total = 0, users = []
+    # Техника тест-дизайна: #2 Граничные значения
+    # Автор: Юлиана Мирочнук
+    # Классы:
+    # - Граничный сценарий: если пользователей нет, total=0 и список пустой
     class FakeScalars:
         @staticmethod
         async def all():
             return []
-
         def __await__(self):
             return self.all().__await__()
 
@@ -278,22 +303,23 @@ async def test_list_users_empty(fake_db_session):
     assert user_page.page == page
     assert user_page.size == size
     assert user_page.total == 0
-    # В зависимости от логики, pages может быть 0 или 1; предположим, что 0
+    # Техника тест-дизайна: #7 Таблица принятия решений
+    # Проверяем, что число страниц равно 0 при отсутствии пользователей
     assert user_page.pages == 0
     assert user_page.users == []
 
-
-# Дополнительный тест: исключение при подсчете общего количества (db.scalar выбрасывает ошибку)
 @pytest.mark.asyncio
 async def test_list_users_count_exception(fake_db_session):
+    # Техника тест-дизайна: #4 Прогнозирование ошибок
+    # Автор: Юлиана Мирочнук
+    # Классы:
+    # - Сценарий, когда db.scalar (подсчет записей) выбрасывает исключение
     class FakeScalars:
         @staticmethod
         async def all():
             return []
-
         def __await__(self):
             return self.all().__await__()
-
     fake_db_session.scalars.return_value = FakeScalars()
     fake_db_session.scalar.side_effect = Exception("Count error")
 
