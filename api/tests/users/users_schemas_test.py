@@ -16,9 +16,9 @@ from source.app.users.enums import Roles
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности
-# Автор: Юлиана Мирочнук
-# Классы:
-# - Корректные данные для UserRequest (эквивалент Credentials)
+# Описание:
+#   - Проверка корректных данных для UserRequest.
+#     • Классы: валидные значения для username и password, аналогичные корректным учетным данным.
 def test_user_request_valid():
     data = {"username": "ValidUser", "password": "StrongPass1!"}
     req = UserRequest(**data)
@@ -27,9 +27,9 @@ def test_user_request_valid():
 
 
 # Техника тест-дизайна: #3 Причинно-следственный анализ
-# Автор: Юлиана Мирочнук
-# Классы:
-# - Проверка работы валидатора в UserCreate, преобразующего пароль
+# Описание:
+#   - Проверка валидатора в UserCreate, который преобразует (хеширует) пароль.
+#     • Классы: проверка преобразования пароля.
 def test_user_create_validator(monkeypatch):
     raw_password = "StrongPass1!"
     data = {"username": "ValidUser", "password": raw_password}
@@ -43,14 +43,16 @@ def test_user_create_validator(monkeypatch):
     user_create = UserCreate(**data)
     assert user_create.password == f"hashed_{raw_password}"
     # Техника тест-дизайна: #2 Граничные значения
-    # Проверяем, что временная метка пароля установлена (больше нуля)
+    # Описание:
+    #   - Проверяем, что временная метка пароля (password_timestamp) установлена и больше нуля.
+    #     • Границы: минимальное допустимое значение timestamp.
     assert user_create.password_timestamp > 0
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности
-# Автор: Юлиана Мирочнук
-# Классы:
-# - Корректное создание UserResponse с обязательными полями
+# Описание:
+#   - Проверка корректного создания UserResponse с обязательными полями.
+#     • Классы: корректно заполненные поля модели UserResponse.
 def test_user_response():
     now = datetime.now(timezone.utc)
     data = {
@@ -72,9 +74,9 @@ def test_user_response():
 
 
 # Техника тест-дизайна: #3 Причинно-следственный анализ
-# Автор: Юлиана Мирочнук
-# Классы:
-# - Проверка работы валидатора в UserUpdate: при наличии пароля он должен быть захеширован
+# Описание:
+#   - Проверка валидатора в UserUpdate: при наличии пароля он должен быть захеширован.
+#     • Классы: проверка преобразования пароля в модели UserUpdate.
 def test_user_update(monkeypatch):
     raw_password = "NewStrongPass1!"
     data = {"password": raw_password, "can_interact": True}
@@ -91,9 +93,9 @@ def test_user_update(monkeypatch):
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности
-# Автор: Юлиана Мирочнук
-# Классы:
-# - Типовой сценарий для пагинационных настроек
+# Описание:
+#   - Типовой сценарий для пагинационных настроек (UserPagination).
+#     • Классы: проверка значений сортировки и порядка (sort, order) по умолчанию.
 def test_user_pagination_defaults():
     pagination = UserPagination()
     assert pagination.sort == "id"
@@ -101,9 +103,9 @@ def test_user_pagination_defaults():
 
 
 # Техника тест-дизайна: #7 Таблица принятия решений
-# Автор: Юлиана Мирочнук
-# Классы:
-# - Проверка создания UserPage с корректным списком пользователей
+# Описание:
+#   - Проверка создания UserPage с корректным списком пользователей.
+#     • Таблица: набор условий для расчёта количества страниц, общего числа и формирования списка пользователей.
 def test_user_page():
     now = datetime.now(timezone.utc)
     user_resp = {
@@ -129,9 +131,9 @@ def test_user_page():
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности
-# Автор: Юлиана Мирочнук
-# Классы:
-# - Корректное создание моделей UserId и Username
+# Описание:
+#   - Проверка корректного создания моделей UserId и Username.
+#     • Классы: валидное значение user_id и корректное имя пользователя.
 def test_userid_and_username():
     uid = UserId(user_id=42)
     assert uid.user_id == 42
