@@ -1,0 +1,5282 @@
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/API.md
+Содержимое:
+---
+title: FastAPI JWT Auth API v1.0.0
+language_tabs:
+  - shell: Shell
+  - http: HTTP
+  - javascript: JavaScript
+  - ruby: Ruby
+  - python: Python
+  - php: PHP
+  - java: Java
+  - go: Go
+toc_footers: []
+includes: []
+search: true
+highlight_theme: darkula
+headingLevel: 2
+
+---
+
+<!-- Generator: Widdershins v4.0.1 -->
+
+<h1 id="fastapi-jwt-auth-api">FastAPI JWT Auth API v1.0.0</h1>
+
+> Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.
+
+# Authentication
+
+- HTTP Authentication, scheme: bearer
+
+<h1 id="fastapi-jwt-auth-api-auth">auth</h1>
+
+## token_auth_login_post
+
+<a id="opIdtoken_auth_login_post"></a>
+
+> Code samples
+
+```shell
+# You can also use wget
+curl -X POST /auth/login \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json'
+
+```
+
+```http
+POST /auth/login HTTP/1.1
+
+Content-Type: application/json
+Accept: application/json
+
+```
+
+```javascript
+const inputBody = '{
+  "username": "string",
+  "password": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('/auth/login',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json'
+}
+
+result = RestClient.post '/auth/login',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+r = requests.post('/auth/login', headers = headers)
+
+print(r.json())
+
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('POST','/auth/login', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("/auth/login");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("POST");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Content-Type": []string{"application/json"},
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("POST", "/auth/login", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+```
+
+`POST /auth/login`
+
+*Token*
+
+> Body parameter
+
+```json
+{
+  "username": "string",
+  "password": "string"
+}
+```
+
+<h3 id="token_auth_login_post-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|[Credentials](#schemacredentials)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "access_token": "string",
+  "refresh_token": "string",
+  "token_type": "bearer"
+}
+```
+
+<h3 id="token_auth_login_post-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|[Token](#schematoken)|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Unauthorized|[ExceptionSchema](#schemaexceptionschema)|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## refresh_auth_refresh_post
+
+<a id="opIdrefresh_auth_refresh_post"></a>
+
+> Code samples
+
+```shell
+# You can also use wget
+curl -X POST /auth/refresh \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json'
+
+```
+
+```http
+POST /auth/refresh HTTP/1.1
+
+Content-Type: application/json
+Accept: application/json
+
+```
+
+```javascript
+const inputBody = '{
+  "refresh_token": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('/auth/refresh',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json'
+}
+
+result = RestClient.post '/auth/refresh',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+r = requests.post('/auth/refresh', headers = headers)
+
+print(r.json())
+
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('POST','/auth/refresh', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("/auth/refresh");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("POST");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Content-Type": []string{"application/json"},
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("POST", "/auth/refresh", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+```
+
+`POST /auth/refresh`
+
+*Refresh*
+
+> Body parameter
+
+```json
+{
+  "refresh_token": "string"
+}
+```
+
+<h3 id="refresh_auth_refresh_post-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|[Refresh](#schemarefresh)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "access_token": "string",
+  "refresh_token": "string",
+  "token_type": "bearer"
+}
+```
+<h3 id="refresh_auth_refresh_post-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|[Token](#schematoken)|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Unauthorized|[ExceptionSchema](#schemaexceptionschema)|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## user_create_auth_register_post
+
+<a id="opIduser_create_auth_register_post"></a>
+
+> Code samples
+
+```shell
+# You can also use wget
+curl -X POST /auth/register \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json'
+
+```
+
+```http
+POST /auth/register HTTP/1.1
+
+Content-Type: application/json
+Accept: application/json
+
+```
+
+```javascript
+const inputBody = '{
+  "username": "string",
+  "password": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('/auth/register',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json'
+}
+
+result = RestClient.post '/auth/register',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+r = requests.post('/auth/register', headers = headers)
+
+print(r.json())
+
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('POST','/auth/register', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("/auth/register");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("POST");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Content-Type": []string{"application/json"},
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("POST", "/auth/register", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+```
+
+`POST /auth/register`
+
+*User Create*
+
+> Body parameter
+
+```json
+{
+  "username": "string",
+  "password": "string"
+}
+```
+
+<h3 id="user_create_auth_register_post-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|[Credentials](#schemacredentials)|true|none|
+
+> Example responses
+
+> 201 Response
+
+```json
+{
+  "id": 0,
+  "username": "string",
+  "active": true,
+  "can_interact": true,
+  "role": "admin",
+  "create_date": "2019-08-24T14:15:22Z",
+  "update_date": "2019-08-24T14:15:22Z"
+}
+```
+
+<h3 id="user_create_auth_register_post-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Successful Response|[UserResponse](#schemauserresponse)|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|Conflict|[ExceptionSchema](#schemaexceptionschema)|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## user_get_auth_info_get
+
+<a id="opIduser_get_auth_info_get"></a>
+
+> Code samples
+
+```shell
+# You can also use wget
+curl -X GET /auth/info \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer {access-token}'
+
+```
+
+```http
+GET /auth/info HTTP/1.1
+
+Accept: application/json
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json',
+  'Authorization':'Bearer {access-token}'
+};
+
+fetch('/auth/info',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer {access-token}'
+}
+
+result = RestClient.get '/auth/info',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer {access-token}'
+}
+
+r = requests.get('/auth/info', headers = headers)
+
+print(r.json())
+
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer {access-token}',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','/auth/info', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("/auth/info");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+        "Authorization": []string{"Bearer {access-token}"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "/auth/info", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+```
+
+`GET /auth/info`
+
+*User Get*
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "id": 0,
+  "username": "string",
+  "active": true,
+  "can_interact": true,
+  "role": "admin",
+  "create_date": "2019-08-24T14:15:22Z",
+  "update_date": "2019-08-24T14:15:22Z"
+}
+```
+
+<h3 id="user_get_auth_info_get-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|[UserResponse](#schemauserresponse)|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Unauthorized|[ExceptionSchema](#schemaexceptionschema)|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+HTTPBearer
+</aside>
+
+## user_update_auth_patch_patch
+
+<a id="opIduser_update_auth_patch_patch"></a>
+
+> Code samples
+
+```shell
+# You can also use wget
+curl -X PATCH /auth/patch?user_id=0&secret_admin_token=string \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json'
+
+```
+
+```http
+PATCH /auth/patch?user_id=0&secret_admin_token=string HTTP/1.1
+
+Content-Type: application/json
+Accept: application/json
+
+```
+
+```javascript
+const inputBody = '{
+  "password": "string",
+  "can_interact": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('/auth/patch?user_id=0&secret_admin_token=string',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json'
+}
+
+result = RestClient.patch '/auth/patch',
+  params: {
+  'user_id' => 'integer',
+'secret_admin_token' => 'string'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+r = requests.patch('/auth/patch', params={
+  'user_id': '0',  'secret_admin_token': 'string'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('PATCH','/auth/patch', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("/auth/patch?user_id=0&secret_admin_token=string");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("PATCH");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Content-Type": []string{"application/json"},
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("PATCH", "/auth/patch", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+```
+
+`PATCH /auth/patch`
+
+*User Update*
+
+> Body parameter
+
+```json
+{
+  "password": "string",
+  "can_interact": true
+}
+```
+
+<h3 id="user_update_auth_patch_patch-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|user_id|query|integer|true|none|
+|secret_admin_token|query|string|true|none|
+|body|body|[UserUpdateRequest](#schemauserupdaterequest)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "id": 0,
+  "username": "string",
+  "active": true,
+  "can_interact": true,
+  "role": "admin",
+  "create_date": "2019-08-24T14:15:22Z",
+  "update_date": "2019-08-24T14:15:22Z"
+}
+```
+
+<h3 id="user_update_auth_patch_patch-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|[UserResponse](#schemauserresponse)|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Unauthorized|[ExceptionSchema](#schemaexceptionschema)|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|Conflict|[ExceptionSchema](#schemaexceptionschema)|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+<h1 id="fastapi-jwt-auth-api-transcriptions">transcriptions</h1>
+
+## transcriptions_list_transcriptions_get
+
+<a id="opIdtranscriptions_list_transcriptions_get"></a>
+
+> Code samples
+
+```shell
+# You can also use wget
+curl -X GET /transcriptions \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer {access-token}'
+
+```
+
+```http
+GET /transcriptions HTTP/1.1
+
+Accept: application/json
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json',
+  'Authorization':'Bearer {access-token}'
+};
+
+fetch('/transcriptions',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer {access-token}'
+}
+
+result = RestClient.get '/transcriptions',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer {access-token}'
+}
+
+r = requests.get('/transcriptions', headers = headers)
+
+print(r.json())
+
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer {access-token}',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','/transcriptions', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("/transcriptions");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+        "Authorization": []string{"Bearer {access-token}"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "/transcriptions", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+```
+
+`GET /transcriptions`
+
+*Transcriptions List*
+
+<h3 id="transcriptions_list_transcriptions_get-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|page|query|integer|false|none|
+|size|query|integer|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "page": 0,
+  "size": 0,
+  "total": 0,
+  "pages": 0,
+  "transcriptions": [
+    {
+      "id": 0,
+      "creator_id": 0,
+      "audio_len_secs": 0,
+      "chunk_size_secs": 0,
+      "current_state": "queued",
+      "create_date": "2019-08-24T14:15:22Z",
+      "update_date": "2019-08-24T14:15:22Z",
+      "description": "string",
+      "error_count": 0
+    }
+  ]
+}
+```
+
+<h3 id="transcriptions_list_transcriptions_get-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|[TranscriptionPage](#schematranscriptionpage)|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Unauthorized|[ExceptionSchema](#schemaexceptionschema)|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+HTTPBearer
+</aside>
+
+## transcript_list_transcript_get
+
+<a id="opIdtranscript_list_transcript_get"></a>
+
+> Code samples
+
+```shell
+# You can also use wget
+curl -X GET /transcript?task_id=0 \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer {access-token}'
+
+```
+
+```http
+GET /transcript?task_id=0 HTTP/1.1
+
+Accept: application/json
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json',
+  'Authorization':'Bearer {access-token}'
+};
+
+fetch('/transcript?task_id=0',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer {access-token}'
+}
+
+result = RestClient.get '/transcript',
+  params: {
+  'task_id' => 'integer'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer {access-token}'
+}
+
+r = requests.get('/transcript', params={
+  'task_id': '0'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer {access-token}',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','/transcript', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("/transcript?task_id=0");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+        "Authorization": []string{"Bearer {access-token}"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "/transcript", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+```
+
+`GET /transcript`
+
+*Transcript List*
+
+<h3 id="transcript_list_transcript_get-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|page|query|integer|false|none|
+|size|query|integer|false|none|
+|task_id|query|integer|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "page": 0,
+  "size": 0,
+  "total": 0,
+  "pages": 0,
+  "transcriptions": [
+    {
+      "id": 0,
+      "chunk_order": 0,
+      "chunk_size_secs": 0,
+      "transcription": "string"
+    }
+  ]
+}
+```
+
+<h3 id="transcript_list_transcript_get-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|[TranscriptionChunksPage](#schematranscriptionchunkspage)|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Unauthorized|[ExceptionSchema](#schemaexceptionschema)|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+HTTPBearer
+</aside>
+
+## transcript_export_transcript_export_post
+
+<a id="opIdtranscript_export_transcript_export_post"></a>
+
+> Code samples
+
+```shell
+# You can also use wget
+curl -X POST /transcript/export?task_id=0&format=doc \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer {access-token}'
+
+```
+
+```http
+POST /transcript/export?task_id=0&format=doc HTTP/1.1
+
+Accept: application/json
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json',
+  'Authorization':'Bearer {access-token}'
+};
+
+fetch('/transcript/export?task_id=0&format=doc',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer {access-token}'
+}
+
+result = RestClient.post '/transcript/export',
+  params: {
+  'task_id' => 'integer',
+'format' => 'string'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer {access-token}'
+}
+
+r = requests.post('/transcript/export', params={
+  'task_id': '0',  'format': 'doc'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer {access-token}',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('POST','/transcript/export', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("/transcript/export?task_id=0&format=doc");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("POST");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+        "Authorization": []string{"Bearer {access-token}"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("POST", "/transcript/export", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+```
+
+`POST /transcript/export`
+
+*Transcript Export*
+
+<h3 id="transcript_export_transcript_export_post-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|task_id|query|integer|true|none|
+|format|query|string|true|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|format|doc|
+|format|txt|
+
+> Example responses
+
+> 200 Response
+
+```json
+null
+```
+
+<h3 id="transcript_export_transcript_export_post-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Unauthorized|[ExceptionSchema](#schemaexceptionschema)|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
+
+<h3 id="transcript_export_transcript_export_post-responseschema">Response Schema</h3>
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+HTTPBearer
+</aside>
+
+## worker_post_transcription_state_worker_transcription_status_post
+
+<a id="opIdworker_post_transcription_state_worker_transcription_status_post"></a>
+
+> Code samples
+
+```shell
+# You can also use wget
+curl -X POST /worker/transcription_status?secret_worker_token=string \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json'
+
+```
+
+```http
+POST /worker/transcription_status?secret_worker_token=string HTTP/1.1
+
+Content-Type: application/json
+Accept: application/json
+
+```
+
+```javascript
+const inputBody = '{
+  "transcription_id": 0,
+  "current_state": "queued",
+  "new_chunk": {
+    "text": "string",
+    "chunk_no": 0
+  }
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('/worker/transcription_status?secret_worker_token=string',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json'
+}
+
+result = RestClient.post '/worker/transcription_status',
+  params: {
+  'secret_worker_token' => 'string'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+r = requests.post('/worker/transcription_status', params={
+  'secret_worker_token': 'string'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('POST','/worker/transcription_status', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("/worker/transcription_status?secret_worker_token=string");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("POST");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Content-Type": []string{"application/json"},
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("POST", "/worker/transcription_status", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+```
+
+`POST /worker/transcription_status`
+
+*Worker Post Transcription State*
+
+> Body parameter
+
+```json
+{
+  "transcription_id": 0,
+  "current_state": "queued",
+  "new_chunk": {
+    "text": "string",
+    "chunk_no": 0
+  }
+}
+```
+
+<h3 id="worker_post_transcription_state_worker_transcription_status_post-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|secret_worker_token|query|string|true|none|
+|body|body|[TranscriptionStatusUpdateRequest](#schematranscriptionstatusupdaterequest)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+null
+```
+
+<h3 id="worker_post_transcription_state_worker_transcription_status_post-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
+
+<h3 id="worker_post_transcription_state_worker_transcription_status_post-responseschema">Response Schema</h3>
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## create_upload_file_upload_audiofile_post
+
+<a id="opIdcreate_upload_file_upload_audiofile_post"></a>
+
+> Code samples
+
+```shell
+# You can also use wget
+curl -X POST /upload-audiofile \
+  -H 'Content-Type: multipart/form-data' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer {access-token}'
+
+```
+
+```http
+POST /upload-audiofile HTTP/1.1
+
+Content-Type: multipart/form-data
+Accept: application/json
+
+```
+
+```javascript
+const inputBody = '{
+  "audiofile": "string"
+}';
+const headers = {
+  'Content-Type':'multipart/form-data',
+  'Accept':'application/json',
+  'Authorization':'Bearer {access-token}'
+};
+
+fetch('/upload-audiofile',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Content-Type' => 'multipart/form-data',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer {access-token}'
+}
+
+result = RestClient.post '/upload-audiofile',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Content-Type': 'multipart/form-data',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer {access-token}'
+}
+
+r = requests.post('/upload-audiofile', headers = headers)
+
+print(r.json())
+
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Content-Type' => 'multipart/form-data',
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer {access-token}',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('POST','/upload-audiofile', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("/upload-audiofile");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("POST");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Content-Type": []string{"multipart/form-data"},
+        "Accept": []string{"application/json"},
+        "Authorization": []string{"Bearer {access-token}"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("POST", "/upload-audiofile", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+```
+
+`POST /upload-audiofile`
+
+*Create Upload File*
+
+> Body parameter
+
+```yaml
+audiofile: string
+
+```
+
+<h3 id="create_upload_file_upload_audiofile_post-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|[Body_create_upload_file_upload_audiofile_post](#schemabody_create_upload_file_upload_audiofile_post)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+null
+```
+
+<h3 id="create_upload_file_upload_audiofile_post-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
+
+<h3 id="create_upload_file_upload_audiofile_post-responseschema">Response Schema</h3>
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+HTTPBearer
+</aside>
+
+## _transcript_cancel_transcript_cancel_post
+
+<a id="opId_transcript_cancel_transcript_cancel_post"></a>
+
+> Code samples
+
+```shell
+# You can also use wget
+curl -X POST /transcript/cancel?transcript_id=0 \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer {access-token}'
+
+```
+
+```http
+POST /transcript/cancel?transcript_id=0 HTTP/1.1
+
+Accept: application/json
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json',
+  'Authorization':'Bearer {access-token}'
+};
+
+fetch('/transcript/cancel?transcript_id=0',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer {access-token}'
+}
+
+result = RestClient.post '/transcript/cancel',
+  params: {
+  'transcript_id' => 'integer'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer {access-token}'
+}
+
+r = requests.post('/transcript/cancel', params={
+  'transcript_id': '0'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer {access-token}',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('POST','/transcript/cancel', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("/transcript/cancel?transcript_id=0");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("POST");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+        "Authorization": []string{"Bearer {access-token}"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("POST", "/transcript/cancel", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+```
+
+`POST /transcript/cancel`
+
+* Transcript Cancel*
+
+<h3 id="_transcript_cancel_transcript_cancel_post-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|transcript_id|query|integer|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+null
+```
+
+<h3 id="_transcript_cancel_transcript_cancel_post-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
+
+<h3 id="_transcript_cancel_transcript_cancel_post-responseschema">Response Schema</h3>
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+HTTPBearer
+</aside>
+
+## _transcript_info_transcript_info_get
+
+<a id="opId_transcript_info_transcript_info_get"></a>
+
+> Code samples
+
+```shell
+# You can also use wget
+curl -X GET /transcript/info?transcript_id=0 \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer {access-token}'
+
+```
+
+```http
+GET /transcript/info?transcript_id=0 HTTP/1.1
+
+Accept: application/json
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json',
+  'Authorization':'Bearer {access-token}'
+};
+
+fetch('/transcript/info?transcript_id=0',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer {access-token}'
+}
+
+result = RestClient.get '/transcript/info',
+  params: {
+  'transcript_id' => 'integer'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer {access-token}'
+}
+
+r = requests.get('/transcript/info', params={
+  'transcript_id': '0'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer {access-token}',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','/transcript/info', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("/transcript/info?transcript_id=0");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+        "Authorization": []string{"Bearer {access-token}"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "/transcript/info", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+```
+
+`GET /transcript/info`
+
+* Transcript Info*
+
+<h3 id="_transcript_info_transcript_info_get-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|transcript_id|query|integer|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+null
+```
+
+<h3 id="_transcript_info_transcript_info_get-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
+
+<h3 id="_transcript_info_transcript_info_get-responseschema">Response Schema</h3>
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+HTTPBearer
+</aside>
+
+<h1 id="fastapi-jwt-auth-api-health">health</h1>
+
+## health_check__get
+
+<a id="opIdhealth_check__get"></a>
+
+> Code samples
+
+```shell
+# You can also use wget
+curl -X GET / \
+  -H 'Accept: application/json'
+
+```
+
+```http
+GET / HTTP/1.1
+
+Accept: application/json
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('/',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get '/',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('/', headers = headers)
+
+print(r.json())
+
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','/', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("/");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "/", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+```
+
+`GET /`
+
+*Health Check*
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "api": true,
+  "database": true
+}
+```
+
+<h3 id="health_check__get-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|[HealthSchema](#schemahealthschema)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+# Schemas
+
+<h2 id="tocS_Body_create_upload_file_upload_audiofile_post">Body_create_upload_file_upload_audiofile_post</h2>
+<!-- backwards compatibility -->
+<a id="schemabody_create_upload_file_upload_audiofile_post"></a>
+<a id="schema_Body_create_upload_file_upload_audiofile_post"></a>
+<a id="tocSbody_create_upload_file_upload_audiofile_post"></a>
+<a id="tocsbody_create_upload_file_upload_audiofile_post"></a>
+
+```json
+{
+  "audiofile": "string"
+}
+
+```
+
+Body_create_upload_file_upload_audiofile_post
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|audiofile|string(binary)|true|none|none|
+
+<h2 id="tocS_CreateTranscriptionChunk">CreateTranscriptionChunk</h2>
+<!-- backwards compatibility -->
+<a id="schemacreatetranscriptionchunk"></a>
+<a id="schema_CreateTranscriptionChunk"></a>
+<a id="tocScreatetranscriptionchunk"></a>
+<a id="tocscreatetranscriptionchunk"></a>
+
+```json
+{
+  "text": "string",
+  "chunk_no": 0
+}
+
+```
+
+CreateTranscriptionChunk
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|text|string|true|none|none|
+|chunk_no|integer|true|none|none|
+
+<h2 id="tocS_Credentials">Credentials</h2>
+<!-- backwards compatibility -->
+<a id="schemacredentials"></a>
+<a id="schema_Credentials"></a>
+<a id="tocScredentials"></a>
+<a id="tocscredentials"></a>
+
+```json
+{
+  "username": "string",
+  "password": "string"
+}
+
+```
+
+Credentials
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|username|string|true|none|none|
+|password|string|true|none|none|
+
+<h2 id="tocS_ExceptionSchema">ExceptionSchema</h2>
+<!-- backwards compatibility -->
+<a id="schemaexceptionschema"></a>
+<a id="schema_ExceptionSchema"></a>
+<a id="tocSexceptionschema"></a>
+<a id="tocsexceptionschema"></a>
+
+```json
+{
+  "detail": "string"
+}
+
+```
+
+ExceptionSchema
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|detail|string|true|none|none|
+
+<h2 id="tocS_HTTPValidationError">HTTPValidationError</h2>
+<!-- backwards compatibility -->
+<a id="schemahttpvalidationerror"></a>
+<a id="schema_HTTPValidationError"></a>
+<a id="tocShttpvalidationerror"></a>
+<a id="tocshttpvalidationerror"></a>
+
+```json
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string"
+    }
+  ]
+}
+
+```
+
+HTTPValidationError
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|detail|[[ValidationError](#schemavalidationerror)]|false|none|none|
+
+<h2 id="tocS_HealthSchema">HealthSchema</h2>
+<!-- backwards compatibility -->
+<a id="schemahealthschema"></a>
+<a id="schema_HealthSchema"></a>
+<a id="tocShealthschema"></a>
+<a id="tocshealthschema"></a>
+
+```json
+{
+  "api": true,
+  "database": true
+}
+
+```
+
+HealthSchema
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|api|boolean|true|none|none|
+|database|boolean|true|none|none|
+
+<h2 id="tocS_Refresh">Refresh</h2>
+<!-- backwards compatibility -->
+<a id="schemarefresh"></a>
+<a id="schema_Refresh"></a>
+<a id="tocSrefresh"></a>
+<a id="tocsrefresh"></a>
+
+```json
+{
+  "refresh_token": "string"
+}
+
+```
+
+Refresh
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|refresh_token|string|true|none|none|
+
+<h2 id="tocS_Roles">Roles</h2>
+<!-- backwards compatibility -->
+<a id="schemaroles"></a>
+<a id="schema_Roles"></a>
+<a id="tocSroles"></a>
+<a id="tocsroles"></a>
+
+```json
+"admin"
+
+```
+
+Roles
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|Roles|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|Roles|admin|
+|Roles|user|
+
+<h2 id="tocS_Token">Token</h2>
+<!-- backwards compatibility -->
+<a id="schematoken"></a>
+<a id="schema_Token"></a>
+<a id="tocStoken"></a>
+<a id="tocstoken"></a>
+
+```json
+{
+  "access_token": "string",
+  "refresh_token": "string",
+  "token_type": "bearer"
+}
+
+```
+
+Token
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|access_token|string|true|none|none|
+|refresh_token|string|true|none|none|
+|token_type|string|false|none|none|
+
+<h2 id="tocS_TranscriptionChunkResponse">TranscriptionChunkResponse</h2>
+<!-- backwards compatibility -->
+<a id="schematranscriptionchunkresponse"></a>
+<a id="schema_TranscriptionChunkResponse"></a>
+<a id="tocStranscriptionchunkresponse"></a>
+<a id="tocstranscriptionchunkresponse"></a>
+
+```json
+{
+  "id": 0,
+  "chunk_order": 0,
+  "chunk_size_secs": 0,
+  "transcription": "string"
+}
+
+```
+
+TranscriptionChunkResponse
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|id|integer|true|none|none|
+|chunk_order|integer|true|none|none|
+|chunk_size_secs|integer|true|none|none|
+|transcription|string|true|none|none|
+
+<h2 id="tocS_TranscriptionChunksPage">TranscriptionChunksPage</h2>
+<!-- backwards compatibility -->
+<a id="schematranscriptionchunkspage"></a>
+<a id="schema_TranscriptionChunksPage"></a>
+<a id="tocStranscriptionchunkspage"></a>
+<a id="tocstranscriptionchunkspage"></a>
+
+```json
+{
+  "page": 0,
+  "size": 0,
+  "total": 0,
+  "pages": 0,
+  "transcriptions": [
+    {
+      "id": 0,
+      "chunk_order": 0,
+      "chunk_size_secs": 0,
+      "transcription": "string"
+    }
+  ]
+}
+
+```
+
+TranscriptionChunksPage
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|page|integer|true|none|none|
+|size|integer|true|none|none|
+|total|integer|true|none|none|
+|pages|integer|true|none|none|
+|transcriptions|[[TranscriptionChunkResponse](#schematranscriptionchunkresponse)]|true|none|none|
+
+<h2 id="tocS_TranscriptionPage">TranscriptionPage</h2>
+<!-- backwards compatibility -->
+<a id="schematranscriptionpage"></a>
+<a id="schema_TranscriptionPage"></a>
+<a id="tocStranscriptionpage"></a>
+<a id="tocstranscriptionpage"></a>
+
+```json
+{
+  "page": 0,
+  "size": 0,
+  "total": 0,
+  "pages": 0,
+  "transcriptions": [
+    {
+      "id": 0,
+      "creator_id": 0,
+      "audio_len_secs": 0,
+      "chunk_size_secs": 0,
+      "current_state": "queued",
+      "create_date": "2019-08-24T14:15:22Z",
+      "update_date": "2019-08-24T14:15:22Z",
+      "description": "string",
+      "error_count": 0
+    }
+  ]
+}
+
+```
+
+TranscriptionPage
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|page|integer|true|none|none|
+|size|integer|true|none|none|
+|total|integer|true|none|none|
+|pages|integer|true|none|none|
+|transcriptions|[[TranscriptionResponse](#schematranscriptionresponse)]|true|none|none|
+
+<h2 id="tocS_TranscriptionResponse">TranscriptionResponse</h2>
+<!-- backwards compatibility -->
+<a id="schematranscriptionresponse"></a>
+<a id="schema_TranscriptionResponse"></a>
+<a id="tocStranscriptionresponse"></a>
+<a id="tocstranscriptionresponse"></a>
+
+```json
+{
+  "id": 0,
+  "creator_id": 0,
+  "audio_len_secs": 0,
+  "chunk_size_secs": 0,
+  "current_state": "queued",
+  "create_date": "2019-08-24T14:15:22Z",
+  "update_date": "2019-08-24T14:15:22Z",
+  "description": "string",
+  "error_count": 0
+}
+
+```
+
+TranscriptionResponse
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|id|integer|true|none|none|
+|creator_id|integer|true|none|none|
+|audio_len_secs|number|true|none|none|
+|chunk_size_secs|number|true|none|none|
+|current_state|[TranscriptionState](#schematranscriptionstate)|true|none|none|
+|create_date|string(date-time)|true|none|none|
+|update_date|string(date-time)|true|none|none|
+|description|string|true|none|none|
+|error_count|integer|true|none|none|
+
+<h2 id="tocS_TranscriptionState">TranscriptionState</h2>
+<!-- backwards compatibility -->
+<a id="schematranscriptionstate"></a>
+<a id="schema_TranscriptionState"></a>
+<a id="tocStranscriptionstate"></a>
+<a id="tocstranscriptionstate"></a>
+
+```json
+"queued"
+
+```
+
+TranscriptionState
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|TranscriptionState|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|TranscriptionState|queued|
+|TranscriptionState|in_progress|
+|TranscriptionState|processing_error|
+|TranscriptionState|completed|
+|TranscriptionState|completed_partially|
+|TranscriptionState|processing_fail|
+|TranscriptionState|cancelled|
+
+<h2 id="tocS_TranscriptionStatusUpdateRequest">TranscriptionStatusUpdateRequest</h2>
+<!-- backwards compatibility -->
+<a id="schematranscriptionstatusupdaterequest"></a>
+<a id="schema_TranscriptionStatusUpdateRequest"></a>
+<a id="tocStranscriptionstatusupdaterequest"></a>
+<a id="tocstranscriptionstatusupdaterequest"></a>
+
+```json
+{
+  "transcription_id": 0,
+  "current_state": "queued",
+  "new_chunk": {
+    "text": "string",
+    "chunk_no": 0
+  }
+}
+
+```
+
+TranscriptionStatusUpdateRequest
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|transcription_id|integer|true|none|none|
+|current_state|any|false|none|none|
+
+anyOf
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» *anonymous*|[TranscriptionState](#schematranscriptionstate)|false|none|none|
+
+or
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» *anonymous*|null|false|none|none|
+
+continued
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|new_chunk|any|false|none|none|
+
+anyOf
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» *anonymous*|[CreateTranscriptionChunk](#schemacreatetranscriptionchunk)|false|none|none|
+
+or
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» *anonymous*|null|false|none|none|
+
+<h2 id="tocS_UserResponse">UserResponse</h2>
+<!-- backwards compatibility -->
+<a id="schemauserresponse"></a>
+<a id="schema_UserResponse"></a>
+<a id="tocSuserresponse"></a>
+<a id="tocsuserresponse"></a>
+
+```json
+{
+  "id": 0,
+  "username": "string",
+  "active": true,
+  "can_interact": true,
+  "role": "admin",
+  "create_date": "2019-08-24T14:15:22Z",
+  "update_date": "2019-08-24T14:15:22Z"
+}
+
+```
+
+UserResponse
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|id|integer|true|none|none|
+|username|string|true|none|none|
+|active|boolean|true|none|none|
+|can_interact|boolean|true|none|none|
+|role|[Roles](#schemaroles)|true|none|none|
+|create_date|string(date-time)|true|none|none|
+|update_date|string(date-time)|true|none|none|
+
+<h2 id="tocS_UserUpdateRequest">UserUpdateRequest</h2>
+<!-- backwards compatibility -->
+<a id="schemauserupdaterequest"></a>
+<a id="schema_UserUpdateRequest"></a>
+<a id="tocSuserupdaterequest"></a>
+<a id="tocsuserupdaterequest"></a>
+
+```json
+{
+  "password": "string",
+  "can_interact": true
+}
+
+```
+
+UserUpdateRequest
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|password|any|false|none|none|
+
+anyOf
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» *anonymous*|string|false|none|none|
+
+or
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» *anonymous*|null|false|none|none|
+
+continued
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|can_interact|any|false|none|none|
+
+anyOf
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» *anonymous*|boolean|false|none|none|
+
+or
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» *anonymous*|null|false|none|none|
+
+<h2 id="tocS_ValidationError">ValidationError</h2>
+<!-- backwards compatibility -->
+<a id="schemavalidationerror"></a>
+<a id="schema_ValidationError"></a>
+<a id="tocSvalidationerror"></a>
+<a id="tocsvalidationerror"></a>
+
+```json
+{
+  "loc": [
+    "string"
+  ],
+  "msg": "string",
+  "type": "string"
+}
+
+```
+
+ValidationError
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|loc|[anyOf]|true|none|none|
+
+anyOf
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» *anonymous*|string|false|none|none|
+
+or
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» *anonymous*|integer|false|none|none|
+
+continued
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|msg|string|true|none|none|
+|type|string|true|none|none|
+
+------------------------------------
+
+Пропускаем файл (недопустимое расширение): /c/Users/Fasci/PycharmProjects/lazy-lecture/api/LICENSE
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/README.md
+Содержимое:
+# FastAPI JWT Auth API
+
+### Summary:
+
+FastAPI, Postgres, Sqlalchemy, Pydantic v2, Docker
+API example with JWT Authentication.
+
+### Requirements:
+```
+docker
+```
+-   В директории проекта выполнить:
+
+``` bash
+docker-compose up -d api
+```
+
+### Run:
+
+```bash
+cp config/.env.example config/.env
+docker compose up --build
+```
+
+### Run tests with coverage
+
+```bash
+docker compose run --build api pytest --cov=source
+```
+
+### Docs:
+
+
+OpenAPI: [спецификация API](http://localhost:8000/docs)
+
+Postman: postman_collection.json in the project root.
+
+
+### Endpoints:
+
+```http request
+POST   /auth/token                       # token get
+POST   /auth/refresh                     # token refresh
+
+POST   /users                            # user create
+GET    /users                            # user get
+PATCH  /users                            # user update
+DELETE /users                            # user delete
+
+GET    /users/admin                      # user list (admin)
+
+GET    /                                 # health check
+```
+
+### Example Requests/Responses:
+
+- Авторизация
+#### Request:
+
+```http request
+POST /auth/login
+
+Body:
+{
+    "username": "user",
+    "password": "123456"
+}
+```
+
+#### Response:
+```json
+{
+    "access_token": "<access_token_string>",
+    "refresh_token": "<refresh_token_string>",
+    "token_type": "bearer"
+}
+```
+
+#### Request:
+```http request
+GET /users
+Headers:
+Authorization: Bearer <access_token_string>
+```
+
+#### Response:
+```json
+{
+    "id": 1,
+    "username": "user",
+    "email": "user@test.com",
+    "first_name": "fname",
+    "last_name": "lname",
+    "active": true,
+    "role": "user",
+    "create_date": "2023-11-17T13:23:45.737500",
+    "update_date": "2023-11-17T13:23:45.737500"
+}
+```
+
+- Обновление сессии
+#### Request:
+```http request
+POST /auth/refresh
+
+{
+    "refresh_token": "<refresh_token_string>"
+}
+```
+
+#### Response:
+```json
+{
+    "access_token": "<access_token_string>",
+    "refresh_token": "<refresh_token_string>",
+    "token_type": "bearer"
+}
+```
+
+### Database Tables:
+
+```json
+{
+  "Base (Abstract)": {
+    "id": "int",
+    "create_date": "datetime",
+    "update_date": "datetime"
+  },
+  "User": {
+    "username": "str",
+    "password": "str", // pragma: allowlist-secret
+    "email": "str",
+    "first_name": "str",
+    "last_name": "str",
+    "active": "bool",
+    "role": "enum(str)",
+    "password_timestamp": "float" // pragma: allowlist-secret
+  }
+}
+```
+
+### Migration:
+
+``` bash
+docker exec api alembic revision --autogenerate -m "description"
+docker exec api alembic upgrade head
+```
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/alembic.ini
+Содержимое:
+# A generic, single database configuration.
+
+[alembic]
+# path to migration scripts
+script_location = source/migrations
+
+# template used to generate migration file names; The default value is %%(rev)s_%%(slug)s
+# Uncomment the line below if you want the files to be prepended with date and time
+# see https://alembic.sqlalchemy.org/en/latest/tutorial.html#editing-the-ini-file
+# for all available tokens
+# file_template = %%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(rev)s_%%(slug)s
+
+# sys.path path, will be prepended to sys.path if present.
+# defaults to the current working directory.
+prepend_sys_path = .
+
+# timezone to use when rendering the date within the migration file
+# as well as the filename.
+# If specified, requires the python-dateutil library that can be
+# installed by adding `alembic[tz]` to the pip requirements
+# string value is passed to dateutil.tz.gettz()
+# leave blank for localtime
+# timezone =
+
+# max length of characters to apply to the
+# "slug" field
+# truncate_slug_length = 40
+
+# set to 'true' to run the environment during
+# the 'revision' command, regardless of autogenerate
+# revision_environment = false
+
+# set to 'true' to allow .pyc and .pyo files without
+# a source .py file to be detected as revisions in the
+# versions/ directory
+# sourceless = false
+
+# version location specification; This defaults
+# to alembic/versions.  When using multiple version
+# directories, initial revisions must be specified with --version-path.
+# The path separator used here should be the separator specified by "version_path_separator" below.
+# version_locations = %(here)s/bar:%(here)s/bat:alembic/versions
+
+# version path separator; As mentioned above, this is the character used to split
+# version_locations. The default within new alembic.ini files is "os", which uses os.pathsep.
+# If this key is omitted entirely, it falls back to the legacy behavior of splitting on spaces and/or commas.
+# Valid values for version_path_separator are:
+#
+# version_path_separator = :
+# version_path_separator = ;
+# version_path_separator = space
+version_path_separator = os  # Use os.pathsep. Default configuration used for new projects.
+
+# set to 'true' to search source files recursively
+# in each "version_locations" directory
+# new in Alembic version 1.10
+# recursive_version_locations = false
+
+# the output encoding used when revision files
+# are written from script.py.mako
+# output_encoding = utf-8
+
+sqlalchemy.url = driver://user:pass@localhost/dbname  #pragma: allowlist secret
+
+
+[post_write_hooks]
+# post_write_hooks defines scripts or Python functions that are run
+# on newly generated revision scripts.  See the documentation for further
+# detail and examples
+
+# format using "black" - use the console_scripts runner, against the "black" entrypoint
+# hooks = black
+# black.type = console_scripts
+# black.entrypoint = black
+# black.options = -l 79 REVISION_SCRIPT_FILENAME
+
+# Logging configuration
+[loggers]
+keys = root,sqlalchemy,alembic
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = WARN
+handlers = console
+qualname =
+
+[logger_sqlalchemy]
+level = WARN
+handlers =
+qualname = sqlalchemy.engine
+
+[logger_alembic]
+level = INFO
+handlers =
+qualname = alembic
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[formatter_generic]
+format = %(levelname)-5.5s [%(name)s] %(message)s
+datefmt = %H:%M:%S
+
+------------------------------------
+
+Пропускаем файл (недопустимое расширение): /c/Users/Fasci/PycharmProjects/lazy-lecture/api/all_files.txt
+Пропускаем файл (недопустимое расширение): /c/Users/Fasci/PycharmProjects/lazy-lecture/api/config/dockerfile
+Пропускаем файл (недопустимое расширение): /c/Users/Fasci/PycharmProjects/lazy-lecture/api/config/requirements.txt
+Пропускаем файл (недопустимое расширение): /c/Users/Fasci/PycharmProjects/lazy-lecture/api/postman_collection.json
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/__init__.py
+Содержимое:
+from source.app.users.models import User  # noqa: F401
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/__init__.py
+Содержимое:
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/auth/__init__.py
+Содержимое:
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/auth/auth.py
+Содержимое:
+from typing import Annotated
+
+from fastapi import Depends
+
+from source.app.auth.services import auth, auth_admin, auth_can_interact
+from source.app.users.models import User
+
+CurrentUser = Annotated[User, Depends(auth)]
+CanInteractCurrentUser = Annotated[User, Depends(auth_can_interact)]
+Admin = Annotated[User, Depends(auth_admin)]
+
+# # TODO: worker class
+# Worker = Annotated[]
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/auth/enums.py
+Содержимое:
+from enum import Enum
+
+
+class TokenType(str, Enum):
+    ACCESS = "access"
+    REFRESH = "refresh"
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/auth/schemas.py
+Содержимое:
+from pydantic import BaseModel
+
+from source.app.auth.types import UsernameStr, PasswordStr
+
+
+class Token(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+
+class Credentials(BaseModel):
+    username: UsernameStr
+    password: PasswordStr
+
+
+class Refresh(BaseModel):
+    refresh_token: str
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/auth/services.py
+Содержимое:
+from datetime import datetime, timedelta, timezone
+
+from fastapi import Depends, Security
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import ExpiredSignatureError, JWTError, jwt
+from jose.exceptions import JWTClaimsError
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from source.app.auth.enums import TokenType
+from source.app.auth.utils import verify_password
+from source.app.users.enums import Roles
+from source.app.users.models import User
+from source.core.database import get_db
+from source.core.exceptions import forbidden, unauthorized
+from source.core.settings import settings
+
+
+async def validate_user(user: User) -> User:
+    if not user.active:
+        return unauthorized("Your account is blocked")
+    return user
+
+
+async def authenticate_user(username: str, password: str, db: AsyncSession) -> User | None:
+    user = await db.scalar(select(User).filter_by(username=username))
+    if user and verify_password(plain_password=password, hashed_password=user.password):
+        return await validate_user(user=user)
+    return None
+
+
+async def authenticate_token(
+    user_id: int,
+    password_timestamp: float,
+    db: AsyncSession,
+) -> User | None:
+    user: User | None = await db.get(User, user_id)
+    if user and password_timestamp == user.password_timestamp:
+        return await validate_user(user=user)
+    return None
+
+
+async def generate_token(
+    user_id: int,
+    password_timestamp: float,
+) -> dict:
+    access = {
+        "user_id": user_id,
+        "password_timestamp": password_timestamp,
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+        "token_type": TokenType.ACCESS,
+    }
+    refresh = access.copy()
+    refresh.update(
+        {
+            "exp": datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+            "token_type": TokenType.REFRESH,
+        }
+    )
+    access_token = jwt.encode(access, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    refresh_token = jwt.encode(refresh, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+    }
+
+
+async def decode_token(token: str) -> dict:
+    try:
+        return jwt.decode(token, settings.SECRET_KEY, algorithms=settings.ALGORITHM)
+    except (JWTError, ExpiredSignatureError, JWTClaimsError):
+        return {}
+
+
+async def authenticate_access_token(
+    token: str, db: AsyncSession, roles: list | None = None, can_interact: bool | None = None
+) -> User | None:
+    payload = await decode_token(token)
+    if payload and payload.get("token_type") == TokenType.ACCESS:
+        if user := await authenticate_token(
+            user_id=payload["user_id"],
+            password_timestamp=payload["password_timestamp"],
+            db=db,
+        ):
+            correct_role = roles is None or user.role in roles
+            correct_can_interact = can_interact is None or user.can_interact == can_interact
+            is_good = correct_role and correct_can_interact
+            if is_good:
+                return user
+            else:
+                return forbidden(f"Access restricted. Either your role or can_interact is invalid for the action.")
+    return None
+
+
+async def authenticate_refresh_token(token: str, db: AsyncSession) -> dict | None:
+    payload = await decode_token(token)
+    if payload and payload.get("token_type") == TokenType.REFRESH:
+        if user := await authenticate_token(
+            user_id=payload["user_id"],
+            password_timestamp=payload["password_timestamp"],
+            db=db,
+        ):
+            return await generate_token(
+                user_id=user.id,
+                password_timestamp=user.password_timestamp,
+            )
+    return None
+
+
+async def authenticate(
+    token: str, db: AsyncSession, roles: list | None = None, can_interact: bool | None = None
+) -> User:
+    if user := await authenticate_access_token(token=token, roles=roles, db=db, can_interact=can_interact):
+        return user
+    return unauthorized("Invalid or expired token")
+
+
+async def auth(
+    token: HTTPAuthorizationCredentials = Security(HTTPBearer(auto_error=False)),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    if not token:
+        return unauthorized("Invalid Authorization Header")
+    return await authenticate(token=token.credentials, db=db)
+
+
+async def auth_admin(
+    token: HTTPAuthorizationCredentials = Security(HTTPBearer(auto_error=False)),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    if not token:
+        return unauthorized("Invalid Authorization Header")
+    return await authenticate(token=token.credentials, db=db, roles=[Roles.ADMIN.value])
+
+
+async def auth_can_interact(
+    token: HTTPAuthorizationCredentials = Security(HTTPBearer(auto_error=False)),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    if not token:
+        return unauthorized("Invalid Authorization Header")
+    return await authenticate(token=token.credentials, db=db, can_interact=True)
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/auth/types.py
+Содержимое:
+import re
+import typing as tp
+from typing_extensions import Annotated
+from pydantic import (
+    AfterValidator,
+    PlainSerializer,
+    TypeAdapter,
+    WithJsonSchema,
+)
+
+
+def validate_username(value: str) -> str:
+    # ft 1-5
+    check_latin = re.fullmatch(r"[A-Za-z]+", value) is not None
+    check_length = 5 <= len(value) <= 64
+
+    if not all([check_latin, check_length]):
+        raise ValueError("Username must consist of Latin letters only and be between 5 and 64 characters long.")
+    return value
+
+
+def validate_pass(value: str) -> str:
+    # ft 1-4
+    check_len = 256 >= len(value) >= 8
+    check_latin = re.search(r"[A-Za-z]", value) is not None
+    check_upper_lower = re.search(r"[A-Z]", value) and re.search(r"[a-z]", value)
+    check_numbers = re.search(r"\d", value) is not None
+    check_special = re.search(r'[!@#$%^&*(),.?":{}|<>=_]', value) is not None
+
+    if not all([check_len, check_latin, check_upper_lower, check_numbers, check_special]):
+        raise ValueError(
+            "Password must be 8-256 characters long, include Latin letters (uppercase and lowercase), "
+            "numbers, and at least one special character."
+        )
+    return value
+
+
+PasswordStr = Annotated[
+    str,
+    AfterValidator(validate_pass),
+    PlainSerializer(lambda x: str(x), return_type=str),
+    WithJsonSchema({"type": "string"}, mode="serialization"),
+]
+UsernameStr = Annotated[
+    str,
+    AfterValidator(validate_username),
+    PlainSerializer(lambda x: str(x), return_type=str),
+    WithJsonSchema({"type": "string"}, mode="serialization"),
+]
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/auth/utils.py
+Содержимое:
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/auth/views.py
+Содержимое:
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from source.app.auth.schemas import Credentials, Refresh, Token
+from source.app.auth.services import (
+    authenticate_refresh_token,
+    authenticate_user,
+    generate_token,
+)
+from source.core.database import get_db
+from source.core.exceptions import unauthorized
+from source.core.schemas import ExceptionSchema
+
+auth_router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@auth_router.post(
+    "/login",
+    response_model=Token,
+    responses={status.HTTP_401_UNAUTHORIZED: {"model": ExceptionSchema}},
+)
+async def token(credentials: Credentials, db: AsyncSession = Depends(get_db)) -> dict:
+    if user := await authenticate_user(
+        username=credentials.username,
+        password=credentials.password,
+        db=db,
+    ):
+        return await generate_token(user_id=user.id, password_timestamp=user.password_timestamp)
+    return unauthorized("Incorrect username or password")
+
+
+@auth_router.post(
+    "/refresh",
+    response_model=Token,
+    responses={status.HTTP_401_UNAUTHORIZED: {"model": ExceptionSchema}},
+)
+async def refresh(request: Refresh, db: AsyncSession = Depends(get_db)) -> dict:
+    if new_token := await authenticate_refresh_token(token=request.refresh_token, db=db):
+        return new_token
+    return unauthorized("Invalid or expired token")
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/transcriptions/enums.py
+Содержимое:
+from enum import Enum
+
+
+class TranscriptionState(str, Enum):
+    # start
+    QUEUED = "queued"
+
+    # intermediate
+    IN_PROGRESS = "in_progress"
+    PROCESSING_ERROR = "processing_error"
+
+    # final
+    COMPLETED = "completed"
+    COMPLETED_PARTIALLY = "completed_partially"
+    PROCESSING_FAIL = "processing_fail"
+    CANCELLED = "cancelled"
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/transcriptions/models.py
+Содержимое:
+from sqlalchemy import Column, Float, Integer, Enum, ForeignKey, Text
+
+from source.app.transcriptions.enums import TranscriptionState
+from source.core.models import Model
+
+
+class Transcription(Model):
+    __tablename__ = "Transcription"
+
+    creator_id = Column(Integer, ForeignKey("User.id"), nullable=False)
+    audio_len_secs = Column(name="audio_len_secs", type_=Float)
+    chunk_size_secs = Column(name="chunk_size_secs", type_=Float)
+    current_state = Column(name="current_state", type_=Enum(TranscriptionState))
+    error_count = Column(name="error_count", type_=Integer, default=0)
+
+
+class TranscriptionChunk(Model):
+    __tablename__ = "TranscriptionChunk"
+
+    transcript_id = Column(Integer, ForeignKey("Transcription.id"), nullable=False)
+    chunk_no = Column(name="chunk_no", type_=Integer)
+    text = Column(name="text", type_=Text)
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/transcriptions/schemas.py
+Содержимое:
+from datetime import datetime
+import typing as tp
+
+from pydantic import BaseModel
+
+from source.core.schemas import PageSchema, PaginationSchema, ResponseSchema
+from source.app.transcriptions.enums import TranscriptionState
+
+
+class TranscriptionResponse(ResponseSchema):
+    id: int
+    creator_id: int
+    audio_len_secs: float
+    chunk_size_secs: float
+    current_state: TranscriptionState
+    create_date: datetime
+    update_date: datetime
+    description: str
+    error_count: int
+
+
+class TranscriptionChunkResponse(ResponseSchema):
+    chunk_order: int
+    chunk_size_secs: int
+    transcription: str
+
+
+# Pagination
+class TranscriptionPagination(PaginationSchema):
+    pass
+
+
+class TranscriptionChunksPagination(PaginationSchema):
+    task_id: int
+    pass
+
+
+class TranscriptionPage(PageSchema):
+    transcriptions: list[TranscriptionResponse]
+
+
+class TranscriptionChunksPage(PageSchema):
+    transcriptions: list[TranscriptionChunkResponse]
+
+
+class TranscriptionRequest(BaseModel):
+    creator_id: int
+    audio_len_secs: float
+    chunk_size_secs: float
+    current_state: TranscriptionState
+
+
+class CreateTranscriptionChunk(BaseModel):
+    text: str
+    chunk_no: int
+
+
+class TranscriptionStatusUpdateRequest(BaseModel):
+    transcription_id: int
+    current_state: tp.Optional[TranscriptionState] = None
+    new_chunk: tp.Optional[CreateTranscriptionChunk] = None
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/transcriptions/services.py
+Содержимое:
+import json
+import typing as tp
+from io import BytesIO
+from math import ceil, floor
+from pathlib import Path
+from typing import Any, Mapping
+
+import pika
+import pika.channel
+from docx import Document
+from source.app.transcriptions.models import Transcription, TranscriptionChunk
+from source.app.transcriptions.schemas import (
+    TranscriptionChunkResponse,
+    TranscriptionChunksPage,
+    TranscriptionPage,
+    TranscriptionRequest,
+    TranscriptionResponse,
+    TranscriptionStatusUpdateRequest,
+)
+import ffmpeg
+from sqlalchemy import asc, desc, func, select, and_, or_
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .enums import TranscriptionState
+
+
+async def get_transcritption_descrtiption(transcription_id: int, db: AsyncSession) -> str:
+    transcription_first_chunk: TranscriptionChunk = await db.scalar(
+        select(TranscriptionChunk).where(
+            and_(TranscriptionChunk.transcript_id == transcription_id, TranscriptionChunk.chunk_no == 0)
+        )
+    )
+    return transcription_first_chunk.text[:256] if transcription_first_chunk else ""
+
+
+def row2dict(row):
+    d = {}
+    for column in row.__table__.columns:
+        d[column.name] = str(getattr(row, column.name))
+
+    return d
+
+
+async def list_user_transcriptions(page: int, size: int, user_id: int, db: AsyncSession) -> TranscriptionPage:
+    order = desc("create_date")
+    transcriptions = await db.scalars(
+        select(Transcription)
+        .order_by(order)
+        .offset((page - 1) * size)
+        .limit(size)
+        .where(Transcription.creator_id == user_id)
+    )
+    transcriptions: tp.List[Transcription] = transcriptions.all()
+    total = await db.scalar(select(func.count(Transcription.id)).where(Transcription.creator_id == user_id))
+    return TranscriptionPage(
+        transcriptions=[
+            TranscriptionResponse(
+                **transcript.__dict__, description=await get_transcritption_descrtiption(transcript.id, db)
+            )
+            for transcript in transcriptions
+        ],
+        page=page,
+        size=size,
+        total=total,
+        pages=(ceil(total / size)),
+    )
+
+
+async def list_user_transcript(
+    page: int, size: int, transcription_id: int, db: AsyncSession
+) -> TranscriptionChunksPage:
+    transcription = await db.get_one(Transcription, transcription_id)
+    transcription_chunks = await db.scalars(
+        select(TranscriptionChunk).where(TranscriptionChunk.transcript_id == transcription_id).order_by(asc("chunk_no"))
+    )
+    transcription_chunks = transcription_chunks.all()
+    chunk_size_secs = transcription.chunk_size_secs
+    total = await db.scalar(
+        select(func.count(TranscriptionChunk.id)).where(TranscriptionChunk.transcript_id == transcription_id)
+    )
+
+    return TranscriptionChunksPage(
+        transcriptions=[
+            TranscriptionChunkResponse(
+                id=tc.id, chunk_order=tc.chunk_no, chunk_size_secs=chunk_size_secs, transcription=tc.text
+            )
+            for tc in transcription_chunks
+        ],
+        page=page,
+        size=size,
+        total=total,
+        pages=(ceil(total / size)),
+    )
+
+
+def send_transcription_job_to_queue(
+    channel: pika.channel.Channel,
+    queue_name: str,
+    transcription_id: int,
+    user_id: int,
+) -> Mapping[str, Any]:
+    job_dict = {
+        "transcription_id": transcription_id,
+        "user_id": user_id,
+    }
+    channel.basic_publish(exchange="", routing_key=queue_name, body=json.dumps(job_dict))
+    return job_dict
+
+
+def get_audio_duration(file: Path) -> float:
+    """Extracts duration using ffmpeg-python bindings."""
+    try:
+        probe = ffmpeg.probe(file, select_streams="a", show_entries="format=duration")
+        duration = float(probe["format"]["duration"])
+        return duration
+    except Exception as e:
+        raise ValueError(f"Error reading audio duration: {e}")
+
+
+async def create_transcription(create_transcription: TranscriptionRequest, db: AsyncSession) -> Transcription | None:
+    try:
+        transcription = Transcription(**create_transcription.model_dump())
+        db.add(transcription)
+
+        all_user_transcriptions = await db.scalars(
+            select(Transcription)
+            .where(Transcription.creator_id == create_transcription.creator_id)
+            .order_by(asc("create_date"))
+        )
+        all_user_transcriptions = all_user_transcriptions.all()
+        if len(all_user_transcriptions) > 100:
+            # remove the oldest transcription
+            oldest_transcription = all_user_transcriptions[0]
+            await db.delete(oldest_transcription)
+        await db.commit()
+        await db.refresh(transcription)
+        return transcription
+    except IntegrityError as e:
+        await db.rollback()  # Rollback transaction on failure
+        print(f"IntegrityError occurred: {e}")
+        return None
+
+
+async def add_new_chunk(chunk: TranscriptionChunk, db: AsyncSession):
+    try:
+        db.add(chunk)
+        await db.commit()
+        await db.refresh(chunk)
+        return chunk
+    except IntegrityError as e:
+        await db.rollback()  # Rollback transaction on failure
+        print(f"IntegrityError occurred: {e}")
+        return None
+
+
+async def get_chunk_count_for_transcription(transcription: Transcription, db: AsyncSession) -> int:
+    transcription_id = transcription.id
+    transcription_chunks = await db.scalars(
+        select(TranscriptionChunk).where(TranscriptionChunk.transcript_id == transcription_id)
+    )
+    transcription_chunks = transcription_chunks.all()
+    return len(transcription_chunks)
+
+
+async def update_transcription_state(data: TranscriptionStatusUpdateRequest, db: AsyncSession) -> Transcription:
+    transcription_id = data.transcription_id
+    new_state = data.current_state
+    new_chunk = data.new_chunk
+
+    if new_state is not None:
+        transcription = await db.get_one(Transcription, transcription_id)
+        if transcription is None:
+            raise ValueError("Transcription does not exist")
+
+        match new_state:
+            case TranscriptionState.PROCESSING_ERROR:
+                error_count = transcription.error_count + 1
+                transcription.error_count = error_count
+                if error_count >= 3:
+                    new_state = TranscriptionState.PROCESSING_FAIL
+            case TranscriptionState.CANCELLED:
+                chunk_count = await get_chunk_count_for_transcription(transcription)
+                if chunk_count >= 0:
+                    new_state = TranscriptionState.COMPLETED_PARTIALLY
+
+        transcription.current_state = new_state
+        await db.commit()
+
+    if new_chunk is not None:
+        # Check if the chunk is proper
+        transcription = await db.get_one(Transcription, transcription_id)
+        audio_len_secs = transcription.audio_len_secs
+        chunk_size_secs = transcription.chunk_size_secs
+        max_chunk_no = floor(audio_len_secs / chunk_size_secs)
+        if new_chunk.chunk_no > max_chunk_no:
+            raise ValueError(f"Chunk no is bigger than max chunk no {new_chunk.chunk_no} > {max_chunk_no}")
+        # Add chunk
+        transcription_chunk = TranscriptionChunk(
+            transcript_id=transcription_id,
+            chunk_no=new_chunk.chunk_no,
+            text=new_chunk.text,
+        )
+        possible_old_chunk = await db.scalar(
+            select(TranscriptionChunk).where(
+                and_(
+                    TranscriptionChunk.transcript_id == transcription_id,
+                    TranscriptionChunk.chunk_no == new_chunk.chunk_no,
+                )
+            )
+        )
+        if possible_old_chunk is not None:
+            old_chunk_id = possible_old_chunk.id
+            chunk_for_update = await db.get_one(TranscriptionChunk, old_chunk_id)
+            chunk_for_update.text = new_chunk.text
+            await db.commit()
+            await db.refresh(chunk_for_update)
+        else:
+            new_chunk = await add_new_chunk(transcription_chunk, db)
+            if new_chunk is None:
+                raise ValueError("Failed to add new chunk")
+
+    transcription = await db.get_one(Transcription, transcription_id)
+    return transcription
+
+
+def get_transcription_doc(transcription_text: str) -> bytes:
+    doc = Document()
+    doc.add_paragraph(transcription_text)
+    byte_io = BytesIO()
+    doc.save(byte_io)
+    byte_io.seek(0)
+    return byte_io.read()
+
+
+async def export_transcription(transcription_id: int, format: tp.Literal["doc", "txt"], db: AsyncSession) -> bytes:
+    transcription = await db.get_one(Transcription, transcription_id)
+    transcription_chunks = await db.scalars(
+        select(TranscriptionChunk).where(TranscriptionChunk.transcript_id == transcription_id).order_by(asc("chunk_no"))
+    )
+    transcription_chunks = transcription_chunks.all()
+    if len(transcription_chunks) == 0:
+        raise ValueError("No transcription chunks for this transcription is available right now. Try again later.")
+
+    transcription_text: str = "\n\n".join([chunk.text for chunk in transcription_chunks])
+    if format == "txt":
+        return transcription_text.encode("utf-8")
+    else:
+        return get_transcription_doc(transcription_text)
+
+
+async def get_user_trancsript(user_id: int, transcript_id: int, db: AsyncSession):
+    transcript = await db.get_one(Transcription, transcript_id)
+    if transcript.creator_id != user_id:
+        raise ValueError("You may cancel processing only of your transcript")
+    return transcript
+
+
+async def cancel_transcript(user_id: int, transcript_id: int, db: AsyncSession) -> None:
+    transcript = await get_user_trancsript(user_id, transcript_id, db)
+    if transcript.current_state in [
+        TranscriptionState.COMPLETED,
+        TranscriptionState.COMPLETED_PARTIALLY,
+        TranscriptionState.PROCESSING_FAIL,
+        TranscriptionState.CANCELLED,
+    ]:
+        raise ValueError("You can't cancel a finished job")
+    transcript.current_state = TranscriptionState.CANCELLED
+
+    await db.commit()
+    await db.refresh(transcript)
+
+
+async def info_transcript(
+    user_id: int,
+    transcript_id: int,
+    db: AsyncSession,
+) -> TranscriptionResponse:
+    return await get_user_trancsript(user_id, transcript_id, db)
+
+
+async def get_current_transcriptions(
+    user_id: int,
+    db: AsyncSession,
+) -> tp.List[Transcription]:
+    active_transcription_states = [
+        TranscriptionState.QUEUED,
+        TranscriptionState.IN_PROGRESS,
+        TranscriptionState.PROCESSING_ERROR,
+    ]
+    current_transcripts = await db.scalars(
+        select(Transcription).where(
+            and_(
+                Transcription.creator_id == user_id,
+                or_(*[Transcription.current_state == state for state in active_transcription_states]),
+            )
+        )
+    )
+    transcriptions: tp.List[Transcription] = current_transcripts.all()
+    return transcriptions
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/transcriptions/types.py
+Содержимое:
+from fastapi import UploadFile
+from pydantic import AfterValidator, PlainSerializer, WithJsonSchema
+from source.core.settings import settings
+from typing_extensions import Annotated
+from pydantic import ValidationError
+import ffmpeg
+
+
+class ValidAudioFile(UploadFile):
+    MIN_DURATION = 10  # Minimum audio length in seconds
+    MAX_DURATION = 2 * 60 * 60  # Maximum audio length in seconds (2 hours)
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def get_audio_duration(cls, file: UploadFile) -> float:
+        """Extracts duration using ffmpeg-python bindings."""
+        try:
+            probe = ffmpeg.probe(file.file, select_streams="a", show_entries="format=duration")
+            duration = float(probe["format"]["duration"])
+            return duration
+        except Exception as e:
+            raise ValueError(f"Error reading audio duration: {e}")
+
+    @classmethod
+    def validate(cls, value: UploadFile) -> UploadFile:
+        duration = cls.get_audio_duration(value)
+        if not (cls.MIN_DURATION <= duration <= cls.MAX_DURATION):
+            raise ValidationError(
+                f"Audio duration must be between {cls.MIN_DURATION} and {cls.MAX_DURATION} seconds. "
+                f"Provided file is {duration:.2f} seconds long."
+            )
+        return value
+
+
+def validate_worker_token(secret_worker_token: str) -> str:
+    print(f"Received: {secret_worker_token}, Expected: {settings.SECRET_WORKER_TOKEN}")  # Debugging
+    if secret_worker_token != settings.SECRET_WORKER_TOKEN:
+        raise ValueError(f"Wrong worker token")
+    return secret_worker_token
+
+
+def validate_admin_token(secret_admin_token: str) -> str:
+    print(f"Received: {secret_admin_token}, Expected: {settings.SECRET_ADMIN_TOKEN}")  # Debugging
+    if secret_admin_token != settings.SECRET_ADMIN_TOKEN:
+        raise ValueError(f"Wrong admin token")
+    return secret_admin_token
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/transcriptions/views.py
+Содержимое:
+import os
+import typing as tp
+
+import aiofiles
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi.responses import PlainTextResponse
+from source.app.auth.auth import CanInteractCurrentUser, CurrentUser
+from source.app.transcriptions.enums import TranscriptionState
+from source.app.transcriptions.models import Transcription
+from source.app.transcriptions.schemas import (
+    TranscriptionChunksPage,
+    TranscriptionChunksPagination,
+    TranscriptionPage,
+    TranscriptionPagination,
+    TranscriptionRequest,
+    TranscriptionStatusUpdateRequest,
+)
+from source.app.transcriptions.services import (
+    cancel_transcript,
+    create_transcription,
+    export_transcription,
+    get_audio_duration,
+    get_current_transcriptions,
+    info_transcript,
+    list_user_transcript,
+    list_user_transcriptions,
+    send_transcription_job_to_queue,
+    update_transcription_state,
+)
+from source.core.database import get_db
+from source.core.schemas import ExceptionSchema
+from source.core.settings import settings
+from source.core.task_queue import get_task_queue
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .types import ValidAudioFile, validate_worker_token
+
+transcriptions_router = APIRouter(prefix="", tags=["transcriptions"])
+
+
+@transcriptions_router.get(
+    "/transcriptions",
+    response_model=TranscriptionPage,
+    responses={status.HTTP_401_UNAUTHORIZED: {"model": ExceptionSchema}},
+)
+async def transcriptions_list(
+    user: CurrentUser, pagination: TranscriptionPagination = Depends(), db: AsyncSession = Depends(get_db)
+) -> TranscriptionPage:
+    return await list_user_transcriptions(
+        page=pagination.page,
+        size=pagination.size,
+        user_id=user.id,
+        db=db,
+    )
+
+
+@transcriptions_router.get(
+    "/transcript",
+    response_model=TranscriptionChunksPage,
+    responses={status.HTTP_401_UNAUTHORIZED: {"model": ExceptionSchema}},
+)
+async def transcript_list(
+    user: CurrentUser, pagination: TranscriptionChunksPagination = Depends(), db: AsyncSession = Depends(get_db)
+) -> TranscriptionChunksPage:
+    return await list_user_transcript(
+        page=pagination.page,
+        size=pagination.size,
+        transcription_id=pagination.task_id,
+        db=db,
+    )
+
+
+@transcriptions_router.post(
+    "/transcript/export",
+    responses={status.HTTP_401_UNAUTHORIZED: {"model": ExceptionSchema}},
+)
+async def transcript_export(
+    user: CurrentUser, task_id: int, format: tp.Literal["doc", "txt"], db: AsyncSession = Depends(get_db)
+):
+    file_bytes: bytes = await export_transcription(task_id, format, db)
+    headers = {"Content-Disposition": f'attachment; filename="{user.id}.{format}"'}
+    return Response(file_bytes, headers=headers)
+
+
+@transcriptions_router.post(
+    "/worker/transcription_status",
+)
+async def worker_post_transcription_state(
+    data: TranscriptionStatusUpdateRequest,
+    secret_worker_token: str = Depends(validate_worker_token),
+    db: AsyncSession = Depends(get_db),
+):
+    transcription = await update_transcription_state(data, db)
+    return {"transcription": transcription}
+
+
+@transcriptions_router.post(
+    "/upload-audiofile",
+)
+async def create_upload_file(
+    user: CanInteractCurrentUser,
+    audiofile: ValidAudioFile,
+    task_q: tp.Tuple[tp.Any, str] = Depends(get_task_queue),
+    db: AsyncSession = Depends(get_db),
+):
+    if audiofile.content_type != "audio/mpeg":
+        raise HTTPException(400, detail="Invalid audio file")
+    user_id = user.id
+    out_file_path = os.path.join(settings.OBJECT_STORAGE_PATH, f"{user_id}.mp3")
+
+    async with aiofiles.open(out_file_path, "wb") as out_file:
+        while chunk := await audiofile.read(512 * 1024):  # Read in 0.5 MB chunks
+            await out_file.write(chunk)  # Write each chunk
+
+    audio_len_sec = get_audio_duration(out_file_path)
+    channel, q_name = task_q
+
+    current_transcriptions: tp.List[Transcription] = await get_current_transcriptions(
+        user_id=user.id,
+        db=db,
+    )
+    if len(current_transcriptions) != 0:
+        raise ValueError(
+            f"Transcription {current_transcriptions[0].id} is {current_transcriptions[0].current_state}. Please cancel the job or wait before its completion to start a new one."
+        )
+
+    transcription: Transcription = await create_transcription(
+        TranscriptionRequest(
+            creator_id=user.id,
+            audio_len_secs=audio_len_sec,
+            chunk_size_secs=settings.DEFAULT_CHUNK_SIZE,
+            current_state=TranscriptionState.QUEUED,
+        ),
+        db,
+    )
+    if not transcription:
+        raise HTTPException(500, detail="failed to create the transcription")
+    transcription_id = transcription.id
+    send_transcription_job_to_queue(channel, q_name, transcription_id, user_id)
+    return {"message": "File uploaded successfully", "task_id": transcription_id, "file": out_file_path}
+
+
+@transcriptions_router.post("/transcript/cancel")
+async def _transcript_cancel(
+    user: CurrentUser,
+    transcript_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    _ = await cancel_transcript(transcript_id=transcript_id, user_id=user.id, db=db)
+    return PlainTextResponse(content="OK")
+
+
+@transcriptions_router.get("/transcript/info")
+async def _transcript_info(
+    user: CurrentUser,
+    transcript_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    return await info_transcript(transcript_id=transcript_id, user_id=user.id, db=db)
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/users/__init__.py
+Содержимое:
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/users/enums.py
+Содержимое:
+from enum import Enum
+
+
+class Roles(str, Enum):
+    ADMIN = "admin"
+    USER = "user"
+
+
+class Sort(str, Enum):
+    ID = "id"
+    USERNAME = "username"
+    CREATE_DATE = "create_date"
+    UPDATE_DATE = "update_date"
+
+
+class Order(str, Enum):
+    ASC = "asc"
+    DESC = "desc"
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/users/models.py
+Содержимое:
+from sqlalchemy import Boolean, Column, Float, String
+
+from source.core.models import Model
+
+
+class User(Model):
+    __tablename__ = "User"
+
+    username = Column(name="username", type_=String, unique=True, index=True)
+    password = Column(name="password", type_=String)
+    active = Column(name="active", type_=Boolean)
+    role = Column(name="role", type_=String)
+    password_timestamp = Column(name="password_timestamp", type_=Float)
+    can_interact = Column(name="can_interact", type_=Boolean, default=False)
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/users/schemas.py
+Содержимое:
+from datetime import datetime, timezone
+
+from pydantic import BaseModel, Field, model_validator
+
+from source.app.auth.utils import get_password_hash
+from source.app.users.enums import Order, Roles, Sort
+from source.core.schemas import PageSchema, PaginationSchema, ResponseSchema
+from source.app.auth.schemas import Credentials, UsernameStr, PasswordStr
+
+
+# class UserRequest(BaseModel):
+#     username: str
+#     password: str
+UserRequest = Credentials
+
+
+class UserCreate(UserRequest):
+    active: bool = True
+    role: Roles = Roles.USER
+    password_timestamp: float = Field(default_factory=lambda: datetime.now(timezone.utc).timestamp())
+
+    @model_validator(mode="after")
+    def validator(cls, values: "UserCreate") -> "UserCreate":
+        values.password = get_password_hash(values.password)
+        return values
+
+
+class UserResponse(ResponseSchema):
+    username: UsernameStr
+    active: bool
+    can_interact: bool
+    role: Roles
+    create_date: datetime
+    update_date: datetime
+
+
+class UserUpdateRequest(BaseModel):
+    # username: str | None = None is not alterable
+    password: PasswordStr | None = None
+    can_interact: bool | None = None
+
+
+class UserUpdateRequestAdmin(UserUpdateRequest):
+    active: bool | None = None
+    role: Roles | None = None
+
+
+class UserUpdate(UserUpdateRequestAdmin):
+    password_timestamp: float | None = None
+
+    @model_validator(mode="after")
+    def validator(cls, values: "UserUpdate") -> "UserUpdate":
+        if password := values.password:
+            values.password = get_password_hash(password)
+            values.password_timestamp = datetime.now(timezone.utc).timestamp()
+        return values
+
+
+class UserPage(PageSchema):
+    users: list[UserResponse]
+
+
+class UserPagination(PaginationSchema):
+    sort: Sort = Sort.ID
+    order: Order = Order.ASC
+
+
+class UserId(BaseModel):
+    user_id: int
+
+
+class Username(BaseModel):
+    username: UsernameStr
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/users/services.py
+Содержимое:
+from math import ceil
+
+from sqlalchemy import asc, desc, func, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from source.app.users.enums import Order, Sort
+from source.app.users.models import User
+from source.app.users.schemas import (
+    UserCreate,
+    UserPage,
+    UserRequest,
+    UserUpdate,
+    UserUpdateRequest,
+)
+
+
+async def create_user(user: UserRequest, db: AsyncSession) -> User | None:
+    try:
+        user = User(**UserCreate(**user.model_dump()).model_dump())
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+        return user
+    except IntegrityError as e:
+        print(e)
+        return None
+
+
+async def get_user_by_id(
+    user_id: int,
+    db: AsyncSession,
+) -> User:
+    return await db.get_one(User, user_id)
+
+
+async def update_user(
+    user: User,
+    request: UserUpdateRequest,
+    db: AsyncSession,
+) -> User | None:
+    try:
+        fields_to_update = UserUpdate(**request.model_dump()).model_dump().items()
+        for key, value in fields_to_update:
+            if value is not None:
+                setattr(user, key, value)
+        await db.commit()
+        await db.refresh(user)
+        return user
+    except IntegrityError:
+        return None
+
+
+async def delete_user(user: User, db: AsyncSession) -> None:
+    await db.delete(user)
+    await db.commit()
+    return None
+
+
+async def list_users(page: int, size: int, sort: Sort, order: Order, db: AsyncSession) -> UserPage:
+    order = asc(sort) if order == Order.ASC else desc(sort)
+
+    users = await db.scalars(select(User).order_by(order).offset((page - 1) * size).limit(size))
+    total = await db.scalar(select(func.count(User.id)))
+
+    return UserPage(
+        users=users,
+        page=page,
+        size=size,
+        total=total,
+        pages=(ceil(total / size)),
+    )
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/users/utils.py
+Содержимое:
+from sqlalchemy import exists, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from source.app.users.enums import Roles
+from source.app.users.models import User
+from source.app.users.schemas import UserCreate
+from source.core.database import SessionLocal
+from source.core.settings import settings
+
+
+async def create_admin(db: AsyncSession = SessionLocal()):
+    admin_user = User(
+        **UserCreate(
+            username=settings.ADMIN_USERNAME,
+            password=settings.ADMIN_PASSWORD,
+            role=Roles.ADMIN,
+        ).model_dump()
+    )
+    try:
+        if not await db.scalar(select(exists().where(User.role == Roles.ADMIN))):
+            db.add(admin_user)
+            await db.commit()
+            await db.refresh(admin_user)
+    except IntegrityError:
+        pass
+    finally:
+        await db.close()
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/app/users/views.py
+Содержимое:
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from source.app.auth.auth import CurrentUser
+from source.app.users.models import User
+from source.app.users.schemas import (
+    UserRequest,
+    UserResponse,
+    UserUpdateRequest,
+)
+from source.app.users.services import create_user, get_user_by_id, update_user
+from source.core.database import get_db
+from source.core.exceptions import conflict
+from source.core.schemas import ExceptionSchema
+from source.app.transcriptions.types import validate_admin_token
+
+users_router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@users_router.post(
+    "/register",
+    response_model=UserResponse,
+    responses={status.HTTP_409_CONFLICT: {"model": ExceptionSchema}},
+    status_code=status.HTTP_201_CREATED,
+)
+async def user_create(user: UserRequest, db: AsyncSession = Depends(get_db)) -> User:
+    if created_user := await create_user(user=user, db=db):
+        return created_user
+    return conflict(f"User '{user.username}' already exists")
+
+
+@users_router.get(
+    "/info",
+    response_model=UserResponse,
+    responses={status.HTTP_401_UNAUTHORIZED: {"model": ExceptionSchema}},
+)
+async def user_get(user: CurrentUser) -> User:
+    return user
+
+
+@users_router.patch(
+    "/patch",
+    response_model=UserResponse,
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": ExceptionSchema},
+        status.HTTP_409_CONFLICT: {"model": ExceptionSchema},
+    },
+)
+async def user_update(
+    user_id: int,
+    request: UserUpdateRequest,
+    admin_secret_token: str = Depends(validate_admin_token),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    print(admin_secret_token)
+    user = await get_user_by_id(user_id, db)
+    if updated_user := await update_user(user=user, request=request, db=db):
+        return updated_user
+    return conflict(f"User '{request.username}' already exists")
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/core/__init__.py
+Содержимое:
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/core/database.py
+Содержимое:
+from typing import Any, AsyncGenerator
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import declarative_base
+
+from source.core.settings import settings
+
+engine = create_async_engine(f"postgresql+asyncpg://{settings.POSTGRES_URI}")
+SessionLocal = async_sessionmaker(bind=engine)
+Base = declarative_base()
+
+
+async def get_db() -> AsyncGenerator[AsyncSession, Any]:
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        await db.close()
+
+
+async def database_health(db: AsyncSession) -> bool:
+    try:
+        await db.execute(select(1))
+        return True
+    except Exception:
+        return False
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/core/exceptions.py
+Содержимое:
+from fastapi import HTTPException, status
+
+
+def bad_request(detail: str):
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=detail,
+    )
+
+
+def unauthorized(detail: str):
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=detail,
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+def forbidden(detail: str):
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=detail,
+    )
+
+
+def not_found(detail: str):
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=detail,
+    )
+
+
+def conflict(detail: str):
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail=detail,
+    )
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/core/models.py
+Содержимое:
+from sqlalchemy import Column, DateTime, Integer, func
+
+from source.core.database import Base
+
+
+class Model(Base):
+    __abstract__ = True
+
+    id = Column(
+        name="id",
+        type_=Integer,
+        primary_key=True,
+        autoincrement=True,
+        unique=True,
+        index=True,
+    )
+    create_date = Column(name="create_date", type_=DateTime, default=func.now(), index=True)
+    update_date = Column(
+        name="update_date",
+        type_=DateTime,
+        default=func.now(),
+        onupdate=func.now(),
+        index=True,
+    )
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/core/routers.py
+Содержимое:
+from fastapi import APIRouter
+
+from source.app.auth.views import auth_router
+from source.app.users.views import users_router
+from source.app.transcriptions.views import transcriptions_router
+
+api_router = APIRouter()
+
+api_router.include_router(auth_router)
+api_router.include_router(users_router)
+api_router.include_router(transcriptions_router)
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/core/schemas.py
+Содержимое:
+from typing import Any
+
+from fastapi import HTTPException, status
+from pydantic import BaseModel, Field, ValidationError
+from pydantic.config import ConfigDict
+
+
+class ResponseSchema(BaseModel):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PageSchema(BaseModel):
+    page: int
+    size: int
+    total: int
+    pages: int
+
+
+class PaginationSchema(BaseModel):
+    page: int = Field(default=1, ge=1)
+    size: int = Field(default=50, ge=1)
+
+    def __init__(self, **data: Any) -> None:
+        try:
+            super(PaginationSchema, self).__init__(**data)
+        except ValidationError as error:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=error.errors(),
+            )
+
+
+class ExceptionSchema(BaseModel):
+    detail: str
+
+
+class HealthSchema(BaseModel):
+    api: bool
+    database: bool
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/core/settings.py
+Содержимое:
+from pydantic import model_validator
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    APP_TITLE: str = "FastAPI JWT Auth API"
+    VERSION: str = "1.0.0"
+
+    ADMIN_USERNAME: str = "admin"
+    ADMIN_PASSWORD: str = "Shkibidi_to1let!"
+
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    SECRET_KEY: str = "s3cr3t_k3y"
+    ALGORITHM: str = "HS256"
+
+    POSTGRES_USER: str = "user"
+    POSTGRES_PASSWORD: str = "password"
+    POSTGRES_DB: str = "database"
+    POSTGRES_HOST: str = "postgres"
+    POSTGRES_PORT: int = 5432
+    POSTGRES_URI: str | None = None
+
+    OBJECT_STORAGE_PATH: str = "object_storage"
+
+    PIKA_HOST: str = "localhost"
+    PIKA_PORT: int = 5672
+    PIKA_USER: str = "rmuser"
+    PIKA_PASS: str = "rmpassword"
+    PIKA_QUEUE: str = "task_queue"
+
+    DEFAULT_CHUNK_SIZE: float = 60 * 15
+
+    SECRET_WORKER_TOKEN: str = "71y209716yc20n971yoj"
+    SECRET_ADMIN_TOKEN: str = "verysecretadmintokenyeah"
+
+    @model_validator(mode="after")
+    def validator(cls, values: "Settings") -> "Settings":
+        values.POSTGRES_URI = (
+            f"{values.POSTGRES_USER}:{values.POSTGRES_PASSWORD}@"
+            f"{values.POSTGRES_HOST}:{values.POSTGRES_PORT}/{values.POSTGRES_DB}"
+        )
+        return values
+
+
+def get_settings():
+    return Settings()
+
+
+settings = get_settings()
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/core/task_queue.py
+Содержимое:
+from typing import Any, AsyncGenerator, Tuple
+
+import pika
+import pika.channel
+
+from source.core.settings import settings
+
+
+def get_pika_connection():
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(
+            host=settings.PIKA_HOST,
+            port=settings.PIKA_PORT,
+            credentials=pika.PlainCredentials(username=settings.PIKA_USER, password=settings.PIKA_PASS),
+            connection_attempts=3,
+            retry_delay=5,
+        )
+    )
+    channel = connection.channel()
+    queue_name = settings.PIKA_QUEUE
+    channel.queue_declare(queue=queue_name, durable=True)
+    return connection, channel, queue_name
+
+
+async def get_task_queue() -> AsyncGenerator[Tuple[pika.channel.Channel, str], Any]:
+    connection, channel, queue_name = get_pika_connection()
+    try:
+        yield channel, queue_name
+    finally:
+        connection.close()
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/main.py
+Содержимое:
+from contextlib import asynccontextmanager
+
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi import FastAPI, Request, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from source.app.users.utils import create_admin
+from source.core.database import database_health, get_db
+from source.core.routers import api_router
+from source.core.schemas import HealthSchema
+from source.core.settings import settings
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await create_admin()
+    yield
+
+
+app = FastAPI(title=settings.APP_TITLE, version=settings.VERSION, lifespan=lifespan)
+
+app.include_router(api_router)
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.exception_handler(Exception)
+async def validation_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=status.HTTP_418_IM_A_TEAPOT,
+        content=jsonable_encoder({"detail": str(exc)}),
+    )
+
+
+@app.get("/", response_model=HealthSchema, tags=["health"])
+async def health_check(db: AsyncSession = Depends(get_db)):
+    return HealthSchema(api=True, database=await database_health(db=db))
+
+------------------------------------
+
+Пропускаем файл (недопустимое расширение): /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/migrations/README
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/migrations/__init__.py
+Содержимое:
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/migrations/env.py
+Содержимое:
+from logging.config import fileConfig
+
+from alembic import context
+from sqlalchemy import engine_from_config, pool
+
+from source.core.database import Base
+from source.core.settings import settings
+
+# this is the Alembic Config object, which provides
+# access to the values within the .ini file in use.
+config = context.config
+
+# Interpret the config file for Python logging.
+# This line sets up loggers basically.
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
+# add your model's MetaData object here
+# for 'autogenerate' support
+# from myapp import mymodel
+# target_metadata = mymodel.Base.metadata
+target_metadata = Base.metadata
+
+# other values from the config, defined by the needs of env.py,
+# can be acquired:
+# my_important_option = config.get_main_option("my_important_option")
+# ... etc.
+config.set_main_option("sqlalchemy.url", f"postgresql://{settings.POSTGRES_URI}")
+
+
+def run_migrations_offline() -> None:
+    """Run migrations in 'offline' mode.
+
+    This configures the context with just a URL
+    and not an Engine, though an Engine is acceptable
+    here as well.  By skipping the Engine creation
+    we don't even need a DBAPI to be available.
+
+    Calls to context.execute() here emit the given string to the
+    script output.
+
+    """
+    url = config.get_main_option("sqlalchemy.url")
+    context.configure(
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+    )
+
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+def run_migrations_online() -> None:
+    """Run migrations in 'online' mode.
+
+    In this scenario we need to create an Engine
+    and associate a connection with the context.
+
+    """
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section, {}),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+
+    with connectable.connect() as connection:
+        context.configure(connection=connection, target_metadata=target_metadata)
+
+        with context.begin_transaction():
+            context.run_migrations()
+
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()
+
+------------------------------------
+
+Пропускаем файл (недопустимое расширение): /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/migrations/script.py.mako
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/migrations/versions/02a75a11fa97_add_transcriptionchunk_table.py
+Содержимое:
+"""Add TranscriptionChunk table
+
+Revision ID: 02a75a11fa97
+Revises: 43703d06f36e
+Create Date: 2025-01-22 01:06:10.922391
+
+"""
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision = "02a75a11fa97"
+down_revision = "43703d06f36e"
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    op.create_table(
+        "TranscriptionChunk",
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column("transcript_id", sa.Integer(), nullable=False),
+        sa.Column("chunk_no", sa.Integer(), nullable=False),
+        sa.Column("text", sa.Text(), nullable=True),
+        sa.Column("create_date", sa.DateTime(), nullable=True),
+        sa.Column("update_date", sa.DateTime(), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
+        sa.ForeignKeyConstraint(["transcript_id"], ["Transcription.id"], name="fk_transcriptionchunk_transcription"),
+        sa.UniqueConstraint("transcript_id", "chunk_no", name="uq_transcript_chunk"),
+    )
+
+
+def downgrade() -> None:
+    op.drop_table("TranscriptionChunk")
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/migrations/versions/43703d06f36e_add_transcriptions.py
+Содержимое:
+"""add: transcriptions
+
+Revision ID: 43703d06f36e
+Revises: ea82a03addfc
+Create Date: 2024-12-01 15:45:45.511078
+
+"""
+from alembic import op
+import sqlalchemy as sa
+from enum import Enum
+
+
+class TranscriptionState(str, Enum):
+    # start
+    QUEUED = "queued"
+
+    # intermediate
+    IN_PROGRESS = "in_progress"
+    PROCESSING_ERROR = "processing_error"
+
+    # final
+    COMPLETED = "completed"
+    COMPLETED_PARTIALLY = "completed_partially"
+    PROCESSING_FAIL = "processing_fail"
+    CANCELLED = "cancelled"
+
+
+# revision identifiers, used by Alembic.
+revision = "43703d06f36e"
+down_revision = "ea82a03addfc"  # pragma: allowlist secret
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.create_table(
+        "Transcription",
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column("creator_id", sa.Integer(), nullable=False),
+        sa.Column("create_date", sa.DateTime(), nullable=True),
+        sa.Column("update_date", sa.DateTime(), nullable=True),
+        sa.Column("audio_len_secs", sa.Float(), nullable=False),
+        sa.Column("chunk_size_secs", sa.Float(), nullable=False),
+        sa.Column("current_state", sa.Enum(TranscriptionState, name="transcriptionstate"), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+        sa.ForeignKeyConstraint(["creator_id"], ["User.id"], name="fk_transcription_creator"),
+    )
+    # ### end Alembic commands ###
+
+
+def downgrade() -> None:
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table("Transcription")
+    # ### end Alembic commands ###
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/migrations/versions/9dea1ae5767c_add_processing_error_counter.py
+Содержимое:
+"""add: processing error counter
+
+Revision ID: 9dea1ae5767c
+Revises: 02a75a11fa97
+Create Date: 2025-02-02 01:40:04.297699
+
+"""
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision = "9dea1ae5767c"
+down_revision = "02a75a11fa97"
+branch_labels = None
+depends_on = None
+
+
+def upgrade():
+    # Add the new column 'error_count' with a default value of zero
+    op.add_column("Transcription", sa.Column("error_count", sa.Integer(), nullable=True, default=0))
+    op.execute('UPDATE "Transcription" SET error_count = 0 WHERE error_count IS NULL')
+    op.alter_column("Transcription", "error_count", nullable=False)
+
+
+def downgrade():
+    # Remove the column in case of downgrade
+    op.drop_column("Transcription", "error_count")
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/migrations/versions/ea82a03addfc_initial.py
+Содержимое:
+"""initial
+
+Revision ID: ea82a03addfc
+Revises:
+Create Date: 2023-10-27 06:04:15.835670
+
+"""
+import sqlalchemy as sa
+from alembic import op
+
+# revision identifiers, used by Alembic.
+revision = "ea82a03addfc"  # pragma: allowlist secret
+down_revision = None
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.create_table(
+        "User",
+        sa.Column("username", sa.String(), nullable=True),
+        sa.Column("password", sa.String(), nullable=True),
+        sa.Column("active", sa.Boolean(), nullable=True),
+        sa.Column("can_interact", sa.Boolean(), nullable=False, default=False),
+        sa.Column("role", sa.String(), nullable=True),
+        sa.Column("password_timestamp", sa.Float(), nullable=True),
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column("create_date", sa.DateTime(), nullable=True),
+        sa.Column("update_date", sa.DateTime(), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index(op.f("ix_User_create_date"), "User", ["create_date"], unique=False)
+    op.create_index(op.f("ix_User_id"), "User", ["id"], unique=True)
+    op.create_index(op.f("ix_User_update_date"), "User", ["update_date"], unique=False)
+    op.create_index(op.f("ix_User_username"), "User", ["username"], unique=True)
+    # ### end Alembic commands ###
+
+
+def downgrade() -> None:
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_index(op.f("ix_User_username"), table_name="User")
+    op.drop_index(op.f("ix_User_update_date"), table_name="User")
+    op.drop_index(op.f("ix_User_id"), table_name="User")
+    op.drop_index(op.f("ix_User_create_date"), table_name="User")
+    op.drop_table("User")
+    # ### end Alembic commands ###
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/tests/__init__.py
+Содержимое:
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/tests/conftest.py
+Содержимое:
+import pytest
+from fastapi.testclient import TestClient
+
+from source.main import app
+
+
+@pytest.fixture(scope="session")
+def client():
+    with TestClient(app) as web_client:
+        yield web_client
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/tests/test_health.py
+Содержимое:
+from source.core.schemas import HealthSchema
+
+
+def test_health_is_good(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    assert HealthSchema(**response.json()) == HealthSchema(api=True, database=True)
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/tests/test_sanity.py
+Содержимое:
+def test_page_not_found(client):
+    response = client.get("/some-random-page")
+    response.status_code == 404
+
+------------------------------------
+
+Файл: /c/Users/Fasci/PycharmProjects/lazy-lecture/api/source/tests/utils.py
+Содержимое:
+
+------------------------------------
+
