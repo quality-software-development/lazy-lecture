@@ -31,7 +31,7 @@ def fake_user_request():
 # Техника тест-дизайна: #4 Прогнозирование ошибок
 # Автор: Юлиана Мирочнук
 # Классы:
-# - Невалидный запрос для создания пользователя (username не соответствует требованиям)
+# - Невалидный запрос для создания пользователя (username не проходит валидацию)
 @pytest.fixture
 def fake_invalid_user_request():
     # Возвращаем словарь с невалидными данными
@@ -90,7 +90,7 @@ async def test_create_user_integrity_error(fake_user_request, fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
     # Автор: Юлиана Мирочнук
     # Классы:
-    # - Ситуация, когда commit выбрасывает IntegrityError
+    # - Сценарий, когда при коммите возникает IntegrityError (например, дублирование пользователя)
     fake_db_session.commit.side_effect = IntegrityError("dummy", "params", Exception("dummy"))
     result = await create_user(user=fake_user_request, db=fake_db_session)
     assert result is None
@@ -100,7 +100,7 @@ async def test_create_user_invalid_input(fake_invalid_user_request, fake_db_sess
     # Техника тест-дизайна: #4 Прогнозирование ошибок
     # Автор: Юлиана Мирочнук
     # Классы:
-    # - Попытка создания пользователя с невалидными данными должна вызвать ошибку
+    # - Попытка создать пользователя с невалидными данными должна вызывать ошибку
     with pytest.raises(Exception):
         await create_user(user=fake_invalid_user_request, db=fake_db_session)
 
@@ -125,7 +125,7 @@ async def test_get_user_by_id_not_found(fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
     # Автор: Юлиана Мирочнук
     # Классы:
-    # - Сценарий отсутствия пользователя в БД (get_one возвращает None)
+    # - Сценарий, когда пользователь не найден в БД (get_one возвращает None)
     fake_db_session.get_one.return_value = None
     user = await get_user_by_id(user_id=999, db=fake_db_session)
     assert user is None
@@ -158,7 +158,7 @@ async def test_update_user_no_changes(fake_db_session):
     # Техника тест-дизайна: #2 Граничные значения и #4 Прогнозирование ошибок
     # Автор: Юлиана Мирочнук
     # Классы:
-    # - Граничный сценарий: пустой запрос обновления не должен изменять пользователя
+    # - Граничный сценарий: пустой запрос обновления должен оставить пользователя без изменений
     test_user = User()
     test_user.username = "testuser"
     test_user.password = "old_hash"
@@ -166,7 +166,7 @@ async def test_update_user_no_changes(fake_db_session):
     test_user.role = "user"
     test_user.can_interact = False
 
-    update_data = {}  # пустой запрос
+    update_data = {}  # Пустой запрос
     update_request = UserUpdateRequest(**update_data)
 
     fake_db_session.commit.return_value = None
@@ -181,7 +181,7 @@ async def test_update_user_integrity_error(fake_db_session, monkeypatch):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
     # Автор: Юлиана Мирочнук
     # Классы:
-    # - Сценарий, когда при обновлении возникает IntegrityError, функция должна вернуть None
+    # - Сценарий, когда при обновлении возникает IntegrityError (например, конфликт обновления)
     test_user = fake_user()
     update_data = {"password": "NewStrongPass1!", "can_interact": True}
     update_request = UserUpdateRequest(**update_data)
@@ -228,25 +228,11 @@ async def test_list_users_success(fake_db_session):
     # Классы:
     # - Типовой сценарий: База содержит два пользователя
     now = datetime.now(timezone.utc)
-    user1 = User(
-        id=1,
-        username="UserOne",
-        active=True,
-        can_interact=True,
-        role=Roles.USER,
-        password_timestamp=123456.0
-    )
+    user1 = User(id=1, username="UserOne", active=True, can_interact=True, role=Roles.USER, password_timestamp=123456.0)
     user1.create_date = now
     user1.update_date = now
 
-    user2 = User(
-        id=2,
-        username="UserTwo",
-        active=True,
-        can_interact=False,
-        role=Roles.USER,
-        password_timestamp=123456.0
-    )
+    user2 = User(id=2, username="UserTwo", active=True, can_interact=False, role=Roles.USER, password_timestamp=123456.0)
     user2.create_date = now
     user2.update_date = now
 
