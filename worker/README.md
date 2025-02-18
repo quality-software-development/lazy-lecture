@@ -17,7 +17,7 @@ $ docker-compose up -d worker
 ## Запуск модульных тестов с Coverage
 
 ```bash
-docker compose run -it --build worker python -m pytest -m unit --cov=worker --cov-report term-missing
+docker compose run -it --build worker python -m pytest tests/unit --cov=. --cov-report term-missing
 ```
 
 ## Параметры
