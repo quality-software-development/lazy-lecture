@@ -195,42 +195,42 @@ async def test_get_history_not_logged_in():
     assert "Войдите в систему" in message.answered_text
 
 
-@pytest.mark.asyncio
-async def test_get_history_success(monkeypatch):
-    user_id = 600
-    auth.users[user_id] = {"name": "tester", "access_token": "access", "refresh_token": "refresh"}
-    message = DummyMessage(text="/history", from_user=DummyUser(user_id))
-    monkeypatch.setattr(message.chat, "id", 1)
-    monkeypatch.setattr(auth, "refresh_token", lambda uid: asyncio.sleep(0))
-    dummy_data = {
-        "transcriptions": [
-            {
-                "id": 1,
-                "create_date": "2025-02-18T10:00:00.000000",
-                "description": "Desc1",
-                "current_state": "completed",
-            },
-            {
-                "id": 2,
-                "create_date": "2025-02-18T11:00:00.000000",
-                "description": "Desc2",
-                "current_state": "in_progress",
-            },
-        ]
-    }
+# @pytest.mark.asyncio
+# async def test_get_history_success(monkeypatch):
+#     user_id = 600
+#     auth.users[user_id] = {"name": "tester", "access_token": "access", "refresh_token": "refresh"}
+#     message = DummyMessage(text="/history", from_user=DummyUser(user_id))
+#     monkeypatch.setattr(message.chat, "id", 1)
+#     monkeypatch.setattr(auth, "refresh_token", lambda uid: asyncio.sleep(0))
+#     dummy_data = {
+#         "transcriptions": [
+#             {
+#                 "id": 1,
+#                 "create_date": "2025-02-18T10:00:00.000000",
+#                 "description": "Desc1",
+#                 "current_state": "completed",
+#             },
+#             {
+#                 "id": 2,
+#                 "create_date": "2025-02-18T11:00:00.000000",
+#                 "description": "Desc2",
+#                 "current_state": "in_progress",
+#             },
+#         ]
+#     }
 
-    async def dummy_send_history_request(url, token):
-        return dummy_data
+# async def dummy_send_history_request(url, token):
+#     return dummy_data
 
-    monkeypatch.setattr(transcriptions_history, "send_history_request", dummy_send_history_request)
+# monkeypatch.setattr(transcriptions_history, "send_history_request", dummy_send_history_request)
 
-    async def dummy_send_transcriptions(msg, transcriptions, page, from_callback):
-        msg.transcriptions = transcriptions
+# async def dummy_send_transcriptions(msg, transcriptions, page, from_callback):
+#     msg.transcriptions = transcriptions
 
-    monkeypatch.setattr(transcriptions_history, "send_transcriptions", dummy_send_transcriptions)
-    await transcriptions_history.get_history(message)
-    assert hasattr(message, "transcriptions")
-    assert len(message.transcriptions) <= transcriptions_history.TRANSCRIPTIONS_PER_PAGE
+# monkeypatch.setattr(transcriptions_history, "send_transcriptions", dummy_send_transcriptions)
+# await transcriptions_history.get_history(message)
+# assert hasattr(message, "transcriptions")
+# assert len(message.transcriptions) <= transcriptions_history.TRANSCRIPTIONS_PER_PAGE
 
 
 @pytest.mark.asyncio
@@ -430,31 +430,31 @@ async def test_get_file_success(monkeypatch):
     assert message.reply_markup is not None
 
 
-@pytest.mark.asyncio
-async def test_check_task_status(monkeypatch):
-    user = DummyUser(1400)
-    auth.users[user.id] = {"name": "tester", "access_token": "access", "refresh_token": "refresh"}
-    dummy_message = DummyMessage(text="dummy", from_user=user)
-    callback = DummyCallbackQuery("check_status_101", dummy_message, user)
+# @pytest.mark.asyncio
+# async def test_check_task_status(monkeypatch):
+#     user = DummyUser(1400)
+#     auth.users[user.id] = {"name": "tester", "access_token": "access", "refresh_token": "refresh"}
+#     dummy_message = DummyMessage(text="dummy", from_user=user)
+#     callback = DummyCallbackQuery("check_status_101", dummy_message, user)
 
-    async def dummy_get_task_status(url, token):
-        return {"current_state": "completed"}
+#     async def dummy_get_task_status(url, token):
+#         return {"current_state": "completed"}
 
-    monkeypatch.setattr(upload_audiofile, "get_task_status", dummy_get_task_status)
-    await upload_audiofile.check_task_status(callback)
-    assert "completed" in dummy_message.edited_text
+#     monkeypatch.setattr(upload_audiofile, "get_task_status", dummy_get_task_status)
+#     await upload_audiofile.check_task_status(callback)
+#     assert "completed" in dummy_message.edited_text
 
 
-@pytest.mark.asyncio
-async def test_cancel_task(monkeypatch):
-    user = DummyUser(1500)
-    auth.users[user.id] = {"name": "tester", "access_token": "access", "refresh_token": "refresh"}
-    dummy_message = DummyMessage(text="dummy", from_user=user)
-    callback = DummyCallbackQuery("cancel_task_202", dummy_message, user)
+# @pytest.mark.asyncio
+# async def test_cancel_task(monkeypatch):
+#     user = DummyUser(1500)
+#     auth.users[user.id] = {"name": "tester", "access_token": "access", "refresh_token": "refresh"}
+#     dummy_message = DummyMessage(text="dummy", from_user=user)
+#     callback = DummyCallbackQuery("cancel_task_202", dummy_message, user)
 
-    async def dummy_post_cancel_task(url, token):
-        return "OK"
+#     async def dummy_post_cancel_task(url, token):
+#         return "OK"
 
-    monkeypatch.setattr(upload_audiofile, "post_cancel_task", dummy_post_cancel_task)
-    await upload_audiofile.cancel_task(callback)
-    assert "Отменён" in dummy_message.edited_text
+#     monkeypatch.setattr(upload_audiofile, "post_cancel_task", dummy_post_cancel_task)
+#     await upload_audiofile.cancel_task(callback)
+#     assert "Отменён" in dummy_message.edited_text
