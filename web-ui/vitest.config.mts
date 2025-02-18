@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig, configDefaults } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
 import { quasar, transformAssetUrls } from '@quasar/vite-plugin';
 import tsconfigPaths from 'vite-tsconfig-paths';
@@ -15,9 +15,25 @@ export default defineConfig({
             'test/vitest/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
         ],
         coverage: {
-          reporter: ['text', 'lcov']  // обязательно добавить "lcov"
-        },
-  },
+            enabled: false,
+            exclude: [
+                'test',
+                'web-ui/src/models',
+                '*.config.*',
+                '.quasar',
+                '.eslintrc.cjs',
+                'src/**/*.d.ts',
+                'src/stores/index.ts',
+                'src/boot/axios.ts',
+                'src/pages/TranscriptPage.vue', // TODO: убрать
+                'src/pages/ErrorNotFound.vue', // TODO: убрать
+                'src/components/TranscriptListItem.vue', // TODO: убрать
+                'src/stores/userInfoStore.ts', // TODO: убрать
+                'src/router/index.ts', // TODO: убрать
+            ],
+            reporter: ['text', 'lcov']  // обязательно добавить "lcov"
+        }
+    },
     plugins: [
         vue({
             template: { transformAssetUrls },

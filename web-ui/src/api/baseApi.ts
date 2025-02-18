@@ -23,7 +23,7 @@ export class BaseApi {
                 e.status === 422
                     ? e.response.data.detail.reduce(
                         (concatedErrs: string, err: any) =>
-                            `${concatedErrs}\n${err.msg}`,
+                            `${concatedErrs ? `${concatedErrs}\n` : ''}${err.msg}`,
                         ''
                     )
                     : e.status && e.status !== 418
