@@ -56,7 +56,7 @@ class APIClient:
             raise e
         return response.json()
 
-    def get_transcription_info(self, transcription_id: int) -> TranscriptionInfo:
+    def get_transcription_info(self, transcription_id: int) -> tp.Union[TranscriptionInfo, None]:
         data = GetTranscriptionStateRequestData(transcription_id=transcription_id)
         response = self._request_to_api("get_transcription_info", None, data.model_dump(mode="json"))["transcription"]
         return TranscriptionInfo(**response)

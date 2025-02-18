@@ -25,6 +25,7 @@ class WhisperASRPredictor(ASRPredictor):
         device: tp.Literal["cpu", "cuda", "auto"] = "auto",
         preload_model: bool = True,
     ):
+        super().__init__()
         self.logger = get_logger(self.__class__.__name__)
         self.device: torch.device = self._infer_device() if device == "auto" else torch.device(device)
         self.logger.info(f"Device: {self.device}")
@@ -52,8 +53,8 @@ class WhisperASRPredictor(ASRPredictor):
 
     def transcribe_audio_file(
         self, path: tp.Union[str, Path], clip_timestamps: tp.Union[str, tp.List[float]] = "0"
-    ) -> tp.Tuple[str, tp.List]:
+    ) -> str:
         path = Path(path)
         TypeAdapter(FilePath).validate_python(path)
         result = self.model.transcribe(str(path), clip_timestamps=clip_timestamps, language="ru")
-        return result["text"], result["segments"]
+        return result["text"]

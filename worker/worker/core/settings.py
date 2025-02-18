@@ -50,6 +50,3 @@ class Settings(BaseSettings):
     @property
     def aio_pika_connection_string(self) -> str:
         return f"amqp://{self.pika_user}:{self.pika_pass}@{self.pika_host}:{self.pika_port}/"
-
-
-settings = Settings()

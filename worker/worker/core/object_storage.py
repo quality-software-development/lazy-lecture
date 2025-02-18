@@ -25,6 +25,7 @@ class SimpleObjectStorage(ObjectStorage):
         return cls(settings.object_storage_path)
 
     def __init__(self, storage_root: Union[Path, str]):
+        super().__init__()
         self.logger = get_logger(self.__class__.__name__)
         self.storage_root = TypeAdapter(DirectoryPath).validate_python(Path(storage_root))
 

@@ -1,10 +1,11 @@
 import asyncio
 
 from worker.core.worker import LazyLectureWorker
-from worker.core.settings import settings
+from worker.core.settings import Settings
 
 
 async def main():
+    settings = Settings()
     worker = LazyLectureWorker(settings)
     await worker.start()
 
