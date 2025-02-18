@@ -11,17 +11,20 @@
                 ref="form"
                 style="height: 50%; width: 50%"
                 @submit="submitHandler"
+                data-test="ui-testing-auth-page-form"
             >
                 <q-input
                     :rules="[(val) => !!val || 'Введите логин']"
                     v-model="login"
                     label="Имя пользователя"
+                    data-test="ui-testing-auth-page-login-input"
                 />
                 <q-input
                     :rules="[(val) => !!val || 'Введите пароль']"
                     v-model="password"
                     :type="isPassword ? 'password' : 'text'"
                     label="Пароль"
+                    data-test="ui-testing-auth-page-password-input"
                 >
                     <template v-slot:append>
                         <q-icon
@@ -31,11 +34,20 @@
                         />
                     </template>
                 </q-input>
-                <q-btn class="q-mt-lg full-width" color="primary" type="submit"
-                    >{{ props.signUp ? 'Зарегистрироваться' : 'Войти' }}
+                <q-btn
+                    class="q-mt-lg full-width"
+                    color="primary"
+                    type="submit"
+                    data-test="ui-testing-auth-page-submit-btn"
+                >
+                    {{ props.signUp ? 'Зарегистрироваться' : 'Войти' }}
                 </q-btn>
             </q-form>
-            <div v-if="errorMsg" class="ui-auth-error row items-center q-mt-sm">
+            <div
+                v-if="errorMsg"
+                class="ui-auth-error row items-center q-mt-sm"
+                data-test="ui-testing-auth-page-error-msg"
+            >
                 <q-icon name="sym_o_error" class="q-mr-xs" />
                 {{ errorMsg }}
                 <q-tooltip
@@ -52,6 +64,7 @@
                 class="q-mt-lg"
                 color="primary"
                 @click="formChangeHandler"
+                data-test="ui-testing-auth-page-switch-forms-btn"
             >
                 {{ props.signUp ? 'Войти в существующий' : 'Создать' }} аккаунт
             </q-btn>
@@ -60,13 +73,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue';
+import { computed, ref, useTemplateRef } from 'vue';
 import { useRouter } from 'vue-router';
 import { AuthApi } from 'src/api/auth';
 import { ResError } from 'src/models/responses';
 import { QForm } from 'quasar';
 const router = useRouter();
 const props = defineProps(['signUp']);
+
+const accessToken = computed(() => localStorage.getItem('accessToken'))
+const refreshToken = computed(() => localStorage.getItem('refreshToken'))
 
 const login = ref('');
 const password = ref('');

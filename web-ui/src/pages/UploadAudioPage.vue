@@ -27,12 +27,14 @@
         class="fit column items-center justify-center"
     >
         <IconMessageItem :rotating="true" icon="settings">
-            Нельзя загрузить - идёт обработка аудио.
+            <p class="text-h6 text-grey-5 text-center" data-test="ui-testing-upload-audio-page-processing-p">
+                Нельзя загрузить - идёт обработка аудио.
+            </p>
         </IconMessageItem>
     </q-page>
     <q-page v-else class="fit column items-center justify-center">
         <IconMessageItem icon="file_upload_off">
-            <p class="text-h6 text-grey-5 text-center">
+            <p class="text-h6 text-grey-5 text-center" data-test="ui-testing-upload-audio-page-forbidden-p">
                 Нет доступа к обработке аудио.<br />Запросите доступ у
                 <a href="https://t.me/ll_requests">администраторов</a>
             </p>
@@ -44,7 +46,7 @@
 import { useUserInfoStore } from 'src/stores/userInfoStore';
 import { useTranscriptStore } from 'src/stores/transcriptStore';
 import { api } from 'src/boot/axios';
-import { onMounted, ref, useTemplateRef } from 'vue';
+import { computed, onMounted, ref, useTemplateRef } from 'vue';
 import IconMessageItem from 'src/components/IconMessageItem.vue';
 import { QUploader, useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
@@ -53,7 +55,7 @@ const transcriptStore = useTranscriptStore();
 const $q = useQuasar();
 const router = useRouter();
 
-const accessToken = ref(localStorage.getItem('accessToken'));
+const accessToken = computed(() => localStorage.getItem('accessToken'));
 
 const hintBeforeAdd = 'Перетащите аудио в поле или нажмите на плюс';
 const hintAfterAdd = 'Нажмите на облако для отправки аудио на обработку';

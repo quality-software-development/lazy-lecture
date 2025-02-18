@@ -1,3 +1,204 @@
+<script setup lang="ts">
+import {
+    ref,
+    useTemplateRef,
+    onMounted,
+    onUpdated,
+    watch,
+    computed,
+} from 'vue';
+import { useQuasar, copyToClipboard } from 'quasar';
+import { useRoute, useRouter } from 'vue-router';
+import { useTranscriptStore } from 'src/stores/transcriptStore';
+import { TranscriptionState } from 'src/models/transcripts';
+import IconMessageItem from 'src/components/IconMessageItem.vue';
+const $q = useQuasar();
+const route = useRoute();
+const router = useRouter();
+const transcriptStore = useTranscriptStore();
+
+const markWidth = 6;
+const markHeight = 20;
+const progressBarRightPadding = 96;
+
+await transcriptStore.loadTranscriptChunks(+route.params.taskId);
+const currentTranscript = ref(
+    transcriptStore.transcriptsMap.get(+route.params.taskId) || null
+);
+
+const progressMarksSvg = useTemplateRef<SVGSVGElement>('marks');
+const relativeMarkPositions = ref(currentTranscript.value?.markXPositions);
+
+const handleMarkClick = (idx: number) => {
+    if (currentTranscript.value?.chunks[idx].text) {
+        router.push({ name: 'transcriptPage', hash: `#chunk-${idx + 1}` });
+    }
+};
+const handleAnchorClick = async (idx: number) => {
+    handleMarkClick(idx);
+    await copyToClipboard(location.href);
+    $q.notify({
+        position: 'top',
+        message: 'Ссылка на фрагмент скопирована.',
+        actions: [{ icon: 'close', color: 'white', round: true }],
+    });
+};
+
+setTimeout(() => {
+    if (route.hash.startsWith('#chunk-')) {
+        handleMarkClick(+route.hash.slice(-1) - 1);
+    }
+});
+
+const updateMarkPositions = () => {
+    if (currentTranscript.value) {
+        const newRelativeXes = currentTranscript.value.markXPositions.map(
+            (xPos) =>
+                (xPos =
+                    xPos *
+                        ((progressMarksSvg.value?.getBoundingClientRect()
+                            .width || 0) -
+                            progressBarRightPadding) -
+                    markWidth)
+        );
+        if (newRelativeXes?.length) {
+            newRelativeXes[0] += markWidth;
+            relativeMarkPositions.value = newRelativeXes;
+        }
+    }
+};
+const updateTimeStampViews = () => {
+    if (currentTranscript.value) {
+        for (
+            let i = 0;
+            i < currentTranscript.value.markXPositions.length;
+            i++
+        ) {
+            const mark = document.querySelector(`rect[rect-idx="${i}"]`);
+            if (mark) {
+                const timestampSpan = document.querySelector(
+                    `span[span-idx="${i}"]`
+                ) as HTMLSpanElement;
+
+                timestampSpan.style.left = '';
+
+                const xDifference =
+                    mark.getBoundingClientRect().x -
+                    timestampSpan.getBoundingClientRect().x;
+
+                timestampSpan.style.left = `${
+                    (xDifference < 0 ? -1 : 1) * xDifference -
+                    (+timestampSpan.getBoundingClientRect().width - markWidth) /
+                        2
+                }px`;
+            }
+        }
+    }
+};
+
+const downloadFile = (format: 'doc' | 'plain') => {
+    if (currentTranscript.value?.chunks.length) {
+        const text = currentTranscript.value.chunks
+            .map(
+                (chunk, chunkIdx) =>
+                    `${currentTranscript.value?.timeStampViews[chunkIdx]}\n${chunk.text}`
+            )
+            .join('\n\n');
+
+        if (text) {
+            const element = document.createElement('a');
+            element.setAttribute(
+                'href',
+                `data:text/${format};charset=utf-8,${encodeURIComponent(text)}`
+            );
+            element.setAttribute(
+                'download',
+                `Транскрипция №${currentTranscript.value.id}${
+                    format === 'plain' ? '.txt' : `.${format}`
+                }`
+            );
+            element.click();
+            element.remove();
+        }
+    }
+};
+
+const cancelledWhileProcessing = ref(
+    localStorage.getItem('cancelledWhileProcessing')
+);
+
+const isCurrentTranscriptProcessing = computed(
+    () =>
+        transcriptStore.isTranscriptProcessing(+route.params.taskId) &&
+        cancelledWhileProcessing.value !== route.params.taskId
+);
+const isCurrentTranscriptCancelling = computed(
+    () =>
+        transcriptStore.isTranscriptCancelling(+route.params.taskId) ||
+        cancelledWhileProcessing.value === route.params.taskId
+);
+const showStateIconMessage = computed(
+    () =>
+        currentTranscript.value &&
+        [
+            TranscriptionState.in_progress,
+            TranscriptionState.queued,
+            TranscriptionState.cancelled,
+        ].includes(currentTranscript.value.currentState) &&
+        !currentTranscript.value.chunks.length
+);
+
+const resizeObserver = new ResizeObserver(() => updateMarkPositions());
+onMounted(() => {
+    if (progressMarksSvg.value) {
+        resizeObserver.observe(progressMarksSvg.value);
+    }
+});
+onUpdated(() => {
+    updateTimeStampViews();
+});
+watch(
+    () => route.params.taskId,
+    async (newId) => {
+        await transcriptStore.loadTranscriptChunks(+route.params.taskId);
+
+        const anotherTranscript = transcriptStore.transcriptsMap.get(+newId);
+        if (anotherTranscript) {
+            if (
+                ![
+                    TranscriptionState.queued,
+                    TranscriptionState.in_progress,
+                    TranscriptionState.processing_error,
+                ].includes(anotherTranscript.currentState)
+            ) {
+            }
+            currentTranscript.value = anotherTranscript;
+            relativeMarkPositions.value = anotherTranscript.markXPositions;
+            updateMarkPositions();
+        } else {
+            currentTranscript.value = null;
+        }
+    }
+);
+watch(
+    () => transcriptStore.processsingTicks,
+    () => {
+        if (
+            transcriptStore.processingTranscriptionId &&
+            +route.params.taskId === transcriptStore.processingTranscriptionId
+        ) {
+            cancelledWhileProcessing.value = localStorage.getItem(
+                'cancelledWhileProcessing'
+            );
+            currentTranscript.value = transcriptStore.processingTranscription!;
+            relativeMarkPositions.value =
+                transcriptStore.processingTranscription!.markXPositions;
+            updateMarkPositions();
+        }
+    }
+);
+</script>
+
 <template>
     <div v-if="currentTranscript" :class="showStateIconMessage ? 'column' : ''">
         <div class="ui-transcript-page-progress-container">
@@ -242,207 +443,6 @@
         </IconMessageItem>
     </q-page>
 </template>
-
-<script setup lang="ts">
-import {
-    ref,
-    useTemplateRef,
-    onMounted,
-    onUpdated,
-    watch,
-    computed,
-} from 'vue';
-import { useQuasar, copyToClipboard } from 'quasar';
-import { useRoute, useRouter } from 'vue-router';
-import { useTranscriptStore } from 'src/stores/transcriptStore';
-import { TranscriptionState } from 'src/models/transcripts';
-import IconMessageItem from 'src/components/IconMessageItem.vue';
-const $q = useQuasar();
-const route = useRoute();
-const router = useRouter();
-const transcriptStore = useTranscriptStore();
-
-const markWidth = 6;
-const markHeight = 20;
-const progressBarRightPadding = 96;
-
-await transcriptStore.loadTranscriptChunks(+route.params.taskId);
-const currentTranscript = ref(
-    transcriptStore.transcriptsMap.get(+route.params.taskId) || null
-);
-
-const progressMarksSvg = useTemplateRef<SVGSVGElement>('marks');
-const relativeMarkPositions = ref(currentTranscript.value?.markXPositions);
-
-const handleMarkClick = (idx: number) => {
-    if (currentTranscript.value?.chunks[idx].text) {
-        router.push({ name: 'transcriptPage', hash: `#chunk-${idx + 1}` });
-    }
-};
-const handleAnchorClick = async (idx: number) => {
-    handleMarkClick(idx);
-    await copyToClipboard(location.href);
-    $q.notify({
-        position: 'top',
-        message: 'Ссылка на фрагмент скопирована.',
-        actions: [{ icon: 'close', color: 'white', round: true }],
-    });
-};
-
-setTimeout(() => {
-    if (route.hash.startsWith('#chunk-')) {
-        handleMarkClick(+route.hash.slice(-1) - 1);
-    }
-});
-
-const updateMarkPositions = () => {
-    if (currentTranscript.value) {
-        const newRelativeXes = currentTranscript.value.markXPositions.map(
-            (xPos) =>
-                (xPos =
-                    xPos *
-                        ((progressMarksSvg.value?.getBoundingClientRect()
-                            .width || 0) -
-                            progressBarRightPadding) -
-                    markWidth)
-        );
-        if (newRelativeXes?.length) {
-            newRelativeXes[0] += markWidth;
-            relativeMarkPositions.value = newRelativeXes;
-        }
-    }
-};
-const updateTimeStampViews = () => {
-    if (currentTranscript.value) {
-        for (
-            let i = 0;
-            i < currentTranscript.value.markXPositions.length;
-            i++
-        ) {
-            const mark = document.querySelector(`rect[rect-idx="${i}"]`);
-            if (mark) {
-                const timestampSpan = document.querySelector(
-                    `span[span-idx="${i}"]`
-                ) as HTMLSpanElement;
-
-                timestampSpan.style.left = '';
-
-                const xDifference =
-                    mark.getBoundingClientRect().x -
-                    timestampSpan.getBoundingClientRect().x;
-
-                timestampSpan.style.left = `${
-                    (xDifference < 0 ? -1 : 1) * xDifference -
-                    (+timestampSpan.getBoundingClientRect().width - markWidth) /
-                        2
-                }px`;
-            }
-        }
-    }
-};
-
-const downloadFile = (format: 'doc' | 'plain') => {
-    if (currentTranscript.value?.chunks.length) {
-        const text = currentTranscript.value.chunks
-            .map(
-                (chunk, chunkIdx) =>
-                    `${currentTranscript.value?.timeStampViews[chunkIdx]}\n${chunk.text}`
-            )
-            .join('\n\n');
-
-        if (text) {
-            const element = document.createElement('a');
-            element.setAttribute(
-                'href',
-                `data:text/${format};charset=utf-8,${encodeURIComponent(text)}`
-            );
-            element.setAttribute(
-                'download',
-                `Транскрипция №${currentTranscript.value.id}${
-                    format === 'plain' ? '.txt' : `.${format}`
-                }`
-            );
-            element.click();
-            element.remove();
-        }
-    }
-};
-
-const cancelledWhileProcessing = ref(
-    localStorage.getItem('cancelledWhileProcessing')
-);
-
-const isCurrentTranscriptProcessing = computed(
-    () =>
-        transcriptStore.isTranscriptProcessing(+route.params.taskId) &&
-        cancelledWhileProcessing.value !== route.params.taskId
-);
-const isCurrentTranscriptCancelling = computed(
-    () =>
-        transcriptStore.isTranscriptCancelling(+route.params.taskId) ||
-        cancelledWhileProcessing.value === route.params.taskId
-);
-const showStateIconMessage = computed(
-    () =>
-        currentTranscript.value &&
-        [
-            TranscriptionState.in_progress,
-            TranscriptionState.queued,
-            TranscriptionState.cancelled,
-        ].includes(currentTranscript.value.currentState) &&
-        !currentTranscript.value.chunks.length
-);
-
-const resizeObserver = new ResizeObserver(() => updateMarkPositions());
-onMounted(() => {
-    if (progressMarksSvg.value) {
-        resizeObserver.observe(progressMarksSvg.value);
-    }
-});
-onUpdated(() => {
-    updateTimeStampViews();
-});
-watch(
-    () => route.params.taskId,
-    async (newId) => {
-        await transcriptStore.loadTranscriptChunks(+route.params.taskId);
-
-        const anotherTranscript = transcriptStore.transcriptsMap.get(+newId);
-        if (anotherTranscript) {
-            if (
-                ![
-                    TranscriptionState.queued,
-                    TranscriptionState.in_progress,
-                    TranscriptionState.processing_error,
-                ].includes(anotherTranscript.currentState)
-            ) {
-            }
-            currentTranscript.value = anotherTranscript;
-            relativeMarkPositions.value = anotherTranscript.markXPositions;
-            updateMarkPositions();
-        } else {
-            currentTranscript.value = null;
-        }
-    }
-);
-watch(
-    () => transcriptStore.processsingTicks,
-    () => {
-        if (
-            transcriptStore.processingTranscriptionId &&
-            +route.params.taskId === transcriptStore.processingTranscriptionId
-        ) {
-            cancelledWhileProcessing.value = localStorage.getItem(
-                'cancelledWhileProcessing'
-            );
-            currentTranscript.value = transcriptStore.processingTranscription!;
-            relativeMarkPositions.value =
-                transcriptStore.processingTranscription!.markXPositions;
-            updateMarkPositions();
-        }
-    }
-);
-</script>
 
 <style scoped lang="scss">
 .ui-transcript-page-progress-container {
