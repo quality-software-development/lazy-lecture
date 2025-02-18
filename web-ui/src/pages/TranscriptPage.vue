@@ -21,7 +21,11 @@ const markWidth = 6;
 const markHeight = 20;
 const progressBarRightPadding = 96;
 
-await transcriptStore.loadTranscriptChunks(+route.params.taskId);
+const chunksLoadRes = transcriptStore.loadTranscriptChunks(+route.params.taskId);
+if (chunksLoadRes instanceof Promise) {
+    console.log('IT\'S PROMISE');
+    await chunksLoadRes
+}
 const currentTranscript = ref(
     transcriptStore.transcriptsMap.get(+route.params.taskId) || null
 );
@@ -150,6 +154,7 @@ const showStateIconMessage = computed(
 
 const resizeObserver = new ResizeObserver(() => updateMarkPositions());
 onMounted(() => {
+    console.log('mounted.');
     if (progressMarksSvg.value) {
         resizeObserver.observe(progressMarksSvg.value);
     }
@@ -439,7 +444,9 @@ watch(
     </div>
     <q-page v-else class="fit column items-center justify-center">
         <IconMessageItem icon="warning">
-            Транскрипция не найдена
+            <p data-test="ui-testing-transcript-page-not-found">
+                Транскрипция не найдена
+            </p>
         </IconMessageItem>
     </q-page>
 </template>

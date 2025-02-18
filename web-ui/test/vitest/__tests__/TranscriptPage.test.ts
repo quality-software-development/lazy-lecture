@@ -1,41 +1,27 @@
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest';
-import { flushPromises, mount } from '@vue/test-utils';
+import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTestingPinia } from '@pinia/testing';
 import { getMockUser, router } from 'test/vitest/setup-file';
 import TranscriptPage from 'src/pages/TranscriptPage.vue';
 
-import { api } from 'src/boot/axios';
 import { useTranscriptStore } from 'src/stores/transcriptStore';
-import MainLayout from 'src/layouts/MainLayout.vue';
-import App from 'src/App.vue';
 import { TranscriptionState } from 'src/models/transcripts';
-import { useRoute } from 'vue-router';
 import { useUserInfoStore } from 'src/stores/userInfoStore';
 installQuasarPlugin();
 
 describe('Страница просмотра транскрипции', () => {
-    it('Для существующей транскрипции открывается её прогресс-бар и текст', async () => {
-
+    it('При открытии экрана транскрипции должны подгружаться её чанки', async () => {
         vi.mock('vue-router', () => ({
             useRoute: vi.fn().mockReturnValue({ params: { taskId: '1' }, hash: '' }),
             useRouter: vi.fn().mockReturnValue(router)
         }));
 
-        const wrapper = mount(TranscriptPage, {
-            global: {
-                plugins: [
-                    createTestingPinia({
-                        stubActions: false,
-                        createSpy: vi.fn,
-                    }),
-                ],
-            },
+        const testingPinia = createTestingPinia({
+            stubActions: false,
+            createSpy: vi.fn,
         });
-
-        const userInfoStore = useUserInfoStore();
-        userInfoStore.userInfo = getMockUser(true);
 
         const transcriptStore = useTranscriptStore();
         const date = new Date();
@@ -44,20 +30,35 @@ describe('Страница просмотра транскрипции', () => {
             creatorId: 0,
             audioLenSecs: 100,
             chunkSizeSecs: 900,
-            currentState: TranscriptionState.in_progress,
+            currentState: TranscriptionState.completed,
             createDate: date,
             updateDate: date,
             description: 'string',
-            chunks: [],
-            markXPositions: [],
-            timeStampViews: [],
-            chunksDurationArray: [],
+            chunks: [
+                {
+                    duration: 900,
+                    index: 0,
+                    text: 'Mock chunk text'
+                }
+            ],
+            markXPositions: [0],
+            timeStampViews: ['00:00:00'],
+            chunksDurationArray: [900],
         });
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const loadTranscriptChunks = vi.spyOn(transcriptStore, 'loadTranscriptChunks');
+        loadTranscriptChunks.mockImplementation(vi.fn as any);
 
-        console.log(wrapper.text());
-        // const transcriptStore = useTranscriptStore();
-        // const date = new Date();
+        const userInfoStore = useUserInfoStore();
+        userInfoStore.userInfo = getMockUser(true);
 
+        mount(TranscriptPage, {
+            global: {
+                plugins: [
+                    testingPinia,
+                ],
+            },
+        });
+
+        expect(loadTranscriptChunks).toBeCalled();
     });
 });

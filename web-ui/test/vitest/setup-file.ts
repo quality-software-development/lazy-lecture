@@ -10,9 +10,9 @@ export const router = createRouter({
     routes: routes,
 });
 
-export const getMockUser = (canInteract: boolean) => {
+export const getMockUser = (canInteract: boolean, id = 0) => {
     return {
-        id: 0,
+        id,
         username: 'mockUser',
         active: true,
         canInteract,
@@ -74,6 +74,7 @@ mockGet.mockImplementation((url) => {
                 },
             });
         case '/transcript?task_id=1&skip=0&limit=100':
+        case '/transcript?task_id=999&skip=0&limit=100':
             return Promise.resolve({
                 data: {
                     page: 1,
@@ -88,6 +89,19 @@ mockGet.mockImplementation((url) => {
                             transcription: 'Mock chunk text.',
                         },
                     ],
+                },
+            });
+        case '/transcript/info?transcript_id=1':
+            return Promise.resolve({
+                data: {
+                    audio_len_secs: 100,
+                    id: 1,
+                    update_date: date,
+                    current_state: 'completed',
+                    error_count: 0,
+                    chunk_size_secs: 900,
+                    creator_id: 0,
+                    create_date: date
                 },
             });
         default:
@@ -157,6 +171,8 @@ mockPost.mockImplementation((url, data) => {
                 })
             );
         }
+        case '/transcript/cancel?transcript_id=1':
+            return Promise.resolve('OK');
         default:
             return Promise.reject(null);
     }

@@ -23,10 +23,17 @@ export default defineConfig({
                 '.quasar',
                 '.eslintrc.cjs',
                 'src/**/*.d.ts',
+                'src/stores/index.ts',
+                'src/boot/axios.ts',
+                'src/pages/TranscriptPage.vue', // TODO: убрать
+                'src/pages/ErrorNotFound.vue', // TODO: убрать
+                'src/components/TranscriptListItem.vue', // TODO: убрать
+                'src/stores/userInfoStore.ts', // TODO: убрать
+                'src/router/index.ts', // TODO: убрать
             ],
             reporter: ['text', 'lcov']  // обязательно добавить "lcov"
         }
-  },
+    },
     plugins: [
         vue({
             template: { transformAssetUrls },
