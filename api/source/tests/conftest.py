@@ -23,7 +23,7 @@ def override_get_settings() -> TestSettings:
     return TestSettings()
 
 
-@pytest_asyncio.fixture(scope="session", autouse=True)
+@pytest_asyncio.fixture(scope="session", autouse=False)
 async def setup_test_db():
     settings = get_settings()
     fixed_db_uri = f"postgresql://{settings.POSTGRES_URI}"
@@ -60,7 +60,7 @@ async def setup_test_db():
     await conn.close()
 
 
-@pytest_asyncio.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=False)
 async def clean_tables():
     settings = get_settings()
     fixed_db_uri = f"postgresql://{settings.POSTGRES_URI}"
