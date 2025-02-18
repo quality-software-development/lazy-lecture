@@ -14,7 +14,10 @@ export default defineConfig({
             'src/**/*.vitest.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
             'test/vitest/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
         ],
-    },
+        coverage: {
+          reporter: ['text', 'lcov']  // обязательно добавить "lcov"
+        },
+  },
     plugins: [
         vue({
             template: { transformAssetUrls },
