@@ -165,7 +165,10 @@ async def test_authenticate_token_inactive():
 @pytest.mark.asyncio
 async def test_generate_token(monkeypatch):
     def fake_jwt_encode(payload, key, algorithm):
-        return f"encoded_{payload['token_type']}_{payload['user_id']}"
+        token_type = payload["token_type"]
+        # Если token_type является элементом Enum, используем его значение и приводим к нижнему регистру
+        token_str = token_type.value.lower() if hasattr(token_type, "value") else str(token_type).lower()
+        return f"encoded_{token_str}_{payload['user_id']}"
 
     monkeypatch.setattr("source.app.auth.services.jwt.encode", fake_jwt_encode)
 
