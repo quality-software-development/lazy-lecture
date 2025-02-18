@@ -6,6 +6,7 @@ from datetime import datetime
 import pytest
 import aiohttp
 
+
 class DummyUser:
     def __init__(self, user_id, first_name="Test"):
         self.id = user_id
