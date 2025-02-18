@@ -1,0 +1,216 @@
+name: Lazy Lecture CI
+
+on:
+  push:
+    branches:
+      - main
+      - feature/ci_cd_integration
+  pull_request:
+    branches:
+      - main
+
+#############################
+# Job: Сборка и установка зависимостей (без кэширования)
+#############################
+jobs:
+  build:
+    name: Сборка и установка зависимостей
+    runs-on: self-hosted
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
+
+      # Установка Python 3.9 (используется для worker, bot и web-ui по умолчанию)
+      - name: Настройка Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      # Установка Node.js версии 20 для web-ui
+      - name: Настройка Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Установка зависимостей для всех Python-компонентов
+      - name: Установка Python зависимостей
+        run: |
+          pip install -r worker/requirements.txt
+          pip install -r bot/requirements.txt
+          # Устанавливаем совместимую версию starlette, если нужная версия недоступна
+          pip install starlette==0.18.0
+          pip install -r api/config/requirements.txt
+
+      # Установка npm зависимостей для web-ui
+      - name: Установка npm зависимостей для web-ui
+        run: |
+          cd web-ui
+          npm install
+
+#############################
+# Тесты worker
+#############################
+  tests_worker:
+    name: Тесты worker
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
+
+      # Устанавливаем ffmpeg (если он не установлен)
+      - name: Установка ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      # Создаём каталог для загрузок и переопределяем DOWNLOAD_ROOT,
+      # чтобы модель не записывалась в /cache (нет прав)
+      - name: Создать каталог для модели
+        run: mkdir -p $GITHUB_WORKSPACE/cache
+
+      - name: Установка переменной окружения DOWNLOAD_ROOT для worker
+        run: echo "DOWNLOAD_ROOT=$GITHUB_WORKSPACE/cache" >> $GITHUB_ENV
+
+      # Дополнительная установка зависимостей worker (если нужны обновления)
+      - name: Установка зависимостей worker
+        run: pip install -r worker/requirements.txt
+
+      # Добавляем папку worker в PYTHONPATH для корректного импорта (например, worker.settings)
+      - name: Установка PYTHONPATH для worker
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE/worker:$GITHUB_WORKSPACE" >> $GITHUB_ENV
+
+      # Копируем аудиофайл для тестов в корневую директорию
+      - name: Подготовка аудиофайла для тестов
+        run: cp worker/sample_ru_120s.mp3 .
+
+      - name: Запуск тестов worker (пропускаем интеграционные тесты)
+        run: pytest --rootdir=. -m "not integration" worker/tests --cov=worker --cov-report=xml:coverage-worker.xml
+
+      - name: Сохранить отчёт покрытия worker
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-worker
+          path: coverage-worker.xml
+
+# #############################
+# # Тесты API
+# #############################
+  tests_api:
+    name: Тесты API
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
+
+      # Настройка Python 3.11 для тестов API (для использования синтаксиса str | None)
+      - name: Настройка Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      # Устанавливаем зависимости API
+      - name: Установка зависимостей API
+        run: pip install -r api/config/requirements.txt
+
+      # Добавляем каталог api в PYTHONPATH
+      - name: Установка PYTHONPATH для API
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE/api:$GITHUB_WORKSPACE" >> $GITHUB_ENV
+
+      - name: Запуск тестов API
+        run: pytest --rootdir=. --cov=source --cov-report=xml:api_coverage.xml api
+
+      - name: Сохранить отчёт покрытия API
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-api
+          path: api_coverage.xml
+
+#############################
+# Тесты Bot
+#############################
+  tests_bot:
+    name: Тесты Bot
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
+
+      # Устанавливаем зависимости Bot (aiogram и т.д.)
+      - name: Установка зависимостей Bot
+        run: pip install -r bot/requirements.txt
+
+      # Добавляем папку bot в PYTHONPATH
+      - name: Установка PYTHONPATH для bot
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE/bot:$GITHUB_WORKSPACE" >> $GITHUB_ENV
+
+      - name: Запуск тестов Bot
+        run: pytest bot/tests --cov=bot --cov-report=xml:bot_coverage.xml
+
+      - name: Сохранить отчёт покрытия Bot
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-bot
+          path: bot_coverage.xml
+
+#############################
+# Тесты web-ui
+#############################
+  tests_web_ui:
+    name: Тесты web-ui
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
+
+      # Настраиваем Node.js 20, чтобы npm/npx были доступны
+      - name: Настройка Node.js 20 для web-ui
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Устанавливаем зависимости внутри каталога web-ui
+      - name: Установка зависимостей web-ui
+        run: |
+          cd web-ui
+          npm ci
+
+      - name: Запуск тестов web-ui
+        run: |
+          cd web-ui
+          npx vitest run
+          npx vitest run --coverage
+
+      - name: Сохранить отчёт покрытия web-ui
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-web-ui
+          path: web-ui/coverage/lcov.info
+
+#############################################
+# Job: Анализ покрытия и запуск SonarQube скана
+#############################################
+  analyze:
+    name: Анализ покрытия и SonarQube
+    runs-on: self-hosted
+    needs: [tests_worker, tests_bot, tests_web_ui, tests_api]
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Скачать все отчёты покрытия
+        uses: actions/download-artifact@v4
+        with:
+          path: coverage_reports
+
+      - name: Показать скачанные отчёты покрытия
+        run: ls -R coverage_reports
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

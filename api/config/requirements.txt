@@ -17,12 +17,7 @@ python-docx==1.1.2
 ffmpeg-python==0.2.0
 httpx==0.28.1
 pytest==8.3.4
-<<<<<<< HEAD
-pytest-cov==6.0.0
-aiosqlite==0.21.0
-=======
 pytest-cov==5.0.0
 aiosqlite==0.20.0
->>>>>>> d1cd137bd39aa958e9b0deb909c70809be642c68
 bcrypt>=4.2.1
 pytest-asyncio>=0.25.3
