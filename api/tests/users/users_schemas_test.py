@@ -1,24 +1,22 @@
 from datetime import datetime, timezone
-import pytest
-from pydantic import ValidationError
+
+from source.app.users.enums import Roles
 from source.app.users.schemas import (
     UserRequest,
     UserCreate,
     UserResponse,
-    UserUpdateRequest,
     UserUpdate,
     UserPage,
     UserPagination,
     UserId,
     Username,
 )
-from source.app.users.enums import Roles
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности
 # Описание:
 #   - Проверка корректных данных для UserRequest.
-#     • Классы: валидные значения для username и password, аналогичные корректным учетным данным.
+#   - Классы: валидные значения для username и password, аналогичные корректным учетным данным.
 def test_user_request_valid():
     data = {"username": "ValidUser", "password": "StrongPass1!"}
     req = UserRequest(**data)
@@ -29,7 +27,7 @@ def test_user_request_valid():
 # Техника тест-дизайна: #3 Причинно-следственный анализ
 # Описание:
 #   - Проверка валидатора в UserCreate, который преобразует (хеширует) пароль.
-#     • Классы: проверка преобразования пароля.
+#   - Классы: проверка преобразования пароля.
 def test_user_create_validator(monkeypatch):
     raw_password = "StrongPass1!"
     data = {"username": "ValidUser", "password": raw_password}
@@ -48,7 +46,7 @@ def test_user_create_validator(monkeypatch):
 # Техника тест-дизайна: #1 Классы эквивалентности
 # Описание:
 #   - Проверка корректного создания UserResponse с обязательными полями.
-#     • Классы: корректно заполненные поля модели UserResponse.
+#   - Классы: корректно заполненные поля модели UserResponse.
 def test_user_response():
     now = datetime.now(timezone.utc)
     data = {
@@ -72,7 +70,7 @@ def test_user_response():
 # Техника тест-дизайна: #3 Причинно-следственный анализ
 # Описание:
 #   - Проверка валидатора в UserUpdate: при наличии пароля он должен быть захеширован.
-#     • Классы: проверка преобразования пароля в модели UserUpdate.
+#   - Классы: проверка преобразования пароля в модели UserUpdate.
 def test_user_update(monkeypatch):
     raw_password = "NewStrongPass1!"
     data = {"password": raw_password, "can_interact": True}
@@ -91,7 +89,7 @@ def test_user_update(monkeypatch):
 # Техника тест-дизайна: #1 Классы эквивалентности
 # Описание:
 #   - Типовой сценарий для пагинационных настроек (UserPagination).
-#     • Классы: проверка значений сортировки и порядка (sort, order) по умолчанию.
+#   - Классы: проверка значений сортировки и порядка (sort, order) по умолчанию.
 def test_user_pagination_defaults():
     pagination = UserPagination()
     assert pagination.sort == "id"
@@ -101,7 +99,7 @@ def test_user_pagination_defaults():
 # Техника тест-дизайна: #7 Таблица принятия решений
 # Описание:
 #   - Проверка создания UserPage с корректным списком пользователей.
-#     • Таблица: набор условий для расчёта количества страниц, общего числа и формирования списка пользователей.
+#   - Таблица: набор условий для расчёта количества страниц, общего числа и формирования списка пользователей.
 def test_user_page():
     now = datetime.now(timezone.utc)
     user_resp = {
@@ -129,7 +127,7 @@ def test_user_page():
 # Техника тест-дизайна: #1 Классы эквивалентности
 # Описание:
 #   - Проверка корректного создания моделей UserId и Username.
-#     • Классы: валидное значение user_id и корректное имя пользователя.
+#   - Классы: валидное значение user_id и корректное имя пользователя.
 def test_userid_and_username():
     uid = UserId(user_id=42)
     assert uid.user_id == 42
