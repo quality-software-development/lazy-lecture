@@ -6,10 +6,6 @@ from datetime import datetime
 import pytest
 import aiohttp
 
-from bot.handlers import auth, echo, transcriptions_history, upload_audiofile
-from bot.handlers.settings import API_BASE_URL
-
-
 class DummyUser:
     def __init__(self, user_id, first_name="Test"):
         self.id = user_id
@@ -21,7 +17,7 @@ class DummyMessage:
         self.text = text
         self.message_id = message_id
         self.from_user = from_user or DummyUser(123)
-        self.chat = self
+        self.chat = type("DummyChat", (), {"id": chat_id})()
         self.audio = audio
         self.reply_markup = None
 
