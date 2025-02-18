@@ -9,7 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from fastapi.testclient import TestClient
 
 from source.main import app
-from ..core.settings import Settings, get_settings
+from source.core.settings import Settings, get_settings
 
 
 TEST_DB_NAME = "test_market"
