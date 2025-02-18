@@ -7,10 +7,7 @@ from jose import JWTError
 
 from source.app.auth.enums import TokenType
 
-# Техника тест-дизайна: #7 Таблица принятия решений
-# Автор: Юлиана Мирончук
-# Описание:
-#   - Импорт тестируемых функций из auth/services.py.
+# Импорт тестируемых функций из auth/services.py.
 from source.app.auth.services import (
     validate_user,
     authenticate_user,

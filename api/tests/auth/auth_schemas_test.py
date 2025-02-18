@@ -1,6 +1,7 @@
 import pytest
 from pydantic import ValidationError
 from source.app.auth.schemas import Token, Credentials, Refresh
+from allpairspy import AllPairs
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности
@@ -19,13 +20,16 @@ def test_token_defaults():
 
 
 @pytest.mark.parametrize(
-    "access_token, refresh_token, token_type, expected_token_type",
-    [
-        ("access123", "refresh123", "custom", "custom"),
-        ("access123", "refresh456", "custom", "custom"),
-        ("access456", "refresh123", "Bearer", "Bearer"),
-        ("access456", "refresh456", "Bearer", "Bearer"),
-    ],
+    "access_token, refresh_token, token_type",
+    list(
+        AllPairs(
+            {
+                "access_token": ["access123", "access456"],
+                "refresh_token": ["refresh123", "refresh456"],
+                "token_type": ["custom", "Bearer"],
+            }
+        )
+    ),
 )
 # Техника тест-дизайна: #5 Попарное тестирование
 # Автор: Юлиана Мирончук
@@ -33,10 +37,10 @@ def test_token_defaults():
 #   - Тест для модели Token с попарным перебором значений token_type.
 #   - Таблица: комбинации "custom" и стандартного значения; проверяем,
 #   что при наличии явного token_type модель использует его.
-def test_token_custom_token_type(access_token, refresh_token, token_type, expected_token_type):
+def test_token_custom_token_type(access_token, refresh_token, token_type):
     token_data = {"access_token": access_token, "refresh_token": refresh_token, "token_type": token_type}
     token = Token(**token_data)
-    assert token.token_type == expected_token_type
+    assert token.token_type == token_type
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности
