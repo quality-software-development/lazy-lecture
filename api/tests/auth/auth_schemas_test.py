@@ -4,10 +4,11 @@ from source.app.auth.schemas import Token, Credentials, Refresh
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности
-# Автор: Юлиана Мирочнук
+# Автор: Юлиана Мирончук
 # Описание:
 #   - Тест для модели Token.
-#   - Классы эквивалентности: корректные данные для access_token, refresh_token, а также проверка значения по умолчанию token_type.
+#   - Классы эквивалентности: корректные данные для access_token, refresh_token,
+#   а также проверка значения по умолчанию token_type.
 def test_token_defaults():
     # Если token_type не передан, модель должна использовать значение по умолчанию ("bearer").
     token_data = {"access_token": "access123", "refresh_token": "refresh123"}
@@ -26,12 +27,12 @@ def test_token_defaults():
         ("access456", "refresh456", "Bearer", "Bearer"),
     ],
 )
-
 # Техника тест-дизайна: #5 Попарное тестирование
-# Автор: Юлиана Мирочнук
+# Автор: Юлиана Мирончук
 # Описание:
 #   - Тест для модели Token с попарным перебором значений token_type.
-#   - Таблица: комбинации "custom" и стандартного значения; проверяем, что при наличии явного token_type модель использует его.
+#   - Таблица: комбинации "custom" и стандартного значения; проверяем,
+#   что при наличии явного token_type модель использует его.
 def test_token_custom_token_type(access_token, refresh_token, token_type, expected_token_type):
     token_data = {"access_token": access_token, "refresh_token": refresh_token, "token_type": token_type}
     token = Token(**token_data)
@@ -39,7 +40,7 @@ def test_token_custom_token_type(access_token, refresh_token, token_type, expect
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности
-# Автор: Юлиана Мирочнук
+# Автор: Юлиана Мирончук
 # Описание:
 #   - Тест для модели Credentials.
 #   - Классы эквивалентности: корректные значения для username (UsernameStr) и password (PasswordStr).
@@ -54,7 +55,7 @@ def test_credentials_valid():
 
 
 # Техника тест-дизайна: #4 Прогнозирование ошибок
-# Автор: Юлиана Мирочнук
+# Автор: Юлиана Мирончук
 # Описание:
 #   - Тест для модели Credentials.
 #   - Таблица: сценарии отсутствия обязательных полей (username или password).
@@ -66,7 +67,7 @@ def test_credentials_invalid():
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности
-# Автор: Юлиана Мирочнук
+# Автор: Юлиана Мирончук
 # Описание:
 #   - Тест для модели Refresh.
 #   - Классы эквивалентности: корректное значение для refresh_token.
@@ -77,7 +78,7 @@ def test_refresh_valid():
 
 
 # Техника тест-дизайна: #4 Прогнозирование ошибок
-# Автор: Юлиана Мирочнук
+# Автор: Юлиана Мирончук
 # Описание:
 #   - Тест для модели Refresh.
 #   - Таблица: сценарий отсутствия обязательного поля refresh_token.

@@ -4,7 +4,8 @@ from source.app.users.models import User
 # Техника тест-дизайна: #1 Классы эквивалентности
 # Описание:
 #   - Проверка корректности модели User.
-#     • Классы: модель User с корректно заданными полями (username, password, active, role, password_timestamp, can_interact).
+#   - Классы: модель User с корректно заданными полями
+#   (username, password, active, role, password_timestamp, can_interact).
 def test_user_model_attributes():
     user = User()
     # Задаём поля вручную (типовой сценарий)
@@ -27,7 +28,7 @@ def test_user_model_attributes():
 # Техника тест-дизайна: #7 Таблица принятия решений
 # Описание:
 #   - Проверка значения __tablename__ для модели User.
-#     • Таблица: ожидаемое имя таблицы должно быть "User".
+#   - Таблица: ожидаемое имя таблицы должно быть "User".
 def test_user_model_tablename():
     user = User()
     # Ожидаем, что __tablename__ равно "User"

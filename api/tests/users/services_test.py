@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from sqlalchemy.exc import IntegrityError
+
 from source.app.users.enums import Sort, Order, Roles
 from source.app.users.models import User
 from source.app.users.schemas import (
@@ -25,7 +26,7 @@ from source.app.users.services import (
 # Техника тест-дизайна: #1 Классы эквивалентности
 # Описание:
 #   - Проверка валидного запроса для создания пользователя.
-#     • Классы: корректный экземпляр UserRequest с валидными значениями.
+#   - Классы: корректный экземпляр UserRequest с валидными значениями.
 @pytest.fixture
 def fake_user_request():
     return UserRequest(username="testuser", password="StrongPass1!")
@@ -34,7 +35,7 @@ def fake_user_request():
 # Техника тест-дизайна: #4 Прогнозирование ошибок
 # Описание:
 #   - Проверка сценария создания пользователя с невалидными данными.
-#     • Таблица: набор условий, при которых username не проходит валидацию.
+#   - Таблица: набор условий, при которых username не проходит валидацию.
 @pytest.fixture
 def fake_invalid_user_request():
     # Возвращаем словарь с невалидными данными
@@ -72,7 +73,7 @@ async def test_create_user_success(fake_user_request, fake_db_session, monkeypat
     # Техника тест-дизайна: #1 Классы эквивалентности
     # Описание:
     #   - Типовой сценарий успешного создания пользователя.
-    #     • Классы: валидный UserRequest, корректное преобразование пароля.
+    #   - Классы: валидный UserRequest, корректное преобразование пароля.
     def fake_hash(pw: str) -> str:
         return f"hashed_{pw}"
 
@@ -91,7 +92,7 @@ async def test_create_user_integrity_error(fake_user_request, fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
     # Описание:
     #   - Сценарий, когда возникает IntegrityError при коммите (например, дублирование записи).
-    #     • Таблица: набор условий, при которых commit выбрасывает исключение.
+    #   - Таблица: набор условий, при которых commit выбрасывает исключение.
     fake_db_session.commit.side_effect = IntegrityError("dummy", "params", Exception("dummy"))
     result = await create_user(user=fake_user_request, db=fake_db_session)
     assert result is None
@@ -102,7 +103,7 @@ async def test_create_user_invalid_input(fake_invalid_user_request, fake_db_sess
     # Техника тест-дизайна: #4 Прогнозирование ошибок
     # Описание:
     #   - Сценарий: создание пользователя с невалидными данными должно вызвать исключение.
-    #     • Таблица: условие невалидного ввода (например, неверный username).
+    #   - Таблица: условие невалидного ввода (например, неверный username).
     with pytest.raises(Exception):
         await create_user(user=fake_invalid_user_request, db=fake_db_session)
 
@@ -115,7 +116,7 @@ async def test_get_user_by_id_found(fake_db_session):
     # Техника тест-дизайна: #1 Классы эквивалентности
     # Описание:
     #   - Типовой сценарий, когда пользователь найден в БД.
-    #     • Классы: корректный пользователь, возвращаемый методом get_one.
+    #   - Классы: корректный пользователь, возвращаемый методом get_one.
     test_user = User()
     test_user.username = "testuser"
     fake_db_session.get_one.return_value = test_user
@@ -130,7 +131,7 @@ async def test_get_user_by_id_not_found(fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
     # Описание:
     #   - Сценарий, когда пользователь не найден в БД (get_one возвращает None).
-    #     • Таблица: набор условий для несуществующего пользователя.
+    #   - Таблица: набор условий для несуществующего пользователя.
     fake_db_session.get_one.return_value = None
     user = await get_user_by_id(user_id=999, db=fake_db_session)
     assert user is None
@@ -144,7 +145,7 @@ async def test_update_user_success(fake_db_session, monkeypatch):
     # Техника тест-дизайна: #3 Причинно-следственный анализ
     # Описание:
     #   - Типовой сценарий обновления: изменение пароля и поля can_interact.
-    #     • Классы: пользователь, для которого изменяются пароль и возможность взаимодействия.
+    #   - Классы: пользователь, для которого изменяются пароль и возможность взаимодействия.
     test_user = fake_user()
     update_data = {"password": "NewStrongPass1!", "can_interact": True}
     update_request = UserUpdateRequest(**update_data)
@@ -167,7 +168,7 @@ async def test_update_user_no_changes(fake_db_session):
     # Техника тест-дизайна: #2 Граничные значения и #4 Прогнозирование ошибок
     # Описание:
     #   - Граничный сценарий: пустой запрос обновления не должен изменять данные пользователя.
-    #     • Границы: отсутствие изменений, пользователь остаётся неизменным.
+    #   - Границы: отсутствие изменений, пользователь остаётся неизменным.
     test_user = User()
     test_user.username = "testuser"
     test_user.password = "old_hash"
@@ -191,7 +192,7 @@ async def test_update_user_integrity_error(fake_db_session, monkeypatch):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
     # Описание:
     #   - Сценарий: при обновлении возникает IntegrityError (например, конфликт обновления).
-    #     • Таблица: набор условий, при которых commit выбрасывает исключение.
+    #   - Таблица: набор условий, при которых commit выбрасывает исключение.
     test_user = fake_user()
     update_data = {"password": "NewStrongPass1!", "can_interact": True}
     update_request = UserUpdateRequest(**update_data)
@@ -215,7 +216,7 @@ async def test_delete_user_success(fake_db_session):
     # Техника тест-дизайна: #1 Классы эквивалентности
     # Описание:
     #   - Типовой сценарий успешного удаления пользователя.
-    #     • Классы: корректный пользователь, который успешно удаляется.
+    #   - Классы: корректный пользователь, который успешно удаляется.
     test_user = User()
     await delete_user(user=test_user, db=fake_db_session)
     fake_db_session.delete.assert_called_once_with(test_user)
@@ -227,7 +228,7 @@ async def test_delete_user_exception(fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
     # Описание:
     #   - Сценарий: удаление пользователя вызывает исключение (например, ошибка при commit).
-    #     • Таблица: набор условий, при которых метод удаления выбрасывает исключение.
+    #   - Таблица: набор условий, при которых метод удаления выбрасывает исключение.
     test_user = User()
     fake_db_session.delete.side_effect = Exception("Delete error")
     with pytest.raises(Exception, match="Delete error"):
@@ -242,8 +243,8 @@ async def test_list_users_success(fake_db_session):
     # Техника тест-дизайна: #1 Классы эквивалентности и #7 Таблица принятия решений
     # Описание:
     #   - Типовой сценарий: База содержит два пользователя.
-    #     • Классы: корректные ORM-объекты пользователей.
-    #     • Таблица: набор условий для вычисления числа страниц, общего числа пользователей и формирования ответа.
+    #   - Классы: корректные ORM-объекты пользователей.
+    #   - Таблица: набор условий для вычисления числа страниц, общего числа пользователей и формирования ответа.
     now = datetime.now(timezone.utc)
     user1 = User(id=1, username="UserOne", active=True, can_interact=True, role=Roles.USER, password_timestamp=123456.0)
     user1.create_date = now
@@ -259,7 +260,8 @@ async def test_list_users_success(fake_db_session):
 
     # Фиктивный объект, возвращающий список пользователей при await
     class FakeScalars:
-        async def all(self):
+        @staticmethod
+        async def all():
             return users_list
 
         def __await__(self):
@@ -281,7 +283,7 @@ async def test_list_users_success(fake_db_session):
     # Техника тест-дизайна: #3 Причинно-следственный анализ
     # Описание:
     #   - Сравнение представлений ORM-объектов и схемы UserResponse.
-    #     • Классы: ожидаемое представление (UserResponse) должно соответствовать данным из ORM.
+    #   - Классы: ожидаемое представление (UserResponse) должно соответствовать данным из ORM.
     expected = [UserResponse.from_orm(u).dict() for u in users_list]
     actual = [r.dict() for r in user_page.users]
     assert actual == expected
@@ -292,7 +294,7 @@ async def test_list_users_empty(fake_db_session):
     # Техника тест-дизайна: #2 Граничные значения
     # Описание:
     #   - Граничный сценарий: если пользователей нет, общее число (total) равно 0, список пустой.
-    #     • Границы: проверка нулевого значения total и корректного расчёта числа страниц.
+    #   - Границы: проверка нулевого значения total и корректного расчёта числа страниц.
     class FakeScalars:
         @staticmethod
         async def all():
@@ -323,7 +325,7 @@ async def test_list_users_count_exception(fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
     # Описание:
     #   - Сценарий: если db.scalar (подсчёт записей) выбрасывает исключение, тест должен его отловить.
-    #     • Таблица: условие, при котором подсчёт записей не выполняется корректно.
+    #   - Таблица: условие, при котором подсчёт записей не выполняется корректно.
     class FakeScalars:
         @staticmethod
         async def all():
