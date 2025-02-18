@@ -97,7 +97,7 @@ async def test_13_registration_password_greater_256_letters(async_client):
 
 @pytest.mark.asyncio
 async def test_14_login(async_client):
-    data = {"username": "whisperteam", "password": "String@123"}
+    data = {"username": "whisperteamrrr", "password": "String@123"}
     response = await async_client.post("/auth/register", json=data)
     assert response.status_code == 201 or response.status_code == 409, response.json()
 
@@ -107,7 +107,7 @@ async def test_14_login(async_client):
 
 @pytest.mark.asyncio
 async def test_15_login_unauthorized(async_client):
-    data = {"username": "whisperteam", "password": "String@123"}
+    data = {"username": "whisperteamrrr", "password": "String@123"}
     response = await async_client.post("/auth/register", json=data)
     assert response.status_code == 201 or response.status_code == 409, response.json()
 
@@ -119,7 +119,7 @@ async def test_15_login_unauthorized(async_client):
 
 @pytest.mark.asyncio
 async def test_16_refresh(async_client):
-    data = {"username": "whisperteam", "password": "String@123"}
+    data = {"username": "whisperteamrrr", "password": "String@123"}
     response = await async_client.post("/auth/register", json=data)
     assert response.status_code == 201 or response.status_code == 409, response.json()
     response = await async_client.post("/auth/login", json=data)
@@ -131,7 +131,7 @@ async def test_16_refresh(async_client):
 
 @pytest.mark.asyncio
 async def test_17_refresh_invalid_token(async_client):
-    data = {"username": "whisperteam", "password": "String@123"}
+    data = {"username": "whisperteamrrr", "password": "String@123"}
     response = await async_client.post("/auth/register", json=data)
     assert response.status_code == 201 or response.status_code == 409, response.json()
     response = await async_client.post("/auth/login", json=data)
