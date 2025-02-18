@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 from math import ceil
-# Для асинхронных тестов используем AsyncMock
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -23,6 +22,7 @@ from source.app.users.services import (
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности
+# Автор: Юлиана Мирончук
 # Описание:
 #   - Проверка валидного запроса для создания пользователя.
 #   - Классы: корректный экземпляр UserRequest с валидными значениями.
@@ -32,12 +32,12 @@ def fake_user_request():
 
 
 # Техника тест-дизайна: #4 Прогнозирование ошибок
+# Автор: Юлиана Мирончук
 # Описание:
 #   - Проверка сценария создания пользователя с невалидными данными.
 #   - Таблица: набор условий, при которых username не проходит валидацию.
 @pytest.fixture
 def fake_invalid_user_request():
-    # Возвращаем словарь с невалидными данными
     return {"username": "123", "password": "StrongPass1!"}
 
 
@@ -51,6 +51,10 @@ def fake_user():
     return test_user
 
 
+# Техника тест-дизайна: #1 Классы эквивалентности
+# Автор: Юлиана Мирончук
+# Описание:
+# - Замоканная сессия БД для типичных сценариев
 @pytest.fixture
 def fake_db_session():
     db = MagicMock()
@@ -66,10 +70,10 @@ def fake_db_session():
 
 # =================== Тесты для create_user ===================
 
-
 @pytest.mark.asyncio
 async def test_create_user_success(fake_user_request, fake_db_session, monkeypatch):
     # Техника тест-дизайна: #1 Классы эквивалентности
+    # Автор: Юлиана Мирончук
     # Описание:
     #   - Типовой сценарий успешного создания пользователя.
     #   - Классы: валидный UserRequest, корректное преобразование пароля.
@@ -89,6 +93,7 @@ async def test_create_user_success(fake_user_request, fake_db_session, monkeypat
 @pytest.mark.asyncio
 async def test_create_user_integrity_error(fake_user_request, fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
+    # Автор: Юлиана Мирончук
     # Описание:
     #   - Сценарий, когда возникает IntegrityError при коммите (например, дублирование записи).
     #   - Таблица: набор условий, при которых commit выбрасывает исключение.
@@ -100,6 +105,7 @@ async def test_create_user_integrity_error(fake_user_request, fake_db_session):
 @pytest.mark.asyncio
 async def test_create_user_invalid_input(fake_invalid_user_request, fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
+    # Автор: Юлиана Мирончук
     # Описание:
     #   - Сценарий: создание пользователя с невалидными данными должно вызвать исключение.
     #   - Таблица: условие невалидного ввода (например, неверный username).
@@ -109,10 +115,10 @@ async def test_create_user_invalid_input(fake_invalid_user_request, fake_db_sess
 
 # =================== Тесты для get_user_by_id ===================
 
-
 @pytest.mark.asyncio
 async def test_get_user_by_id_found(fake_db_session):
     # Техника тест-дизайна: #1 Классы эквивалентности
+    # Автор: Юлиана Мирончук
     # Описание:
     #   - Типовой сценарий, когда пользователь найден в БД.
     #   - Классы: корректный пользователь, возвращаемый методом get_one.
@@ -128,6 +134,7 @@ async def test_get_user_by_id_found(fake_db_session):
 @pytest.mark.asyncio
 async def test_get_user_by_id_not_found(fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
+    # Автор: Юлиана Мирончук
     # Описание:
     #   - Сценарий, когда пользователь не найден в БД (get_one возвращает None).
     #   - Таблица: набор условий для несуществующего пользователя.
@@ -142,6 +149,7 @@ async def test_get_user_by_id_not_found(fake_db_session):
 @pytest.mark.asyncio
 async def test_update_user_success(fake_db_session, monkeypatch):
     # Техника тест-дизайна: #3 Причинно-следственный анализ
+    # Автор: Юлиана Мирончук
     # Описание:
     #   - Типовой сценарий обновления: изменение пароля и поля can_interact.
     #   - Классы: пользователь, для которого изменяются пароль и возможность взаимодействия.
@@ -165,6 +173,7 @@ async def test_update_user_success(fake_db_session, monkeypatch):
 @pytest.mark.asyncio
 async def test_update_user_no_changes(fake_db_session):
     # Техника тест-дизайна: #2 Граничные значения и #4 Прогнозирование ошибок
+    # Автор: Юлиана Мирончук
     # Описание:
     #   - Граничный сценарий: пустой запрос обновления не должен изменять данные пользователя.
     #   - Границы: отсутствие изменений, пользователь остаётся неизменным.
@@ -189,6 +198,7 @@ async def test_update_user_no_changes(fake_db_session):
 @pytest.mark.asyncio
 async def test_update_user_integrity_error(fake_db_session, monkeypatch):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
+    # Автор: Юлиана Мирончук
     # Описание:
     #   - Сценарий: при обновлении возникает IntegrityError (например, конфликт обновления).
     #   - Таблица: набор условий, при которых commit выбрасывает исключение.
@@ -213,6 +223,7 @@ async def test_update_user_integrity_error(fake_db_session, monkeypatch):
 @pytest.mark.asyncio
 async def test_delete_user_success(fake_db_session):
     # Техника тест-дизайна: #1 Классы эквивалентности
+    # Автор: Юлиана Мирончук
     # Описание:
     #   - Типовой сценарий успешного удаления пользователя.
     #   - Классы: корректный пользователь, который успешно удаляется.
@@ -225,6 +236,7 @@ async def test_delete_user_success(fake_db_session):
 @pytest.mark.asyncio
 async def test_delete_user_exception(fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
+    # Автор: Юлиана Мирончук
     # Описание:
     #   - Сценарий: удаление пользователя вызывает исключение (например, ошибка при commit).
     #   - Таблица: набор условий, при которых метод удаления выбрасывает исключение.
@@ -240,6 +252,7 @@ async def test_delete_user_exception(fake_db_session):
 @pytest.mark.asyncio
 async def test_list_users_success(fake_db_session):
     # Техника тест-дизайна: #1 Классы эквивалентности и #7 Таблица принятия решений
+    # Автор: Юлиана Мирончук
     # Описание:
     #   - Типовой сценарий: База содержит два пользователя.
     #   - Классы: корректные ORM-объекты пользователей.
@@ -249,15 +262,13 @@ async def test_list_users_success(fake_db_session):
     user1.create_date = now
     user1.update_date = now
 
-    user2 = User(
-        id=2, username="UserTwo", active=True, can_interact=False, role=Roles.USER, password_timestamp=123456.0
-    )
+    user2 = User(id=2, username="UserTwo", active=True, can_interact=False, role=Roles.USER,
+                 password_timestamp=123456.0)
     user2.create_date = now
     user2.update_date = now
 
     users_list = [user1, user2]
 
-    # Фиктивный объект, возвращающий список пользователей при await
     class FakeScalars:
         @staticmethod
         async def all():
@@ -280,9 +291,7 @@ async def test_list_users_success(fake_db_session):
     assert user_page.total == 2
     assert user_page.pages == ceil(2 / size)
     # Техника тест-дизайна: #3 Причинно-следственный анализ
-    # Описание:
-    #   - Сравнение представлений ORM-объектов и схемы UserResponse.
-    #   - Классы: ожидаемое представление (UserResponse) должно соответствовать данным из ORM.
+    # Сравниваем представления ORM-объектов и схемы UserResponse
     expected = [UserResponse.from_orm(u).dict() for u in users_list]
     actual = [r.dict() for r in user_page.users]
     assert actual == expected
@@ -291,6 +300,7 @@ async def test_list_users_success(fake_db_session):
 @pytest.mark.asyncio
 async def test_list_users_empty(fake_db_session):
     # Техника тест-дизайна: #2 Граничные значения
+    # Автор: Юлиана Мирончук
     # Описание:
     #   - Граничный сценарий: если пользователей нет, общее число (total) равно 0, список пустой.
     #   - Границы: проверка нулевого значения total и корректного расчёта числа страниц.
@@ -314,7 +324,6 @@ async def test_list_users_empty(fake_db_session):
     assert user_page.page == page
     assert user_page.size == size
     assert user_page.total == 0
-    # Таблица: число страниц должно равняться 0 при отсутствии пользователей.
     assert user_page.pages == 0
     assert user_page.users == []
 
@@ -322,6 +331,7 @@ async def test_list_users_empty(fake_db_session):
 @pytest.mark.asyncio
 async def test_list_users_count_exception(fake_db_session):
     # Техника тест-дизайна: #4 Прогнозирование ошибок
+    # Автор: Юлиана Мирончук
     # Описание:
     #   - Сценарий: если db.scalar (подсчёт записей) выбрасывает исключение, тест должен его отловить.
     #   - Таблица: условие, при котором подсчёт записей не выполняется корректно.
