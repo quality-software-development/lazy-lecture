@@ -4,6 +4,7 @@ from io import BytesIO
 from math import ceil, floor
 from pathlib import Path
 from typing import Any, Mapping
+import subprocess
 
 import pika
 import pika.channel
@@ -109,9 +110,15 @@ def send_transcription_job_to_queue(
 
 
 def get_audio_duration(file: Path) -> float:
-    """Extracts duration using ffmpeg-python bindings."""
+    """Extracts duration using ffprobe via subprocess."""
     try:
-        probe = ffmpeg.probe(file, select_streams="a", show_entries="format=duration")
+        result = subprocess.run(
+            ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", str(file)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        probe = json.loads(result.stdout)
         duration = float(probe["format"]["duration"])
         return duration
     except Exception as e:
@@ -180,7 +187,7 @@ async def update_transcription_state(data: TranscriptionStatusUpdateRequest, db:
                 if error_count >= 3:
                     new_state = TranscriptionState.PROCESSING_FAIL
             case TranscriptionState.CANCELLED:
-                chunk_count = await get_chunk_count_for_transcription(transcription)
+                chunk_count = await get_chunk_count_for_transcription(transcription, db)
                 if chunk_count >= 0:
                     new_state = TranscriptionState.COMPLETED_PARTIALLY
 
