@@ -233,7 +233,7 @@ jobs:
   analyze:
     name: Анализ покрытия и SonarQube
     runs-on: ubuntu-latest
-    needs: [tests_worker, tests_bot, tests_web_ui, tests_api, test_api_integration]
+    needs: [tests_worker, tests_bot, tests_web_ui, tests_api, tests_api_integration]
     steps:
       - name: Checkout кода
         uses: actions/checkout@v4
