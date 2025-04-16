@@ -15,7 +15,7 @@ on:
 jobs:
   build:
     name: Сборка и установка зависимостей
-    runs-on: linux
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout кода
         uses: actions/checkout@v4
@@ -52,7 +52,7 @@ jobs:
 #############################
   tests_worker:
     name: Тесты worker
-    runs-on: linux
+    runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checkout кода
@@ -96,7 +96,7 @@ jobs:
 # #############################
   tests_api:
     name: Тесты API
-    runs-on: linux
+    runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checkout кода
@@ -130,7 +130,7 @@ jobs:
 #############################
   tests_bot:
     name: Тесты Bot
-    runs-on: linux
+    runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checkout кода
@@ -164,7 +164,7 @@ jobs:
 #############################
   tests_web_ui:
     name: Тесты web-ui
-    runs-on: linux
+    runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checkout кода
@@ -199,7 +199,7 @@ jobs:
 #############################################
   analyze:
     name: Анализ покрытия и SonarQube
-    runs-on: linux
+    runs-on: ubuntu-latest
     needs: [tests_worker, tests_bot, tests_web_ui, tests_api]
     steps:
       - name: Checkout кода
