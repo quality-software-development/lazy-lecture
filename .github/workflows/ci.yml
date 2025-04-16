@@ -115,8 +115,7 @@ jobs:
 
       # Запуск Unit-тестов
       - name: Запуск Unit-тестов API
-        run: pytest --rootdir=. --cov=source --cov-report=xml:api_unit_coverage.xml \
-            api/tests/unit_tests
+        run: pytest --rootdir=. --cov=source --cov-report=xml:api_unit_coverage.xml tests/unit_tests
 
       - name: Сохранить отчёт покрытия Unit-тестов
         uses: actions/upload-artifact@v4
@@ -149,8 +148,7 @@ jobs:
 
       # Запуск Интеграционных тестов
       - name: Запуск интеграционных тестов API
-        run: pytest --rootdir=. --cov=source --cov-report=xml:api_integration_coverage.xml \
-            api/tests/integration_tests
+        run: pytest --rootdir=. --cov=source --cov-report=xml:api_integration_coverage.xml tests/integration_tests
 
       - name: Сохранить отчёт покрытия интеграционных тестов
         uses: actions/upload-artifact@v4
