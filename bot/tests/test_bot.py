@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 
-from tests.unit_tests.conftest import (
+from tests.conftest import (
     DummyResponse,
     DummyClientSession,
     DummyState,
@@ -18,6 +18,7 @@ from tests.unit_tests.conftest import (
     DummyBot,
 )
 from handlers import auth, echo, transcriptions_history, upload_audiofile
+from handlers.settings import API_BASE_URL
 
 
 @pytest.mark.asyncio
