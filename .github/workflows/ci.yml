@@ -15,7 +15,7 @@ on:
 jobs:
   build:
     name: Сборка и установка зависимостей
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout кода
         uses: actions/checkout@v4
@@ -52,7 +52,7 @@ jobs:
 #############################
   tests_worker:
     name: Тесты worker
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checkout кода
@@ -92,45 +92,76 @@ jobs:
           path: coverage-worker.xml
 
 # #############################
-# # Тесты API
+# # Юнит-тесты API
 # #############################
   tests_api:
-    name: Тесты API
-    runs-on: self-hosted
+    name: Юнит-тесты API
+    runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checkout кода
         uses: actions/checkout@v4
 
-      # Настройка Python 3.11 для тестов API (для использования синтаксиса str | None)
       - name: Настройка Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: 3.11
 
-      # Устанавливаем зависимости API
       - name: Установка зависимостей API
         run: pip install -r api/config/requirements.txt
 
-      # Добавляем каталог api в PYTHONPATH
       - name: Установка PYTHONPATH для API
         run: echo "PYTHONPATH=$GITHUB_WORKSPACE/api:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
-      - name: Запуск тестов API
-        run: pytest --rootdir=. --cov=source --cov-report=xml:api_coverage.xml api
+      # Запуск Unit-тестов
+      - name: Запуск Unit-тестов API
+        run: pytest --rootdir=. --cov=source --cov-report=xml:api_unit_coverage.xml api/tests/unit_tests
 
-      - name: Сохранить отчёт покрытия API
+      - name: Сохранить отчёт покрытия Unit-тестов
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-api
-          path: api_coverage.xml
+          name: coverage-unit
+          path: api_unit_coverage.xml
+
+
+# #############################
+# # Интеграционные тесты API
+# #############################
+  tests_api_integration:
+    name: Интеграционные тесты API
+    runs-on: ubuntu-latest
+    needs: tests_api # Интеграционные тесты запускаются после юнит-тестов
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
+
+      - name: Настройка Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Установка зависимостей API
+        run: pip install -r api/config/requirements.txt
+
+      - name: Установка PYTHONPATH для API
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE/api:$GITHUB_WORKSPACE" >> $GITHUB_ENV
+
+      # Запуск Интеграционных тестов
+      - name: Запуск интеграционных тестов API
+        run: pytest --rootdir=. --cov=source --cov-report=xml:api_integration_coverage.xml api/tests/integration_tests
+
+      - name: Сохранить отчёт покрытия интеграционных тестов
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-integration
+          path: api_integration_coverage.xml
 
 #############################
 # Тесты Bot
 #############################
   tests_bot:
     name: Тесты Bot
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checkout кода
@@ -164,7 +195,7 @@ jobs:
 #############################
   tests_web_ui:
     name: Тесты web-ui
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checkout кода
@@ -199,8 +230,8 @@ jobs:
 #############################################
   analyze:
     name: Анализ покрытия и SonarQube
-    runs-on: self-hosted
-    needs: [tests_worker, tests_bot, tests_web_ui, tests_api]
+    runs-on: ubuntu-latest
+    needs: [tests_worker, tests_bot, tests_web_ui, tests_api, tests_api_integration]
     steps:
       - name: Checkout кода
         uses: actions/checkout@v4
