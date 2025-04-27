@@ -35,7 +35,7 @@
     <q-page v-else class="fit column items-center justify-center">
         <IconMessageItem icon="file_upload_off">
             <p class="text-h6 text-grey-5 text-center" data-test="ui-testing-upload-audio-page-forbidden-p">
-                Нет доступа к обработке аудио.<br />Запросите доступ у
+                Нет доступа к обработке аудио.<br/>Запросите доступ у
                 <a href="https://t.me/ll_requests">администраторов</a>
             </p>
         </IconMessageItem>
@@ -43,13 +43,14 @@
 </template>
 
 <script setup lang="ts">
-import { useUserInfoStore } from 'src/stores/userInfoStore';
-import { useTranscriptStore } from 'src/stores/transcriptStore';
-import { api } from 'src/boot/axios';
-import { computed, onMounted, ref, useTemplateRef } from 'vue';
+import {useUserInfoStore} from 'src/stores/userInfoStore';
+import {useTranscriptStore} from 'src/stores/transcriptStore';
+import {api} from 'src/boot/axios';
+import {computed, nextTick, onMounted, ref, useTemplateRef} from 'vue';
 import IconMessageItem from 'src/components/IconMessageItem.vue';
-import { QUploader, useQuasar } from 'quasar';
-import { useRouter } from 'vue-router';
+import {QUploader, useQuasar} from 'quasar';
+import {useRouter} from 'vue-router';
+
 const userInfoStore = useUserInfoStore();
 const transcriptStore = useTranscriptStore();
 const $q = useQuasar();
@@ -81,7 +82,7 @@ const handleAudioAdd = (files: readonly any[]) => {
                     icon: 'error',
                     position: 'bottom-right',
                     message: 'Длина аудио должна быть больше 10 секунд.',
-                    actions: [{ icon: 'close', color: 'white', round: true }],
+                    actions: [{icon: 'close', color: 'white', round: true}],
                 });
             } else if (audio.duration > 7200) {
                 $q.notify({
@@ -89,7 +90,7 @@ const handleAudioAdd = (files: readonly any[]) => {
                     icon: 'error',
                     position: 'bottom-right',
                     message: 'Длина аудио должна быть меньше 2 часов.',
-                    actions: [{ icon: 'close', color: 'white', round: true }],
+                    actions: [{icon: 'close', color: 'white', round: true}],
                 });
             }
             uploader.value?.reset();
@@ -104,7 +105,7 @@ const handleAudioAdd = (files: readonly any[]) => {
             icon: 'error',
             position: 'bottom-right',
             message: 'Размер аудио должен быть меньше 200 Мбайт.',
-            actions: [{ icon: 'close', color: 'white', round: true }],
+            actions: [{icon: 'close', color: 'white', round: true}],
         });
         uploader.value?.reset();
         hintText.value = hintBeforeAdd;
@@ -122,10 +123,40 @@ const handleAudioAdd = (files: readonly any[]) => {
 };
 
 const handleAudioUpload = async () => {
-    await transcriptStore.loadTranscriptions();
-    const id = transcriptStore.checkProcessingTranscription();
-    if (id) {
-        router.push(`/transcripts/${id}`);
+    console.log('[handleAudioUpload] старт');
+
+    try {
+        const uploadedFile = uploader.value?.uploadedFiles[0];
+        const responseText = uploadedFile?.xhr?.response;
+
+        console.log('[handleAudioUpload] uploadedFile:', uploadedFile);
+        console.log('[handleAudioUpload] responseText:', responseText);
+
+        if (responseText) {
+            const response = JSON.parse(responseText);
+            const taskId = response.task_id;
+
+            console.log('[handleAudioUpload] taskId:', taskId);
+
+            if (taskId) {
+                await nextTick();
+                console.log('[handleAudioUpload] push to /transcripts/' + taskId);
+                router.push(`/transcripts/${taskId}`);
+                return;
+            }
+        }
+
+        console.log('[handleAudioUpload] fallback через loadTranscriptions');
+
+        await transcriptStore.loadTranscriptions();
+        const id = transcriptStore.checkProcessingTranscription();
+        if (id) {
+            await nextTick();
+            console.log('[handleAudioUpload] push to /transcripts/' + id);
+            router.push(`/transcripts/${id}`);
+        }
+    } catch (error) {
+        console.error('Ошибка в handleAudioUpload:', error);
     }
 };
 
@@ -140,6 +171,7 @@ onMounted(() => {
 a {
     color: gray;
 }
+
 a:visited {
     color: lightgray;
 }

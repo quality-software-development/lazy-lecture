@@ -1,17 +1,11 @@
 <script setup lang="ts">
-import {
-    ref,
-    useTemplateRef,
-    onMounted,
-    onUpdated,
-    watch,
-    computed,
-} from 'vue';
-import { useQuasar, copyToClipboard } from 'quasar';
+import { computed, onMounted, onUpdated, ref, useTemplateRef, watch } from 'vue';
+import { copyToClipboard, useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { useTranscriptStore } from 'src/stores/transcriptStore';
 import { TranscriptionState } from 'src/models/transcripts';
 import IconMessageItem from 'src/components/IconMessageItem.vue';
+
 const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
@@ -21,23 +15,51 @@ const markWidth = 6;
 const markHeight = 20;
 const progressBarRightPadding = 96;
 
-const chunksLoadRes = transcriptStore.loadTranscriptChunks(+route.params.taskId);
-if (chunksLoadRes instanceof Promise) {
-    console.log('IT\'S PROMISE');
-    await chunksLoadRes
-}
-const currentTranscript = ref(
-    transcriptStore.transcriptsMap.get(+route.params.taskId) || null
-);
+console.log('[TranscriptPage] MOUNT, taskId =', route.params.taskId);
 
+const currentTranscript = ref(transcriptStore.transcriptsMap.get(+route.params.taskId) || null);
 const progressMarksSvg = useTemplateRef<SVGSVGElement>('marks');
-const relativeMarkPositions = ref(currentTranscript.value?.markXPositions);
+const relativeMarkPositions = ref(currentTranscript.value?.markXPositions || []);
+
+const updateMarkPositions = () => {
+    if (currentTranscript.value && currentTranscript.value.markXPositions) {
+        const barWidth = (progressMarksSvg.value?.getBoundingClientRect().width || 0) - progressBarRightPadding;
+        console.log('[updateMarkPositions] Bar width:', barWidth);
+
+        const newRelativeXes = currentTranscript.value.markXPositions.map((xPos) =>
+            xPos * barWidth - markWidth
+        );
+
+        console.log('[updateMarkPositions] markXPositions:', currentTranscript.value.markXPositions);
+        console.log('[updateMarkPositions] newRelativeXes:', newRelativeXes);
+
+        if (newRelativeXes.length) {
+            newRelativeXes[0] += markWidth;
+            relativeMarkPositions.value = newRelativeXes;
+        }
+    }
+};
+
+const updateTimeStampViews = () => {
+    if (currentTranscript.value) {
+        for (let i = 0; i < currentTranscript.value.markXPositions.length; i++) {
+            const mark = document.querySelector(`rect[rect-idx="${i}"]`);
+            if (mark) {
+                const timestampSpan = document.querySelector(`span[span-idx="${i}"]`) as HTMLSpanElement;
+                timestampSpan.style.left = '';
+                const xDiff = mark.getBoundingClientRect().x - timestampSpan.getBoundingClientRect().x;
+                timestampSpan.style.left = `${(xDiff < 0 ? -1 : 1) * xDiff - ((timestampSpan.getBoundingClientRect().width - markWidth) / 2)}px`;
+            }
+        }
+    }
+};
 
 const handleMarkClick = (idx: number) => {
     if (currentTranscript.value?.chunks[idx].text) {
         router.push({ name: 'transcriptPage', hash: `#chunk-${idx + 1}` });
     }
 };
+
 const handleAnchorClick = async (idx: number) => {
     handleMarkClick(idx);
     await copyToClipboard(location.href);
@@ -48,161 +70,101 @@ const handleAnchorClick = async (idx: number) => {
     });
 };
 
-setTimeout(() => {
-    if (route.hash.startsWith('#chunk-')) {
-        handleMarkClick(+route.hash.slice(-1) - 1);
-    }
-});
-
-const updateMarkPositions = () => {
-    if (currentTranscript.value) {
-        const newRelativeXes = currentTranscript.value.markXPositions.map(
-            (xPos) =>
-                (xPos =
-                    xPos *
-                        ((progressMarksSvg.value?.getBoundingClientRect()
-                            .width || 0) -
-                            progressBarRightPadding) -
-                    markWidth)
-        );
-        if (newRelativeXes?.length) {
-            newRelativeXes[0] += markWidth;
-            relativeMarkPositions.value = newRelativeXes;
-        }
-    }
-};
-const updateTimeStampViews = () => {
-    if (currentTranscript.value) {
-        for (
-            let i = 0;
-            i < currentTranscript.value.markXPositions.length;
-            i++
-        ) {
-            const mark = document.querySelector(`rect[rect-idx="${i}"]`);
-            if (mark) {
-                const timestampSpan = document.querySelector(
-                    `span[span-idx="${i}"]`
-                ) as HTMLSpanElement;
-
-                timestampSpan.style.left = '';
-
-                const xDifference =
-                    mark.getBoundingClientRect().x -
-                    timestampSpan.getBoundingClientRect().x;
-
-                timestampSpan.style.left = `${
-                    (xDifference < 0 ? -1 : 1) * xDifference -
-                    (+timestampSpan.getBoundingClientRect().width - markWidth) /
-                        2
-                }px`;
-            }
-        }
-    }
-};
-
 const downloadFile = (format: 'doc' | 'plain') => {
     if (currentTranscript.value?.chunks.length) {
-        const text = currentTranscript.value.chunks
-            .map(
-                (chunk, chunkIdx) =>
-                    `${currentTranscript.value?.timeStampViews[chunkIdx]}\n${chunk.text}`
-            )
-            .join('\n\n');
-
+        const text = currentTranscript.value.chunks.map((chunk, idx) => `${currentTranscript.value!.timeStampViews[idx]}\n${chunk.text}`).join('\n\n');
         if (text) {
             const element = document.createElement('a');
-            element.setAttribute(
-                'href',
-                `data:text/${format};charset=utf-8,${encodeURIComponent(text)}`
-            );
-            element.setAttribute(
-                'download',
-                `Транскрипция №${currentTranscript.value.id}${
-                    format === 'plain' ? '.txt' : `.${format}`
-                }`
-            );
+            element.setAttribute('href', `data:text/${format};charset=utf-8,${encodeURIComponent(text)}`);
+            element.setAttribute('download', `Транскрипция №${currentTranscript.value!.id}${format === 'plain' ? '.txt' : `.${format}`}`);
             element.click();
             element.remove();
         }
     }
 };
 
-const cancelledWhileProcessing = ref(
-    localStorage.getItem('cancelledWhileProcessing')
+const cancelledWhileProcessing = ref(localStorage.getItem('cancelledWhileProcessing'));
+
+const isCurrentTranscriptProcessing = computed(() =>
+    transcriptStore.isTranscriptProcessing(+route.params.taskId) &&
+    cancelledWhileProcessing.value !== route.params.taskId
+);
+const isCurrentTranscriptCancelling = computed(() =>
+    transcriptStore.isTranscriptCancelling(+route.params.taskId) ||
+    cancelledWhileProcessing.value === route.params.taskId
 );
 
-const isCurrentTranscriptProcessing = computed(
-    () =>
-        transcriptStore.isTranscriptProcessing(+route.params.taskId) &&
-        cancelledWhileProcessing.value !== route.params.taskId
-);
-const isCurrentTranscriptCancelling = computed(
-    () =>
-        transcriptStore.isTranscriptCancelling(+route.params.taskId) ||
-        cancelledWhileProcessing.value === route.params.taskId
-);
-const showStateIconMessage = computed(
-    () =>
-        currentTranscript.value &&
-        [
-            TranscriptionState.in_progress,
-            TranscriptionState.queued,
-            TranscriptionState.cancelled,
-        ].includes(currentTranscript.value.currentState) &&
-        !currentTranscript.value.chunks.length
+const showStateIconMessage = computed(() =>
+    currentTranscript.value &&
+    [
+        TranscriptionState.in_progress,
+        TranscriptionState.queued,
+        TranscriptionState.cancelled,
+    ].includes(currentTranscript.value.currentState) &&
+    !currentTranscript.value.chunks.length
 );
 
 const resizeObserver = new ResizeObserver(() => updateMarkPositions());
-onMounted(() => {
-    console.log('mounted.');
-    if (progressMarksSvg.value) {
-        resizeObserver.observe(progressMarksSvg.value);
+
+onMounted(async () => {
+    console.log('[TranscriptPage] onMounted, taskId =', route.params.taskId);
+
+    if (!transcriptStore.transcriptsMap.has(+route.params.taskId)) {
+        console.warn('[TranscriptPage] transcript not found. Loading info...');
+        await transcriptStore.loadTranscriptions();
+        await transcriptStore.updateTranscriptionData(+route.params.taskId);
+    }
+
+    console.log('[TranscriptPage] loading transcript chunks...');
+    const chunksRes = transcriptStore.loadTranscriptChunks(+route.params.taskId);
+    if (chunksRes instanceof Promise) {
+        await chunksRes;
+    }
+
+    currentTranscript.value = transcriptStore.transcriptsMap.get(+route.params.taskId) || null;
+    console.log('[TranscriptPage] after load, currentTranscript =', currentTranscript.value);
+
+    if (!currentTranscript.value) {
+        console.error('[TranscriptPage] ERROR: transcript not found even after loading!');
+    } else {
+        console.log('[TranscriptPage] Loaded transcript:', {
+            audioLenSecs: currentTranscript.value.audioLenSecs,
+            chunksDurationArray: currentTranscript.value.chunksDurationArray,
+            markXPositions: currentTranscript.value.markXPositions,
+            timeStampViews: currentTranscript.value.timeStampViews,
+        });
+        updateMarkPositions();
     }
 });
+
 onUpdated(() => {
     updateTimeStampViews();
 });
-watch(
-    () => route.params.taskId,
-    async (newId) => {
-        await transcriptStore.loadTranscriptChunks(+route.params.taskId);
 
-        const anotherTranscript = transcriptStore.transcriptsMap.get(+newId);
-        if (anotherTranscript) {
-            if (
-                ![
-                    TranscriptionState.queued,
-                    TranscriptionState.in_progress,
-                    TranscriptionState.processing_error,
-                ].includes(anotherTranscript.currentState)
-            ) {
-            }
-            currentTranscript.value = anotherTranscript;
-            relativeMarkPositions.value = anotherTranscript.markXPositions;
-            updateMarkPositions();
-        } else {
-            currentTranscript.value = null;
-        }
+watch(() => route.params.taskId, async (newId) => {
+    console.log('[TranscriptPage] watch route change, newId =', newId);
+
+    await transcriptStore.loadTranscriptChunks(+newId);
+    const transcript = transcriptStore.transcriptsMap.get(+newId);
+    if (transcript) {
+        currentTranscript.value = transcript;
+        relativeMarkPositions.value = transcript.markXPositions;
+        updateMarkPositions();
+    } else {
+        currentTranscript.value = null;
     }
-);
-watch(
-    () => transcriptStore.processsingTicks,
-    () => {
-        if (
-            transcriptStore.processingTranscriptionId &&
-            +route.params.taskId === transcriptStore.processingTranscriptionId
-        ) {
-            cancelledWhileProcessing.value = localStorage.getItem(
-                'cancelledWhileProcessing'
-            );
-            currentTranscript.value = transcriptStore.processingTranscription!;
-            relativeMarkPositions.value =
-                transcriptStore.processingTranscription!.markXPositions;
-            updateMarkPositions();
-        }
+});
+
+watch(() => transcriptStore.processsingTicks, () => {
+    if (transcriptStore.processingTranscriptionId && +route.params.taskId === transcriptStore.processingTranscriptionId) {
+        cancelledWhileProcessing.value = localStorage.getItem('cancelledWhileProcessing');
+        currentTranscript.value = transcriptStore.processingTranscription!;
+        relativeMarkPositions.value = transcriptStore.processingTranscription!.markXPositions;
+        updateMarkPositions();
     }
-);
+});
 </script>
+
 
 <template>
     <div v-if="currentTranscript" :class="showStateIconMessage ? 'column' : ''">
@@ -292,7 +254,7 @@ watch(
             >
                 Обработка отменена. Текущий фрагмент будет обработан.
             </p>
-            <q-separator />
+            <q-separator/>
         </div>
         <div
             v-if="showStateIconMessage"
@@ -317,10 +279,10 @@ watch(
                     currentTranscript.currentState === TranscriptionState.queued
                         ? 'В очереди на обработку.'
                         : isCurrentTranscriptProcessing
-                        ? 'В обработке.'
-                        : 'Обработка отменена.'
+                            ? 'В обработке.'
+                            : 'Обработка отменена.'
                 }}
-                <br />
+                <br/>
                 {{
                     isCurrentTranscriptCancelling
                         ? 'Текущий фрагмент будет обработан.'
@@ -342,22 +304,22 @@ watch(
                 {{
                     (
                         ((currentTranscript.chunksDurationArray?.length
-                            ? currentTranscript.chunksDurationArray[
-                                  currentTranscript.chunksDurationArray.length -
-                                      1
-                              ] > currentTranscript.audioLenSecs
-                                ? currentTranscript.audioLenSecs
-                                : currentTranscript.chunksDurationArray[
-                                      currentTranscript.chunksDurationArray
-                                          .length - 1
-                                  ]
-                            : 0) /
+                                ? currentTranscript.chunksDurationArray[
+                                currentTranscript.chunksDurationArray.length -
+                                1
+                                    ] > currentTranscript.audioLenSecs
+                                    ? currentTranscript.audioLenSecs
+                                    : currentTranscript.chunksDurationArray[
+                                    currentTranscript.chunksDurationArray
+                                        .length - 1
+                                        ]
+                                : 0) /
                             currentTranscript.audioLenSecs) *
                         100
                     ).toFixed(1)
                 }}%
             </div>
-            <q-separator inset />
+            <q-separator inset/>
             <q-btn
                 class="q-pa-md"
                 flat
@@ -367,7 +329,7 @@ watch(
                 title="Закрыть транскрипцию"
                 @click="router.push('/transcripts')"
             />
-            <q-separator inset />
+            <q-separator inset/>
             <q-btn
                 :disable="
                     !currentTranscript?.chunks.length ||
@@ -393,7 +355,7 @@ watch(
                     />
                 </svg>
             </q-btn>
-            <q-separator inset />
+            <q-separator inset/>
             <q-btn
                 :disable="
                     !currentTranscript?.chunks.length ||
@@ -425,6 +387,7 @@ watch(
             v-for="(timeStampView, idx) of currentTranscript.timeStampViews"
             :key="idx"
             class="q-pt-xl q-pl-xl"
+            data-test="ui-testing-transcript-chunk"
             style="padding-right: 60px"
         >
             <div v-if="currentTranscript.chunks[idx].text">
@@ -438,7 +401,7 @@ watch(
                 <p class="q-mb-lg">
                     {{ currentTranscript.chunks[idx].text }}
                 </p>
-                <q-separator />
+                <q-separator/>
             </div>
         </div>
     </div>
@@ -457,21 +420,27 @@ watch(
     top: 50px;
     background-color: white;
 }
+
 .ui-trancscript-page-progress-bar {
     position: relative;
     overflow-x: hidden;
 }
+
 .ui-trancscript-page-progress-bar-marks {
     position: absolute;
+
     rect {
         cursor: pointer;
+
         &.ui-progress-mark {
             &-processing {
                 fill: $warning;
             }
+
             &-complete {
                 fill: $primary;
             }
+
             &-empty {
                 fill: lightgray;
                 cursor: default;
@@ -479,20 +448,25 @@ watch(
         }
     }
 }
+
 .ui-transcript-page-progress-timestamp {
     position: relative;
     cursor: pointer;
+
     &.empty {
         color: lightgray;
         cursor: default;
     }
 }
+
 .ui-transcript-page-text-timestamp {
     cursor: pointer;
+
     &:hover::after {
         content: ' #';
     }
 }
+
 .ui-export-btn {
     fill: $primary;
 }

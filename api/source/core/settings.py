@@ -1,4 +1,4 @@
-from pydantic import model_validator
+from pydantic import model_validator, Field
 from pydantic_settings import BaseSettings
 
 
@@ -33,6 +33,8 @@ class Settings(BaseSettings):
 
     SECRET_WORKER_TOKEN: str = "71y209716yc20n971yoj"
     SECRET_ADMIN_TOKEN: str = "verysecretadmintokenyeah"
+
+    DISABLE_WORKER: bool = Field(False, env="DISABLE_WORKER")
 
     @model_validator(mode="after")
     def validator(cls, values: "Settings") -> "Settings":

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import PlainTextResponse
 from source.app.auth.auth import CanInteractCurrentUser, CurrentUser
 from source.app.transcriptions.enums import TranscriptionState
-from source.app.transcriptions.models import Transcription
+from source.app.transcriptions.models import Transcription, TranscriptionChunk
 from source.app.transcriptions.schemas import (
     TranscriptionChunksPage,
     TranscriptionChunksPagination,
@@ -107,9 +107,7 @@ async def worker_get_transcription_state(
     return {"transcription": transcription}
 
 
-@transcriptions_router.post(
-    "/upload-audiofile",
-)
+@transcriptions_router.post("/upload-audiofile")
 async def create_upload_file(
     user: CanInteractCurrentUser,
     audiofile: ValidAudioFile,
@@ -137,20 +135,44 @@ async def create_upload_file(
             f"Transcription {current_transcriptions[0].id} is {current_transcriptions[0].current_state}. Please cancel the job or wait before its completion to start a new one."
         )
 
-    transcription: Transcription = await create_transcription(
+    transcription = await create_transcription(
         TranscriptionRequest(
             creator_id=user.id,
             audio_len_secs=audio_len_sec,
             chunk_size_secs=settings.DEFAULT_CHUNK_SIZE,
-            current_state=TranscriptionState.QUEUED,
+            current_state=(
+                TranscriptionState.COMPLETED  # ← если воркер выключен – сразу COMPLETED
+                if settings.DISABLE_WORKER
+                else TranscriptionState.QUEUED
+            ),
         ),
         db,
     )
-    if not transcription:
-        raise HTTPException(500, detail="failed to create the transcription")
-    transcription_id = transcription.id
-    send_transcription_job_to_queue(channel, q_name, transcription_id, user_id)
-    return {"message": "File uploaded successfully", "task_id": transcription_id, "file": out_file_path}
+    if settings.DISABLE_WORKER:
+        # создаём фиктивный чанк, чтобы фронт что-то показал
+        fake_chunk = TranscriptionChunk(
+            transcript_id=transcription.id,
+            chunk_no=0,
+            text="(Тестовый текст) Транскрипция сгенерирована в режиме DISABLE_WORKER.",
+        )
+        await db.commit()  # убедимся, что transcription.id уже есть
+        db.add(fake_chunk)
+        await db.commit()
+
+        return {
+            "message": "File uploaded successfully (worker disabled)",
+            "task_id": transcription.id,
+            "file": out_file_path,
+        }
+
+    # ────────────────────── обычный путь с очередью ───────────────────────
+    channel, q_name = task_q
+    send_transcription_job_to_queue(channel, q_name, transcription.id, user.id)
+    return {
+        "message": "File uploaded successfully",
+        "task_id": transcription.id,
+        "file": out_file_path,
+    }
 
 
 @transcriptions_router.post("/transcript/cancel")
