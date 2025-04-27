@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: ./config/dockerfile
+    container_name: api
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./api/config/.env.test
+    volumes:
+      - ./api/source:/app/source
+      - ./api/mock:/app/mock
+      - ./volumes/object_storage:/object_storage:rw
+    depends_on:
+      - mock_postgres
+
+  mock_postgres:
+    image: postgres
+    container_name: mock_postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: test_db
+    tmpfs:
+      - /var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web-ui:
+    build:
+      context: ./web-ui
+      dockerfile: ./Dockerfile
+      args:
+        API_URL: http://localhost:8000
+    container_name: web-ui
+    ports:
+      - "9000:80"
+    depends_on:
+      - api
+
+volumes:
+  pg-data:

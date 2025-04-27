@@ -29,6 +29,7 @@
     "devDependencies": {
         "@quasar/app-vite": "^1.8.0",
         "@quasar/quasar-app-extension-testing-unit-vitest": "^1.1.0",
+        "@testing-library/cypress": "^10.0.3",
         "@types/node": "^20.11.0",
         "@typescript-eslint/eslint-plugin": "^5.10.0",
         "@typescript-eslint/parser": "^5.10.0",
@@ -37,6 +38,8 @@
         "@vue/test-utils": "^2.4.4",
         "autoprefixer": "^10.4.2",
         "cypress": "^14.3.1",
+        "cypress-downloadfile": "^1.2.4",
+        "cypress-real-events": "^1.14.0",
         "cypress-wait-until": "^3.0.2",
         "eslint": "^8.11.0",
         "eslint-config-prettier": "^8.1.0",
