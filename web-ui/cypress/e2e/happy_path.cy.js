@@ -1,18 +1,14 @@
 /* eslint-disable */
 /// <reference types="cypress" />
+import { generateLatinUsername } from '../support/utils';
 
-function genUser(n = 16) {
-  const a = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  return Array.from({ length: n }, () => a[Math.floor(Math.random() * a.length)]).join('');
-}
-
-const username      = genUser();
+const username = generateLatinUsername();
 const password      = 'GoodP@ss123456#Aa';
 const fileName      = 'sample_19m57s.mp3';
 const downloadName  = 'Транскрипция №1.txt';
 const taskId        = 1;
 const iso           = new Date().toISOString();
-const audio_len_secs = 1197;
+const audioLenSecs  = 1197;
 const mockChunks = [
   { chunk_order: 0, chunk_size_secs: 900, id: 1, transcription: 'Здравствуйте, это пример транскрипции за первые 15 минут.' },
   { chunk_order: 1, chunk_size_secs: 297, id: 2, transcription: 'Следующий фрагмент продолжается, и вот его текст.' },
@@ -23,7 +19,6 @@ describe('2️⃣ Happy-path: Web → API → Worker → Web', () => {
   const adminToken = Cypress.env('admin_secret_token');
 
   it('🧪 Полный happy-path', () => {
-
     cy.log('🔐 Регистрируем пользователя');
     cy.request('POST', `${apiUrl}/auth/register`, { username, password });
 
@@ -40,7 +35,7 @@ describe('2️⃣ Happy-path: Web → API → Worker → Web', () => {
         headers: { Authorization: `Bearer ${token}` },
       }).then(res => {
         const uid = res.body.id;
-        cy.wrap(uid).as('userId')
+        cy.wrap(uid).as('userId');
 
         cy.log('🛠️ Выдаём доступ can_interact');
         cy.request({
@@ -54,34 +49,35 @@ describe('2️⃣ Happy-path: Web → API → Worker → Web', () => {
 
     /* ─── Мокаем ВСЁ перед загрузкой страницы ───────────────────── */
 
-    cy.log('🛠️ Настраиваем моки API');
     cy.get('@userId').then(userId => {
-        cy.intercept('GET', `${apiUrl}/transcriptions?page=1&size=100`, {
-            statusCode: 200,
-            body: {
-                page: 1, pages: 1, size: 100, total: 1,
-                transcriptions: [{
-                    id: taskId, creator_id: userId, audio_len_secs: audio_len_secs,
-                    chunk_size_secs: 900, current_state: 'completed',
-                    create_date: iso, update_date: iso, description: fileName,
-                }],
-            },
-        }).as('listReq');
+      cy.log('🛠️ Настраиваем моки API');
+
+      cy.intercept('GET', `${apiUrl}/transcriptions?page=1&size=100`, {
+        statusCode: 200,
+        body: {
+          page: 1, pages: 1, size: 100, total: 1,
+          transcriptions: [{
+            id: taskId, creator_id: userId, audio_len_secs: audioLenSecs,
+            chunk_size_secs: 900, current_state: 'completed',
+            create_date: iso, update_date: iso, description: fileName,
+          }],
+        },
+      }).as('listReq');
+
+      cy.intercept('GET', `${apiUrl}/transcript?task_id=${taskId}&skip=0&limit=100`, {
+        statusCode: 200,
+        body: { page: 1, pages: 1, size: 50, total: 2, transcriptions: mockChunks },
+      }).as('chunksReq');
+
+      cy.intercept('POST', '**/upload-audiofile', {
+        statusCode: 200,
+        body: { message: 'ok', task_id: taskId, file: 'object_storage/1.mp3' },
+      }).as('uploadAudio');
+
+      cy.intercept('POST', `${apiUrl}/transcriptions/*/start`, { statusCode: 200 }).as('startReq');
     });
 
-    cy.intercept('POST', '**/upload-audiofile', {
-      statusCode: 200,
-      body: { message: 'ok', task_id: taskId, file: 'object_storage/1.mp3' },
-    }).as('uploadAudio');
-
-    cy.intercept('GET', `${apiUrl}/transcript?task_id=${taskId}&skip=0&limit=100`, {
-      statusCode: 200,
-      body: { page: 1, pages: 1, size: 50, total: 2, transcriptions: mockChunks },
-    }).as('chunksReq');
-
-    cy.intercept('POST', `${apiUrl}/transcriptions/*/start`, { statusCode: 200 }).as('startReq');
-
-    /* ─── Логинимся в UI ────────────────────────────────────────── */
+    /* ─── UI: Логинимся ─────────────────────────────────────────── */
 
     cy.log('🌐 Открываем логин-страницу');
     cy.hashVisit('/log_in');
@@ -91,37 +87,40 @@ describe('2️⃣ Happy-path: Web → API → Worker → Web', () => {
     cy.get('[data-test="ui-testing-auth-page-password-input"]').type(password);
     cy.get('[data-test="ui-testing-auth-page-submit-btn"]').click();
 
-    cy.log('➡️ Проверяем переход на страницу транскрипций');
+    cy.log('➡️ Ждём загрузку транскрипций');
     cy.wait('@listReq');
     cy.location('hash', { timeout: 10_000 }).should('include', '#/transcripts');
 
-    /* ─── Загружаем аудио ───────────────────────────────────────── */
+    /* ─── UI: Загружаем файл ────────────────────────────────────── */
 
-    cy.log('📤 Загружаем файл');
+    cy.log('📤 Загружаем файл для транскрипции');
     cy.get('.q-uploader__input[type="file"]').selectFile(`cypress/fixtures/${fileName}`, { force: true });
 
-    cy.log('🚀 Отправляем на транскрипцию');
+    cy.log('🚀 Нажимаем на отправку файла');
     cy.contains('i', 'cloud_upload').click();
 
     cy.log('📍 Ждём переход на страницу транскрипции');
     cy.location('hash', { timeout: 10_000 }).should('include', `#/transcripts/${taskId}`);
     cy.wait('@chunksReq');
 
-    /* ─── Проверяем отрисовку ───────────────────────────────────── */
+    /* ─── Проверяем UI ───────────────────────────────────────────── */
 
-    cy.log('✅ Проверяем прогресс-бар');
+    cy.log('✅ Проверяем, что прогресс-бар появился');
     cy.get('.ui-trancscript-page-progress-bar');
 
+    cy.log('🧾 Проверяем текст всех чанков');
+    cy.get('[data-test="ui-testing-transcript-chunk"]')
+      .should('have.length', mockChunks.length)
+      .each((chunkEl, idx) => {
+        cy.wrap(chunkEl).should('contain.text', mockChunks[idx].transcription);
+      });
 
-    cy.log('🧾 Проверяем чанки транскрипции');
-    cy.get('[data-test="ui-testing-transcript-chunk"]').should('have.length', 2)
-      .first().should('contain.text', mockChunks[0].transcription);
+    /* ─── Проверяем Экспорт ─────────────────────────────────────── */
 
-    /* ─── Проверяем экспорт ─────────────────────────────────────── */
-
-    cy.log('📄 Проверяем экспорт в текстовый файл');
+    cy.log('📄 Проверяем экспорт транскрипции в TXT');
     cy.get('[title="Экспорт в .txt"]').click();
     cy.readFile(`${Cypress.config('downloadsFolder')}/${downloadName}`, { timeout: 10_000 })
-      .should('include', mockChunks[0].transcription);
+      .should('include', mockChunks[0].transcription)
+      .and('include', mockChunks[1].transcription);
   });
 });

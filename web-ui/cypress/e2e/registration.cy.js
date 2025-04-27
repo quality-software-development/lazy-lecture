@@ -1,14 +1,7 @@
 /* eslint-disable */
 /// <reference types="cypress" />
 
-function generateLatinUsername(length = 16) {
-  const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let username = '';
-  while (username.length < length) {
-    username += letters[Math.floor(Math.random() * letters.length)];
-  }
-  return username;
-}
+import { generateLatinUsername } from '../support/utils';
 
 const uniqueUser = generateLatinUsername();
 
