@@ -102,7 +102,24 @@ describe('1️⃣ Регистрация с валидацией + авто‑л
   });
 
   it('Шаг 7: Токен работает после перезагрузки защищённой страницы', () => {
-    cy.visit('/transcripts');
+    cy.get('[data-test="ui-testing-auth-page-login-input"]')
+      .clear()
+      .type(generateLatinUsername());
+
+    cy.get('[data-test="ui-testing-auth-page-password-input"]')
+      .clear()
+      .type('GoodP@ss123456#Aa');
+
+    cy.log('🚀 Отправляем форму регистрации');
+    cy.get('[data-test="ui-testing-auth-page-submit-btn"]').click();
+
+    cy.log('✅ Проверяем успешный редирект на /transcripts');
+    cy.url({ timeout: 10000 }).should('include', '/transcripts');
+
+    cy.log('🔄 Перезагружаем защищённую страницу');
+    cy.hashVisit('/transcripts');
+
+    cy.log('✅ Проверяем, что остались на /transcripts');
     cy.url({ timeout: 10000 }).should('include', '/transcripts');
   });
 });
