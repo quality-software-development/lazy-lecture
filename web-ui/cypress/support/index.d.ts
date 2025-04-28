@@ -5,5 +5,7 @@ declare namespace Cypress {
      * @example cy.hashVisit('/sign_up')
      */
     hashVisit(path: string): Chainable<void>;
+    registerAndPrepareUser(username: string, password: string): Chainable<JQuery<any>>;
+
   }
 }

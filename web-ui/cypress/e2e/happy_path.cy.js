@@ -17,65 +17,40 @@ const mockChunks = [
 describe('2️⃣ Happy-path: Web → API → Worker → Web', () => {
   const apiUrl     = Cypress.env('apiUrl');
   const adminToken = Cypress.env('admin_secret_token');
+  let uid;
+  before(() => {
+    cy.registerAndPrepareUser(username, password).then(id => {
+      uid = id;
+    });
+  });
 
   it('🧪 Полный happy-path', () => {
-    cy.log('🔐 Регистрируем пользователя');
-    cy.request('POST', `${apiUrl}/auth/register`, { username, password });
-
-    cy.log('🔑 Логинимся');
-    cy.request('POST', `${apiUrl}/auth/login`, { username, password })
-      .its('body.access_token')
-      .as('token');
-
-    cy.get('@token').then(token => {
-      cy.log('👤 Получаем информацию о пользователе');
-      cy.request({
-        method: 'GET',
-        url: `${apiUrl}/auth/info`,
-        headers: { Authorization: `Bearer ${token}` },
-      }).then(res => {
-        const uid = res.body.id;
-        cy.wrap(uid).as('userId');
-
-        cy.log('🛠️ Выдаём доступ can_interact');
-        cy.request({
-          method: 'PATCH',
-          url: `${apiUrl}/auth/patch?user_id=${uid}&secret_admin_token=${adminToken}`,
-          headers: { Authorization: `Bearer ${token}` },
-          body: { can_interact: true },
-        });
-      });
-    });
-
     /* ─── Мокаем ВСЁ перед загрузкой страницы ───────────────────── */
 
-    cy.get('@userId').then(userId => {
-      cy.log('🛠️ Настраиваем моки API');
+    cy.log('🛠️ Настраиваем моки API');
 
-      cy.intercept('GET', `${apiUrl}/transcriptions?page=1&size=100`, {
-        statusCode: 200,
-        body: {
-          page: 1, pages: 1, size: 100, total: 1,
-          transcriptions: [{
-            id: taskId, creator_id: userId, audio_len_secs: audioLenSecs,
-            chunk_size_secs: 900, current_state: 'completed',
-            create_date: iso, update_date: iso, description: fileName,
-          }],
-        },
-      }).as('listReq');
+    cy.intercept('GET', `${apiUrl}/transcriptions?page=1&size=100`, {
+      statusCode: 200,
+      body: {
+        page: 1, pages: 1, size: 100, total: 1,
+        transcriptions: [{
+          id: taskId, creator_id: uid, audio_len_secs: audioLenSecs,
+          chunk_size_secs: 900, current_state: 'completed',
+          create_date: iso, update_date: iso, description: fileName,
+        }],
+      },
+    }).as('listReq');
 
-      cy.intercept('GET', `${apiUrl}/transcript?task_id=${taskId}&skip=0&limit=100`, {
-        statusCode: 200,
-        body: { page: 1, pages: 1, size: 50, total: 2, transcriptions: mockChunks },
-      }).as('chunksReq');
+    cy.intercept('GET', `${apiUrl}/transcript?task_id=${taskId}&skip=0&limit=100`, {
+      statusCode: 200,
+      body: { page: 1, pages: 1, size: 50, total: 2, transcriptions: mockChunks },
+    }).as('chunksReq');
 
-      cy.intercept('POST', '**/upload-audiofile', {
-        statusCode: 200,
-        body: { message: 'ok', task_id: taskId, file: 'object_storage/1.mp3' },
-      }).as('uploadAudio');
-
-      cy.intercept('POST', `${apiUrl}/transcriptions/*/start`, { statusCode: 200 }).as('startReq');
-    });
+    cy.intercept('POST', '**/upload-audiofile', {
+      statusCode: 200,
+      body: { message: 'ok', task_id: taskId, file: 'object_storage/1.mp3' },
+    }).as('uploadAudio');
+    cy.intercept('POST', `${apiUrl}/transcriptions/*/start`, { statusCode: 200 }).as('startReq');
 
     /* ─── UI: Логинимся ─────────────────────────────────────────── */
 

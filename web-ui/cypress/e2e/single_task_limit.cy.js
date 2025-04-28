@@ -31,25 +31,8 @@ describe('3️⃣ Ограничение одной задачи + отмена'
   };
 
   before(() => {
-    cy.log('🔐 Регистрация и авторизация');
-    cy.request('POST', `${apiUrl}/auth/register`, { username, password });
-    cy.request('POST', `${apiUrl}/auth/login`, { username, password })
-      .its('body.access_token').as('token');
-
-    cy.get('@token').then(token => {
-      cy.request({
-        method: 'GET',
-        url: `${apiUrl}/auth/info`,
-        headers: { Authorization: `Bearer ${token}` },
-      }).then(res => {
-        uid = res.body.id;
-        cy.request({
-          method: 'PATCH',
-          url: `${apiUrl}/auth/patch?user_id=${uid}&secret_admin_token=${adminToken}`,
-          headers: { Authorization: `Bearer ${token}` },
-          body: { can_interact: true },
-        });
-      });
+    cy.registerAndPrepareUser(username, password).then(id => {
+      uid = id;
     });
   });
 

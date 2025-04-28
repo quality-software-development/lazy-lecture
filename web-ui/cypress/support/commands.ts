@@ -49,4 +49,29 @@ Cypress.Commands.add('hashVisit', (hashPath: string) => {
         return cy.visit(`${baseUrl}/#${hashPath}`);
     });
 });
+
+Cypress.Commands.add('registerAndPrepareUser', (username: string, password: string) => {
+    const apiUrl = Cypress.env('apiUrl');
+    const adminToken = Cypress.env('admin_secret_token');
+    cy.request('POST', `${apiUrl}/auth/register`, {username, password});
+    return cy.request('POST', `${apiUrl}/auth/login`, {username, password})
+        .then(loginRes => {
+            const token = loginRes.body.access_token;
+            return cy.request({
+                method: 'GET',
+                url: `${apiUrl}/auth/info`,
+                headers: {Authorization: `Bearer ${token}`},
+            }).then(infoRes => {
+                const userId = infoRes.body.id;
+                cy.request({
+                    method: 'PATCH',
+                    url: `${apiUrl}/auth/patch?user_id=${userId}&secret_admin_token=${adminToken}`,
+                    headers: {Authorization: `Bearer ${token}`},
+                    body: {can_interact: true},
+                });
+                return cy.wrap(userId);
+            });
+        });
+});
+
 export {};
