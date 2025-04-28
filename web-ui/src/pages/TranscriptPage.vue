@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, onUpdated, ref, useTemplateRef, watch } from 'vue';
-import { copyToClipboard, useQuasar } from 'quasar';
-import { useRoute, useRouter } from 'vue-router';
-import { useTranscriptStore } from 'src/stores/transcriptStore';
-import { TranscriptionState } from 'src/models/transcripts';
+import {computed, onMounted, onUpdated, ref, useTemplateRef, watch} from 'vue';
+import {copyToClipboard, useQuasar} from 'quasar';
+import {useRoute, useRouter} from 'vue-router';
+import {useTranscriptStore} from 'src/stores/transcriptStore';
+import {TranscriptionState} from 'src/models/transcripts';
 import IconMessageItem from 'src/components/IconMessageItem.vue';
 
 const $q = useQuasar();
@@ -56,7 +56,7 @@ const updateTimeStampViews = () => {
 
 const handleMarkClick = (idx: number) => {
     if (currentTranscript.value?.chunks[idx].text) {
-        router.push({ name: 'transcriptPage', hash: `#chunk-${idx + 1}` });
+        router.push({name: 'transcriptPage', hash: `#chunk-${idx + 1}`});
     }
 };
 
@@ -66,7 +66,7 @@ const handleAnchorClick = async (idx: number) => {
     $q.notify({
         position: 'top',
         message: 'Ссылка на фрагмент скопирована.',
-        actions: [{ icon: 'close', color: 'white', round: true }],
+        actions: [{icon: 'close', color: 'white', round: true}],
     });
 };
 
@@ -137,6 +137,19 @@ onMounted(async () => {
     }
 });
 
+const progressPercent = computed(() => {
+    if (!currentTranscript.value) {
+        return 0;
+    }
+
+    const processedDuration = currentTranscript.value.chunks
+        .filter(chunk => chunk.text) // берем только обработанные чанки
+        .map((chunk, idx) => currentTranscript.value!.chunksDurationArray[idx] || 0)
+        .reduce((sum, val) => sum + val, 0);
+
+    return (processedDuration / currentTranscript.value.audioLenSecs) * 100;
+});
+
 onUpdated(() => {
     updateTimeStampViews();
 });
@@ -198,21 +211,13 @@ watch(() => transcriptStore.processsingTicks, () => {
                 </svg>
                 <q-linear-progress
                     size="md"
-                    :stripe="
-                        isCurrentTranscriptProcessing ||
-                        isCurrentTranscriptCancelling
-                    "
+                    :stripe="isCurrentTranscriptProcessing || isCurrentTranscriptCancelling"
                     :value="
                         (currentTranscript.chunksDurationArray[
-                            currentTranscript.chunksDurationArray.length - 1
+                          currentTranscript.chunksDurationArray.length - 1
                         ] || 0) / currentTranscript.audioLenSecs
                     "
-                    :color="
-                        isCurrentTranscriptProcessing ||
-                        isCurrentTranscriptCancelling
-                            ? 'warning'
-                            : 'primary'
-                    "
+                    :color="isCurrentTranscriptProcessing || isCurrentTranscriptCancelling ? 'warning' : 'primary'"
                     animation-speed="100"
                 />
             </div>

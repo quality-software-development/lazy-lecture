@@ -1,37 +1,30 @@
 <template>
-    <q-page
-        class="column items-center justify-center"
-        v-if="
-            userInfoStore.userInfo?.canInteract && !transcriptStore.isProcessing
-        "
-    >
+    <q-page class="column items-center justify-center"
+            v-if="userInfoStore.userInfo?.canInteract && !transcriptStore.isProcessing">
         <p class="text-center text-grey-6">{{ hintText }}</p>
         <q-uploader
             ref="uploader"
             class="q-mx-md"
             label="MP-3"
             :url="`${api.getUri()}/upload-audiofile`"
-            :headers="[
-                { name: 'Authorization', value: `Bearer ${accessToken}` },
-            ]"
+            :headers="[{ name: 'Authorization', value: `Bearer ${accessToken}` }]"
             accept=".mp3"
             field-name="audiofile"
             @added="handleAudioAdd"
             @uploaded="handleAudioUpload"
+            @failed="handleAudioFail"
         />
     </q-page>
-    <q-page
-        v-else-if="
-            userInfoStore.userInfo?.canInteract && transcriptStore.isProcessing
-        "
-        class="fit column items-center justify-center"
-    >
+
+    <q-page v-else-if="userInfoStore.userInfo?.canInteract && transcriptStore.isProcessing"
+            class="fit column items-center justify-center">
         <IconMessageItem :rotating="true" icon="settings">
             <p class="text-h6 text-grey-5 text-center" data-test="ui-testing-upload-audio-page-processing-p">
                 Нельзя загрузить - идёт обработка аудио.
             </p>
         </IconMessageItem>
     </q-page>
+
     <q-page v-else class="fit column items-center justify-center">
         <IconMessageItem icon="file_upload_off">
             <p class="text-h6 text-grey-5 text-center" data-test="ui-testing-upload-audio-page-forbidden-p">
@@ -43,13 +36,13 @@
 </template>
 
 <script setup lang="ts">
+import {computed, nextTick, onMounted, ref, useTemplateRef} from 'vue';
 import {useUserInfoStore} from 'src/stores/userInfoStore';
 import {useTranscriptStore} from 'src/stores/transcriptStore';
 import {api} from 'src/boot/axios';
-import {computed, nextTick, onMounted, ref, useTemplateRef} from 'vue';
-import IconMessageItem from 'src/components/IconMessageItem.vue';
 import {QUploader, useQuasar} from 'quasar';
 import {useRouter} from 'vue-router';
+import IconMessageItem from 'src/components/IconMessageItem.vue';
 
 const userInfoStore = useUserInfoStore();
 const transcriptStore = useTranscriptStore();
@@ -62,13 +55,13 @@ const hintBeforeAdd = 'Перетащите аудио в поле или наж
 const hintAfterAdd = 'Нажмите на облако для отправки аудио на обработку';
 const hintText = ref(hintBeforeAdd);
 
+const uploader = useTemplateRef<QUploader>('uploader');
+
 const tooltipsMap: any = {
     clear_all: 'Очистить поле',
     cloud_upload: 'Отправить аудио на обработку',
     close: 'Очистить поле',
 };
-
-const uploader = useTemplateRef<QUploader>('uploader');
 
 const handleAudioAdd = (files: readonly any[]) => {
     const audio = document.createElement('audio');
@@ -76,29 +69,21 @@ const handleAudioAdd = (files: readonly any[]) => {
     audio.onloadedmetadata = () => {
         URL.revokeObjectURL(audio.src);
         if (audio.duration < 10 || audio.duration > 7200) {
-            if (audio.duration < 10) {
-                $q.notify({
-                    type: 'negative',
-                    icon: 'error',
-                    position: 'bottom-right',
-                    message: 'Длина аудио должна быть больше 10 секунд.',
-                    actions: [{icon: 'close', color: 'white', round: true}],
-                });
-            } else if (audio.duration > 7200) {
-                $q.notify({
-                    type: 'negative',
-                    icon: 'error',
-                    position: 'bottom-right',
-                    message: 'Длина аудио должна быть меньше 2 часов.',
-                    actions: [{icon: 'close', color: 'white', round: true}],
-                });
-            }
+            $q.notify({
+                type: 'negative',
+                icon: 'error',
+                position: 'bottom-right',
+                message: audio.duration < 10
+                    ? 'Длина аудио должна быть больше 10 секунд.'
+                    : 'Длина аудио должна быть меньше 2 часов.',
+                actions: [{icon: 'close', color: 'white', round: true}],
+            });
             uploader.value?.reset();
             hintText.value = hintBeforeAdd;
-            return;
         }
     };
     audio.src = URL.createObjectURL(files[0]);
+
     if (files[0].size > 200 * 1024 * 1024) {
         $q.notify({
             type: 'negative',
@@ -114,56 +99,74 @@ const handleAudioAdd = (files: readonly any[]) => {
 
     hintText.value = hintAfterAdd;
     setTimeout(() => {
-        for (const btnIcon of Array.from(
-            document.querySelectorAll('.q-uploader .q-icon')
-        )) {
+        Array.from(document.querySelectorAll('.q-uploader .q-icon')).forEach(btnIcon => {
             btnIcon.setAttribute('title', tooltipsMap[btnIcon.innerHTML]);
-        }
+        });
     });
 };
 
 const handleAudioUpload = async () => {
     console.log('[handleAudioUpload] старт');
 
+    const uploadedFile = uploader.value?.uploadedFiles[0];
+    const xhr = uploadedFile?.xhr;
+
+    if (!xhr || xhr.status >= 400) {
+        console.warn('[handleAudioUpload] Ошибка, делегируем в handleAudioFail');
+        return;
+    }
+
     try {
-        const uploadedFile = uploader.value?.uploadedFiles[0];
-        const responseText = uploadedFile?.xhr?.response;
+        const response = JSON.parse(xhr.response || '{}');
+        const taskId = response.task_id;
 
-        console.log('[handleAudioUpload] uploadedFile:', uploadedFile);
-        console.log('[handleAudioUpload] responseText:', responseText);
-
-        if (responseText) {
-            const response = JSON.parse(responseText);
-            const taskId = response.task_id;
-
-            console.log('[handleAudioUpload] taskId:', taskId);
-
-            if (taskId) {
+        if (taskId) {
+            await nextTick();
+            router.push(`/transcripts/${taskId}`);
+        } else {
+            await transcriptStore.loadTranscriptions();
+            const id = transcriptStore.checkProcessingTranscription();
+            if (id) {
                 await nextTick();
-                console.log('[handleAudioUpload] push to /transcripts/' + taskId);
-                router.push(`/transcripts/${taskId}`);
-                return;
+                router.push(`/transcripts/${id}`);
             }
         }
-
-        console.log('[handleAudioUpload] fallback через loadTranscriptions');
-
-        await transcriptStore.loadTranscriptions();
-        const id = transcriptStore.checkProcessingTranscription();
-        if (id) {
-            await nextTick();
-            console.log('[handleAudioUpload] push to /transcripts/' + id);
-            router.push(`/transcripts/${id}`);
-        }
     } catch (error) {
-        console.error('Ошибка в handleAudioUpload:', error);
+        console.error('[handleAudioUpload] Ошибка обработки ответа:', error);
+        handleAudioFail({xhr});
     }
 };
 
+const handleAudioFail = ({xhr}: { xhr: XMLHttpRequest }) => {
+    console.log('[handleAudioFail] xhr.status:', xhr?.status);
+
+    let message = 'Ошибка загрузки аудиофайла.';
+
+    try {
+        const response = JSON.parse(xhr?.response || '{}');
+        if (response.detail) {
+            message = response.detail === 'Already processing transcription.'
+                ? 'Нельзя загрузить: уже обрабатывается другое аудио.'
+                : response.detail;
+        }
+    } catch (error) {
+        console.warn('[handleAudioFail] Не удалось распарсить тело ошибки', error);
+    }
+
+    $q.notify({
+        type: 'negative',
+        icon: 'error',
+        position: 'bottom-right',
+        message,
+        actions: [{icon: 'close', color: 'white', round: true}],
+    });
+
+    uploader.value?.reset();
+    hintText.value = hintBeforeAdd;
+};
+
 onMounted(() => {
-    document
-        .querySelector('.q-uploader__input')
-        ?.setAttribute('title', 'Добавить аудиофайл');
+    document.querySelector('.q-uploader__input')?.setAttribute('title', 'Добавить аудиофайл');
 });
 </script>
 
