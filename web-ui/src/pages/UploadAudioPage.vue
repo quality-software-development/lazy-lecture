@@ -64,6 +64,23 @@ const tooltipsMap: any = {
 };
 
 const handleAudioAdd = (files: readonly any[]) => {
+    const file = files[0];
+    const fileName = file.name.toLowerCase();
+
+    if (!fileName.endsWith('.mp3')) {
+        $q.notify({
+            type: 'negative',
+            icon: 'error',
+            position: 'bottom-right',
+            message: 'Неподдерживаемый формат файла. Загрузите MP3.',
+            actions: [{icon: 'close', color: 'white', round: true}],
+        });
+        uploader.value?.reset();
+        hintText.value = hintBeforeAdd;
+        return;
+    }
+
+    // Всё остальное (проверка размера, длины) — ниже
     const audio = document.createElement('audio');
     audio.preload = 'metadata';
     audio.onloadedmetadata = () => {
@@ -82,9 +99,9 @@ const handleAudioAdd = (files: readonly any[]) => {
             hintText.value = hintBeforeAdd;
         }
     };
-    audio.src = URL.createObjectURL(files[0]);
+    audio.src = URL.createObjectURL(file);
 
-    if (files[0].size > 200 * 1024 * 1024) {
+    if (file.size > 200 * 1024 * 1024) {
         $q.notify({
             type: 'negative',
             icon: 'error',
@@ -104,6 +121,7 @@ const handleAudioAdd = (files: readonly any[]) => {
         });
     });
 };
+
 
 const handleAudioUpload = async () => {
     console.log('[handleAudioUpload] старт');
