@@ -1,8 +1,8 @@
-import { vi } from 'vitest';
-import { api } from 'src/boot/axios';
-import { AxiosError } from 'axios';
-import { messages } from 'test/vitest/messages';
-import { createRouter, createWebHistory } from 'vue-router';
+import {vi} from 'vitest';
+import {api} from 'src/boot/axios';
+import {AxiosError} from 'axios';
+import {messages} from 'test/vitest/messages';
+import {createRouter, createWebHistory} from 'vue-router';
 import routes from 'src/router/routes';
 
 export const router = createRouter({
@@ -22,6 +22,11 @@ export const getMockUser = (canInteract: boolean, id = 0) => {
     };
 };
 
+export const ok = <T>(data: T) => ({
+    successful: true,
+    data,
+});
+
 const getAxiosError = (code: number, msg: string) => {
     const error = new AxiosError(
         '',
@@ -32,13 +37,13 @@ const getAxiosError = (code: number, msg: string) => {
             ? ({
                 data: {
                     detail:
-                          code === 422
-                              ? [
-                                  {
-                                      msg,
-                                  },
-                              ]
-                              : msg,
+                        code === 422
+                            ? [
+                                {
+                                    msg,
+                                },
+                            ]
+                            : msg,
                 },
             } as any)
             : null
@@ -136,7 +141,7 @@ const rejectInvalidCreds = (username: string, password: string) => {
 mockPost.mockImplementation((url, data) => {
     switch (url) {
         case '/auth/login': {
-            const { username, password } = data as {
+            const {username, password} = data as {
                 username: string;
                 password: string;
             };
@@ -152,7 +157,7 @@ mockPost.mockImplementation((url, data) => {
             );
         }
         case '/auth/register': {
-            const { username, password } = data as {
+            const {username, password} = data as {
                 username: string;
                 password: string;
             };

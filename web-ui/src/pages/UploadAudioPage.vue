@@ -186,6 +186,11 @@ const handleAudioFail = ({xhr}: { xhr: XMLHttpRequest }) => {
 onMounted(() => {
     document.querySelector('.q-uploader__input')?.setAttribute('title', 'Добавить аудиофайл');
 });
+
+defineExpose({
+    handleAudioAdd,
+    handleAudioUpload,
+});
 </script>
 
 <style scoped>
