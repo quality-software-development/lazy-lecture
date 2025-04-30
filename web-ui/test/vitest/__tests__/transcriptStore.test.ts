@@ -1,164 +1,133 @@
-import {createPinia, setActivePinia} from 'pinia';
-import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {useTranscriptStore} from 'src/stores/transcriptStore';
-import {useUserInfoStore} from 'src/stores/userInfoStore';
-import {getMockUser, ok} from '../setup-file';
-import {TranscriptionState} from 'src/models/transcripts';
-
-vi.mock('src/api/transcripts', () => ({
-    TranscriptionsApi: {
-        getTranscriptions: vi.fn().mockResolvedValue(ok({
-            page: 1,
-            pages: 1,
-            size: 1,
-            total: 1,
-            transcriptions: [{
-                id: 1,
-                creatorId: 1,
-                audioLenSecs: 100,
-                chunkSizeSecs: 900,
-                currentState: TranscriptionState.completed,
-                createDate: new Date(),
-                updateDate: new Date(),
-                description: 'test-audio.mp3',
-            }],
-        })),
-        getChunkedTranscription: vi.fn().mockResolvedValue(ok({
-            taskId: 1,
-            chunks: [{index: 0, duration: 900, text: 'Mock chunk text.'}],
-        })),
-        getTranscriptionInfo: vi.fn().mockResolvedValue(ok({
-            id: 1,
-            creatorId: 1,
-            audioLenSecs: 100,
-            chunkSizeSecs: 900,
-            currentState: TranscriptionState.completed,
-            createDate: new Date(),
-            updateDate: new Date(),
-            description: 'test-audio.mp3',
-        })),
-        cancelTranscriptionProcess: vi.fn().mockResolvedValue(ok(null)),
-    }
-}));
+import { describe, expect, it, beforeEach, vi } from 'vitest';
+import { setActivePinia, createPinia } from 'pinia';
+import { useTranscriptStore } from 'src/stores/transcriptStore';
+import { flushPromises } from '@vue/test-utils';
+import { useUserInfoStore } from 'src/stores/userInfoStore';
+import { getMockUser } from '../setup-file';
+import { TranscriptionState } from 'src/models/transcripts';
 
 describe('Стор транскрипций', () => {
     beforeEach(() => {
-        setActivePinia(createPinia());
-        vi.clearAllMocks();
-    });
+        setActivePinia(createPinia())
+    })
 
-    it('Загружаются только транскрипции текущего пользователя', async () => {
+    it('Должны подгружаться транскрипции только авторизованного пользователя', async () => {
         const transcriptStore = useTranscriptStore();
         const userInfoStore = useUserInfoStore();
-        userInfoStore.userInfo = getMockUser(true, 2); // пользователь ≠ creatorId
+
+        userInfoStore.userInfo = getMockUser(true, 1);
 
         await transcriptStore.loadTranscriptions();
         expect(transcriptStore.transcriptsMap.size).toBe(0);
     });
-
-    it('Загруженные транскрипции появляются в сторе', async () => {
+    it('После корректной подгрузки транскрипции должны появиться в сторе', async () => {
         const transcriptStore = useTranscriptStore();
         const userInfoStore = useUserInfoStore();
-        userInfoStore.userInfo = getMockUser(true, 1);
+
+        userInfoStore.userInfo = getMockUser(true);
 
         await transcriptStore.loadTranscriptions();
-        expect(transcriptStore.transcriptsMap.has(1)).toBe(true);
+        expect(transcriptStore.transcriptsMap.size).toBe(1);
     });
-
-    it('После загрузки чанков — они сохраняются в transcript', async () => {
+    it('После подгрузки чанков информация о них должна появиться в записи в словаре', async () => {
         const transcriptStore = useTranscriptStore();
         const userInfoStore = useUserInfoStore();
-        userInfoStore.userInfo = getMockUser(true, 1);
 
-        const now = new Date();
+        userInfoStore.userInfo = getMockUser(true);
+
+        const date = new Date();
         transcriptStore.transcriptsMap.set(1, {
             id: 1,
-            creatorId: 1,
+            creatorId: 0,
             audioLenSecs: 100,
             chunkSizeSecs: 900,
             currentState: TranscriptionState.completed,
-            createDate: now,
-            updateDate: now,
-            description: 'test',
+            createDate: date,
+            updateDate: date,
+            description: 'string',
             chunks: [],
             markXPositions: [],
             timeStampViews: [],
             chunksDurationArray: [],
         });
 
+        expect(transcriptStore.transcriptsMap.get(1)?.chunks.length).toBe(0);
         await transcriptStore.loadTranscriptChunks(1);
         expect(transcriptStore.transcriptsMap.get(1)?.chunks.length).toBeGreaterThan(0);
     });
-
-    it('После обновления info — данные в transcript обновляются', async () => {
+    it('После догрузки информации о транскрипции запись в словаре должна обновиться', async () => {
         const transcriptStore = useTranscriptStore();
         const userInfoStore = useUserInfoStore();
-        userInfoStore.userInfo = getMockUser(true, 1);
 
-        const now = new Date();
+        userInfoStore.userInfo = getMockUser(true);
+
+        const date = new Date();
         transcriptStore.transcriptsMap.set(1, {
             id: 1,
-            creatorId: 1,
+            creatorId: 0,
             audioLenSecs: 100,
             chunkSizeSecs: 900,
             currentState: null as any,
-            createDate: now,
-            updateDate: now,
-            description: 'test',
+            createDate: date,
+            updateDate: date,
+            description: 'string',
             chunks: [],
             markXPositions: [],
             timeStampViews: [],
             chunksDurationArray: [],
         });
 
+        expect(transcriptStore.transcriptsMap.get(1)?.currentState).toBeNull();
         await transcriptStore.updateTranscriptionData(1);
         expect(transcriptStore.transcriptsMap.get(1)?.currentState).not.toBeNull();
     });
-
-    it('watchTranscriptionProcess вызывает обновления каждые 2 секунды', async () => {
+    it('При опрашивании состояния транскрипции каждые 2 секунды должны идти запросы на обновление иформации', async () => {
         const transcriptStore = useTranscriptStore();
         const userInfoStore = useUserInfoStore();
-        userInfoStore.userInfo = getMockUser(true, 1);
 
-        const now = new Date();
+        userInfoStore.userInfo = getMockUser(true);
+
+        const date = new Date();
         transcriptStore.transcriptsMap.set(1, {
             id: 1,
-            creatorId: 1,
+            creatorId: 0,
             audioLenSecs: 100,
             chunkSizeSecs: 900,
             currentState: TranscriptionState.in_progress,
-            createDate: now,
-            updateDate: now,
-            description: 'test',
+            createDate: date,
+            updateDate: date,
+            description: 'string',
             chunks: [],
             markXPositions: [],
             timeStampViews: [],
             chunksDurationArray: [],
         });
 
-        const spy = vi.spyOn(transcriptStore, 'updateTranscriptionData');
+        const updateTranscriptionData = vi.spyOn(transcriptStore, 'updateTranscriptionData');
         transcriptStore.watchTranscriptionProcess(1);
-
-        await new Promise(resolve => setTimeout(resolve, 2100));
-        expect(spy).toHaveBeenCalled();
-        transcriptStore.unwatchTranscriptionProcess(); // Clean up
+        await flushPromises();
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        expect(updateTranscriptionData).toBeCalled();
+        await flushPromises();
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        expect(updateTranscriptionData).toBeCalled();
     });
-
-    it('Если в очереди — обработка отменяется сразу', async () => {
+    it('Отмена обработки транскрипции, наподящейся в очереди, должна произойти немедленно', async () => {
         const transcriptStore = useTranscriptStore();
         const userInfoStore = useUserInfoStore();
-        userInfoStore.userInfo = getMockUser(true, 1);
 
-        const now = new Date();
+        userInfoStore.userInfo = getMockUser(true);
+
+        const date = new Date();
         transcriptStore.transcriptsMap.set(1, {
             id: 1,
-            creatorId: 1,
+            creatorId: 0,
             audioLenSecs: 100,
             chunkSizeSecs: 900,
             currentState: TranscriptionState.queued,
-            createDate: now,
-            updateDate: now,
-            description: 'test',
+            createDate: date,
+            updateDate: date,
+            description: 'string',
             chunks: [],
             markXPositions: [],
             timeStampViews: [],
@@ -168,22 +137,22 @@ describe('Стор транскрипций', () => {
         await transcriptStore.cancelTranscriptionProcess(1);
         expect(transcriptStore.transcriptsMap.get(1)?.currentState).toBe(TranscriptionState.cancelled);
     });
-
-    it('Если в процессе — id сохраняется в локальное хранилище', async () => {
+    it('При отмене уже начатой обработки id транскрипции должен быть сохранен в локальном хранилище', async () => {
         const transcriptStore = useTranscriptStore();
         const userInfoStore = useUserInfoStore();
-        userInfoStore.userInfo = getMockUser(true, 1);
 
-        const now = new Date();
+        userInfoStore.userInfo = getMockUser(true);
+
+        const date = new Date();
         transcriptStore.transcriptsMap.set(1, {
             id: 1,
-            creatorId: 1,
+            creatorId: 0,
             audioLenSecs: 100,
             chunkSizeSecs: 900,
             currentState: TranscriptionState.in_progress,
-            createDate: now,
-            updateDate: now,
-            description: 'test',
+            createDate: date,
+            updateDate: date,
+            description: 'string',
             chunks: [],
             markXPositions: [],
             timeStampViews: [],
@@ -191,6 +160,8 @@ describe('Стор транскрипций', () => {
         });
 
         await transcriptStore.cancelTranscriptionProcess(1);
-        expect(localStorage.getItem('cancelledWhileProcessing')).toBe('1');
+        expect(localStorage.getItem(
+            'cancelledWhileProcessing',
+        )).toBe('1');
     });
 });

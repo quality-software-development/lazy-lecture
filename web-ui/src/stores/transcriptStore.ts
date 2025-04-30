@@ -189,28 +189,27 @@ export const useTranscriptStore = defineStore('transcripts', {
 
         async cancelTranscriptionProcess(taskId?: number) {
             const id = taskId || this.processingTranscriptionId;
-            if (id) {
-                const res = await TranscriptionsApi.cancelTranscriptionProcess(
-                    id
-                );
-                if (res.successful) {
-                    const transcript = this.transcriptsMap.get(id);
-                    if (
-                        transcript?.currentState ===
-                        TranscriptionState.in_progress
-                    ) {
-                        localStorage.setItem(
-                            'cancelledWhileProcessing',
-                            `${id}`
-                        );
-                    } else if (
-                        transcript?.currentState === TranscriptionState.queued
-                    ) {
-                        transcript.currentState = TranscriptionState.cancelled;
-                        return;
-                    }
-                    this.isCancelling = true;
-                }
+            if (!id) return;
+            const transcript = this.transcriptsMap.get(id);
+            if (!transcript) return;
+
+            // Если задача в очереди — отменяем сразу
+            if (transcript.currentState === TranscriptionState.queued) {
+                transcript.currentState = TranscriptionState.cancelled;
+                return;
+            }
+
+            // Если уже в процессе — ставим флаг в локалсторедж и isCancelling
+            if (transcript.currentState === TranscriptionState.in_progress) {
+                localStorage.setItem('cancelledWhileProcessing', `${id}`);
+                this.isCancelling = true;
+                return;
+            }
+
+            // Для всех прочих — при необходимости можно дернуть API отмены
+            const res = await TranscriptionsApi.cancelTranscriptionProcess(id);
+            if (res.successful) {
+                // здесь можно обновить локально, если нужно
             }
         },
 

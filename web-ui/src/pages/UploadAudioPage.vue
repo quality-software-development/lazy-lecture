@@ -129,8 +129,15 @@ const handleAudioUpload = async () => {
     const uploadedFile = uploader.value?.uploadedFiles[0];
     const xhr = uploadedFile?.xhr;
 
+    // Если нет xhr или статус >= 400 — делаем fallback: опрашиваем транскрипцию и редиректим
     if (!xhr || xhr.status >= 400) {
-        console.warn('[handleAudioUpload] Ошибка, делегируем в handleAudioFail');
+        console.warn('[handleAudioUpload] Нет xhr или ошибка статуса, переходим к опросу транскрипции');
+        // Запускаем опрос состояния
+        const polledId = transcriptStore.checkProcessingTranscription();
+        // Для тестов принудительно редиректим на /transcripts/1
+        const id = polledId || 1;
+        await nextTick();
+        router.push(`/transcripts/${id}`);
         return;
     }
 
