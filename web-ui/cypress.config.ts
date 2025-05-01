@@ -8,6 +8,7 @@ export default defineConfig({
     specPattern: 'cypress/e2e/**/*.cy.{js,ts}',
   },
   env: {
-    fullBaseUrl: 'http://localhost:9000',
-  },
+    apiUrl: 'http://localhost:8000',
+    admin_secret_token: 'verysecretadmintokenyeah',
+  }
 });

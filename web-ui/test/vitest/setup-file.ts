@@ -4,23 +4,22 @@ import {AxiosError} from 'axios';
 import {messages} from 'test/vitest/messages';
 import {createRouter, createWebHistory} from 'vue-router';
 import routes from 'src/router/routes';
+import {TranscriptionsApi} from 'src/api/transcripts';
 
 export const router = createRouter({
     history: createWebHistory(),
-    routes: routes,
+    routes,
 });
 
-export const getMockUser = (canInteract: boolean, id = 0) => {
-    return {
-        id,
-        username: 'mockUser',
-        active: true,
-        canInteract,
-        role: 'admin',
-        createDate: new Date(),
-        updateDate: new Date(),
-    };
-};
+export const getMockUser = (canInteract: boolean, id = 0) => ({
+    id,
+    username: 'mockUser',
+    active: true,
+    canInteract,
+    role: 'admin',
+    createDate: new Date(),
+    updateDate: new Date(),
+});
 
 export const ok = <T>(data: T) => ({
     successful: true,
@@ -52,8 +51,10 @@ const getAxiosError = (code: number, msg: string) => {
     return error;
 };
 
+// ========== MOCK API.GET ==========
 const mockGet = vi.spyOn(api, 'get');
-const date = new Date().toISOString().slice(0, -1);
+const now = new Date().toISOString().slice(0, -1);
+
 mockGet.mockImplementation((url) => {
     switch (url) {
         case '/transcriptions?page=1&size=100':
@@ -70,14 +71,15 @@ mockGet.mockImplementation((url) => {
                             audio_len_secs: 100,
                             chunk_size_secs: 900,
                             current_state: 'in_progress',
-                            create_date: date,
-                            update_date: date,
+                            create_date: now,
+                            update_date: now,
                             description: 'string',
                             error_count: 0,
                         },
                     ],
                 },
             });
+
         case '/transcript?task_id=1&skip=0&limit=100':
         case '/transcript?task_id=999&skip=0&limit=100':
             return Promise.resolve({
@@ -96,25 +98,29 @@ mockGet.mockImplementation((url) => {
                     ],
                 },
             });
+
         case '/transcript/info?transcript_id=1':
             return Promise.resolve({
                 data: {
                     audio_len_secs: 100,
                     id: 1,
-                    update_date: date,
+                    update_date: now,
                     current_state: 'completed',
                     error_count: 0,
                     chunk_size_secs: 900,
                     creator_id: 0,
-                    create_date: date
+                    create_date: now,
                 },
             });
+
         default:
             return Promise.reject();
     }
 });
 
+// ========== MOCK API.POST ==========
 const mockPost = vi.spyOn(api, 'post');
+
 const rejectInvalidCreds = (username: string, password: string) => {
     if (
         username.length < 5 ||
@@ -138,6 +144,7 @@ const rejectInvalidCreds = (username: string, password: string) => {
         );
     }
 };
+
 mockPost.mockImplementation((url, data) => {
     switch (url) {
         case '/auth/login': {
@@ -156,6 +163,7 @@ mockPost.mockImplementation((url, data) => {
                 })
             );
         }
+
         case '/auth/register': {
             const {username, password} = data as {
                 username: string;
@@ -170,15 +178,23 @@ mockPost.mockImplementation((url, data) => {
                         active: true,
                         can_interact: true,
                         role: 'admin',
-                        create_date: '2025-02-16T10:29:03.230Z',
-                        update_date: '2025-02-16T10:29:03.230Z',
+                        create_date: now,
+                        update_date: now,
                     },
                 })
             );
         }
+
         case '/transcript/cancel?transcript_id=1':
             return Promise.resolve('OK');
+
         default:
             return Promise.reject(null);
     }
 });
+
+// ========== MOCK TRANSCRIPTIONS API ==========
+
+vi.spyOn(TranscriptionsApi, 'cancelTranscriptionProcess').mockImplementation(() =>
+    Promise.resolve({successful: true, data:null})
+);

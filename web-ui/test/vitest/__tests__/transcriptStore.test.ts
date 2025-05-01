@@ -1,10 +1,11 @@
-import { describe, expect, it, beforeEach, vi } from 'vitest';
-import { setActivePinia, createPinia } from 'pinia';
-import { useTranscriptStore } from 'src/stores/transcriptStore';
-import { flushPromises } from '@vue/test-utils';
-import { useUserInfoStore } from 'src/stores/userInfoStore';
-import { getMockUser } from '../setup-file';
-import { TranscriptionState } from 'src/models/transcripts';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {createPinia, setActivePinia} from 'pinia';
+import {useTranscriptStore} from 'src/stores/transcriptStore';
+import {flushPromises} from '@vue/test-utils';
+import {useUserInfoStore} from 'src/stores/userInfoStore';
+import {getMockUser} from '../setup-file';
+import {TranscriptionState} from 'src/models/transcripts';
+
 
 describe('Стор транскрипций', () => {
     beforeEach(() => {
@@ -112,6 +113,7 @@ describe('Стор транскрипций', () => {
         await new Promise((resolve) => setTimeout(resolve, 2000));
         expect(updateTranscriptionData).toBeCalled();
     });
+
     it('Отмена обработки транскрипции, наподящейся в очереди, должна произойти немедленно', async () => {
         const transcriptStore = useTranscriptStore();
         const userInfoStore = useUserInfoStore();
