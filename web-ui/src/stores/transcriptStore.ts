@@ -29,6 +29,7 @@ export const useTranscriptStore = defineStore('transcripts', {
     },
     actions: {
         async loadTranscriptions(page = 1, size = 100) {
+            console.log('[TranscriptStore] loadTranscriptions() called');
             this.transcriptsMap.clear();
             const res = await TranscriptionsApi.getTranscriptions(page, size);
             if (res.successful) {
@@ -43,12 +44,14 @@ export const useTranscriptStore = defineStore('transcripts', {
                             timeStampViews: [],
                             chunksDurationArray: [],
                         });
+                        console.log('[TranscriptStore] added to transcriptsMap:', transcript);
                     }
                 }
             }
         },
 
         async loadTranscriptChunks(taskId: number, skip = 0, limit = 100) {
+            console.log('[TranscriptStore] loadTranscriptChunks() taskId =', taskId);
             const res = await TranscriptionsApi.getChunkedTranscription(
                 taskId,
                 skip,
@@ -58,6 +61,7 @@ export const useTranscriptStore = defineStore('transcripts', {
                 const loadedChunkedTranscript = (
                     res as ResSuccess<ChunkedTranscription>
                 ).data;
+                console.log('[TranscriptStore] received chunks for taskId', taskId, loadedChunkedTranscript);
                 if (this.transcriptsMap.has(loadedChunkedTranscript.taskId)) {
                     const transcript = this.transcriptsMap.get(
                         loadedChunkedTranscript.taskId

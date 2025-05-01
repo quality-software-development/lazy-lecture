@@ -38,3 +38,5 @@ yarn-error.log*
 
 # артефакты расчета покрытия тестами
 coverage
+!/cypress.config.ts
+!/test/vitest/__tests__/transcriptStore.test.ts

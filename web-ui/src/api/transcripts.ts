@@ -89,7 +89,7 @@ export class TranscriptionsApi extends BaseApi {
     ): Promise<ResSuccess<null> | ResError> {
         return this.runRequest<null, any>(
             'post',
-            `/transcript/cancel?transcript_id=${taskId}`,
+            `/transcriptions/${taskId}/cancel`,
             () => null,
             `Не удалось отменить обработку транскрипции с id = ${taskId}.`
         );
