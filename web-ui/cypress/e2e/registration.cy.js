@@ -122,4 +122,24 @@ describe('1️⃣ Регистрация с валидацией + авто‑л
     cy.log('✅ Проверяем, что остались на /transcripts');
     cy.url({ timeout: 10000 }).should('include', '/transcripts');
   });
+
+  it('Шаг 8: Попытка регистрации с уже существующим логином — ошибка', () => {
+    const takenUsername = 'existingUser';
+
+    // Подставляем фиктивного юзера, который "уже есть"
+    cy.get('[data-test="ui-testing-auth-page-login-input"]').clear().type(uniqueUser);
+    cy.get('[data-test="ui-testing-auth-page-password-input"]').clear().type('GoodP@ss123');
+
+    // Мокаем ответ сервера — 400 Bad Request
+    cy.intercept('POST', '**/auth/register', {
+      statusCode: 400,
+      body: { detail: 'Пользователь уже существует' }
+    }).as('registerFail');
+
+    cy.get('[data-test="ui-testing-auth-page-submit-btn"]').click();
+    cy.wait('@registerFail');
+
+    cy.contains('Ошибка регистрации.').should('be.visible').realHover();
+    cy.get('.q-tooltip').should('contain.text', 'Пользователь уже существует');
+  });
 });

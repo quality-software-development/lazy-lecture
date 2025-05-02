@@ -10,6 +10,7 @@ import {
 import { formatTimestamp } from 'src/composables/formatTimestamp';
 import { ResSuccess } from 'src/models/responses';
 import { useUserInfoStore } from './userInfoStore';
+import { Notify } from 'quasar';
 
 export const useTranscriptStore = defineStore('transcripts', {
     state: () => ({
@@ -190,26 +191,32 @@ export const useTranscriptStore = defineStore('transcripts', {
         async cancelTranscriptionProcess(taskId?: number) {
             const id = taskId || this.processingTranscriptionId;
             if (id) {
-                const res = await TranscriptionsApi.cancelTranscriptionProcess(
-                    id
-                );
-                if (res.successful) {
-                    const transcript = this.transcriptsMap.get(id);
-                    if (
-                        transcript?.currentState ===
-                        TranscriptionState.in_progress
-                    ) {
-                        localStorage.setItem(
-                            'cancelledWhileProcessing',
-                            `${id}`
-                        );
-                    } else if (
-                        transcript?.currentState === TranscriptionState.queued
-                    ) {
-                        transcript.currentState = TranscriptionState.cancelled;
-                        return;
+                try {
+                    const res = await TranscriptionsApi.cancelTranscriptionProcess(
+                        id
+                    );
+                    if (res.successful) {
+                        const transcript = this.transcriptsMap.get(id);
+                        if (
+                            transcript?.currentState ===
+                            TranscriptionState.in_progress
+                        ) {
+                            localStorage.setItem(
+                                'cancelledWhileProcessing',
+                                `${id}`
+                            );
+                        } else if (
+                            transcript?.currentState === TranscriptionState.queued
+                        ) {
+                            transcript.currentState = TranscriptionState.cancelled;
+                            return;
+                        }
+                        this.isCancelling = true;
+                    } else {
+                        Notify.create({type: 'negative', message: 'Не удалось отменить задачу'});
                     }
-                    this.isCancelling = true;
+                } catch (e) {
+                    Notify.create({ type: 'negative', message: 'Не удалось отменить задачу' });
                 }
             }
         },
