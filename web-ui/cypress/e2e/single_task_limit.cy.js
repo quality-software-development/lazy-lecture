@@ -181,4 +181,78 @@ describe('3️⃣ Ограничение одной задачи + отмена'
     cy.wait('@list_with_b');
     cy.location('hash').should('include', `#/transcripts/${taskB}`);
   });
+
+    it('❌ Ошибка при отмене обработки — отображается уведомление', () => {
+    cy.then(() => {
+      tasks = [{
+        id: taskA,
+        creator_id: uid,
+        audio_len_secs: 1197,
+        chunk_size_secs: 900,
+        current_state: 'queued',
+        create_date: iso,
+        update_date: iso,
+        description: fileA,
+      }];
+      interceptList('list_retry');
+
+      cy.intercept('GET', `${apiUrl}/transcript?task_id=${taskA}*&limit=*`, {
+        statusCode: 200,
+        body: {
+          page: 1,
+          pages: 1,
+          size: mockChunks.length,
+          total: mockChunks.length,
+          transcriptions: mockChunks,
+        },
+      }).as('chunks_retry');
+    });
+
+    // Логин
+    cy.hashVisit('/log_in');
+    cy.get('[data-test="ui-testing-auth-page-login-input"]').type(username);
+    cy.get('[data-test="ui-testing-auth-page-password-input"]').type(password);
+    cy.get('[data-test="ui-testing-auth-page-submit-btn"]').click();
+    cy.wait('@list_retry');
+    cy.location('hash').should('include', '/transcripts');
+
+    // Загрузка файла A
+    cy.intercept('POST', '**/upload-audiofile', {
+      statusCode: 200,
+      body: { message: 'ok', task_id: taskA, file: 'object_storage/a.mp3' },
+    }).as('uploadRetry');
+
+    cy.intercept('GET', `${apiUrl}/transcription/info?task_id=${taskA}`, {
+      statusCode: 200,
+      body: {
+        id: taskA,
+        creator_id: uid,
+        audio_len_secs: 1197,
+        chunk_size_secs: 900,
+        current_state: 'queued',
+        create_date: iso,
+        update_date: iso,
+        description: fileA,
+      },
+    }).as('infoRetry');
+
+    cy.get('.q-uploader__input[type="file"]').selectFile(`cypress/fixtures/${fileA}`, { force: true });
+    cy.contains('i', 'cloud_upload').click();
+    cy.wait('@uploadRetry');
+    cy.wait('@chunks_retry');
+
+    cy.contains(mockChunks[0].transcription).should('be.visible');
+
+    // Ошибка при отмене
+    cy.intercept('POST', `${apiUrl}/transcriptions/${taskA}/cancel`, {
+      statusCode: 500,
+      body: { detail: 'Server error' },
+    }).as('cancelFail');
+
+    cy.contains('Отменить обработку').click();
+    cy.wait('@cancelFail');
+
+    cy.get('.q-notification__message')
+      .should('contain.text', 'Не удалось отменить задачу');
+  });
 });
