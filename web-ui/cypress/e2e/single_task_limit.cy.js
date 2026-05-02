@@ -1,53 +1,45 @@
 /* eslint-disable */
 /// <reference types="cypress" />
+//
+// E2E-003 — Ограничение одной задачи и отмена
+// см. docs/Курсовая_работа_ТРКПО_E2E.docx.pdf, раздел 2.3
+//
 import { generateLatinUsername } from '../support/utils';
 
 const username   = generateLatinUsername();
 const password   = 'GoodP@ss123456#Aa';
-const fileA      = 'sample_19m57s.mp3';
-const fileB      = 'sample_ru_120s.mp3';
+const fileA      = 'sample_ru_120s.mp3';
+const fileB      = 'sample_ru_20s.mp3';
 const taskA      = 1;
 const taskB      = 2;
 const apiUrl     = Cypress.env('apiUrl');
-const adminToken = Cypress.env('admin_secret_token');
 const iso        = new Date().toISOString();
 const mockChunks = [
-  { chunk_order: 0, chunk_size_secs: 900, id: 1, transcription: 'Здравствуйте, это пример транскрипции за первые 15 минут.' },
-  { chunk_order: 1, chunk_size_secs: 0, id: 2, transcription: null },
+  { chunk_order: 0, chunk_size_secs: 60, id: 1, transcription: 'Здравствуйте, это пример транскрипции за первую минуту.' },
+  { chunk_order: 1, chunk_size_secs: 0,  id: 2, transcription: null },
 ];
 
-describe('3️⃣ Ограничение одной задачи + отмена', () => {
+describe('E2E-003 3️⃣ Ограничение одной задачи + отмена', () => {
   let uid;
   let tasks = [];
 
   const interceptList = (alias = 'list') => {
     cy.intercept('GET', `${apiUrl}/transcriptions?page=1&size=100`, {
       statusCode: 200,
-      body: {
-        page: 1, pages: 1, size: 100, total: tasks.length,
-        transcriptions: tasks,
-      },
+      body: { page: 1, pages: 1, size: 100, total: tasks.length, transcriptions: tasks },
     }).as(alias);
   };
 
   before(() => {
-    cy.registerAndPrepareUser(username, password).then(id => {
-      uid = id;
-    });
+    cy.registerAndPrepareUser(username, password).then(id => { uid = id; });
   });
 
   it('🧪 Ограничение одной задачи + отмена', function() {
     cy.log('🎯 Настройка моков для первой транскрипции (A)');
     cy.then(() => {
       tasks = [{
-        id: taskA,
-        creator_id: uid,
-        audio_len_secs: 1197,
-        chunk_size_secs: 900,
-        current_state: 'queued',
-        create_date: iso,
-        update_date: iso,
-        description: fileA,
+        id: taskA, creator_id: uid, audio_len_secs: 120, chunk_size_secs: 60,
+        current_state: 'queued', create_date: iso, update_date: iso, description: fileA,
       }];
       interceptList('list');
 
@@ -78,14 +70,8 @@ describe('3️⃣ Ограничение одной задачи + отмена'
     cy.intercept('GET', `${apiUrl}/transcription/info?task_id=${taskA}`, {
       statusCode: 200,
       body: {
-        id: taskA,
-        creator_id: uid,
-        audio_len_secs: 1197,
-        chunk_size_secs: 900,
-        current_state: 'in_progress',
-        create_date: iso,
-        update_date: iso,
-        description: fileA,
+        id: taskA, creator_id: uid, audio_len_secs: 120, chunk_size_secs: 60,
+        current_state: 'in_progress', create_date: iso, update_date: iso, description: fileA,
       },
     }).as('infoA');
 
@@ -122,9 +108,7 @@ describe('3️⃣ Ограничение одной задачи + отмена'
     cy.contains(fileA).click();
     cy.location('hash').should('include', `#/transcripts/${taskA}`);
 
-    cy.intercept('POST', `${apiUrl}/transcriptions/${taskA}/cancel`, {
-      statusCode: 200,
-    }).as('cancelA');
+    cy.intercept('POST', `${apiUrl}/transcriptions/${taskA}/cancel`, { statusCode: 200 }).as('cancelA');
 
     cy.contains('Отменить обработку').click();
     cy.wait('@cancelA');
@@ -151,8 +135,8 @@ describe('3️⃣ Ограничение одной задачи + отмена'
       body: {
         page: 1, pages: 1, size: 2, total: 2,
         transcriptions: [
-          { chunk_order: 0, chunk_size_secs: 60, id: 1, transcription: 'чанк 1' },
-          { chunk_order: 1, chunk_size_secs: 0, id: 2, transcription: null },
+          { chunk_order: 0, chunk_size_secs: 20, id: 1, transcription: 'чанк 1' },
+          { chunk_order: 1, chunk_size_secs: 0,  id: 2, transcription: null },
         ],
       },
     }).as('chunksB');
@@ -165,13 +149,9 @@ describe('3️⃣ Ограничение одной задачи + отмена'
     cy.log('🔎 Проверяем переход на задачу B');
     cy.then(() => {
       tasks.push({
-        id: taskB,
-        creator_id: uid,
-        audio_len_secs: 120,
-        chunk_size_secs: 900,
+        id: taskB, creator_id: uid, audio_len_secs: 20, chunk_size_secs: 60,
         current_state: 'in_progress',
-        create_date: new Date().toISOString(),
-        update_date: new Date().toISOString(),
+        create_date: new Date().toISOString(), update_date: new Date().toISOString(),
         description: fileB,
       });
       interceptList('list_with_b');

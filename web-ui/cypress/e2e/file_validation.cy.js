@@ -1,18 +1,20 @@
 /* eslint-disable */
 /// <reference types="cypress" />
+//
+// E2E-005 — Ограничения аудио: длина, формат, размер
+// см. docs/Курсовая_работа_ТРКПО_E2E.docx.pdf, раздел 2.5
+//
 import { generateLatinUsername } from '../support/utils';
 
 const username = generateLatinUsername();
 const password = 'GoodP@ss123456#Aa';
-const apiUrl = Cypress.env('apiUrl');
+const apiUrl   = Cypress.env('apiUrl');
 
-describe('5️⃣ Ограничения аудио: короткий / длинный / формат / размер', () => {
+describe('E2E-005 5️⃣ Ограничения аудио: короткий / длинный / формат / размер', () => {
   let uid;
 
   before(() => {
-    cy.registerAndPrepareUser(username, password).then(id => {
-      uid = id;
-    });
+    cy.registerAndPrepareUser(username, password).then(id => { uid = id; });
   });
 
   beforeEach(() => {
@@ -28,13 +30,15 @@ describe('5️⃣ Ограничения аудио: короткий / длин
   };
 
   it('🧪 Проверка ошибок при загрузке неподходящих аудиофайлов', () => {
-    cy.log('📥 Пытаемся загрузить слишком короткий файл');
+    cy.log('📥 Пытаемся загрузить слишком короткий файл (5 секунд)');
     uploadFile('cypress/fixtures/too_short.mp3');
-    cy.get('.q-notification__message').should('contain.text', 'Длина аудио должна быть больше 10 секунд.');
+    cy.get('.q-notification__message')
+      .should('contain.text', 'Длина аудио должна быть больше 10 секунд.');
 
-    cy.log('📥 Пытаемся загрузить слишком длинный файл');
+    cy.log('📥 Пытаемся загрузить слишком длинный файл (>2 ч)');
     uploadFile('cypress/fixtures/too_long.mp3');
-    cy.get('.q-notification__message').should('contain.text', 'Длина аудио должна быть меньше 2 часов.');
+    cy.get('.q-notification__message')
+      .should('contain.text', 'Длина аудио должна быть меньше 2 часов.');
 
     cy.log('📥 Пытаемся загрузить файл неподдерживаемого формата (.wav)');
     uploadFile('cypress/fixtures/invalid_format.wav');
@@ -62,14 +66,10 @@ describe('5️⃣ Ограничения аудио: короткий / длин
       body: {
         page: 1, pages: 1, size: 1, total: 1,
         transcriptions: [{
-          id: 1,
-          creator_id: uid,
-          audio_len_secs: 100,
-          chunk_size_secs: 60,
+          id: 1, creator_id: uid, audio_len_secs: 120, chunk_size_secs: 60,
           current_state: 'completed',
-          create_date: new Date().toISOString(),
-          update_date: new Date().toISOString(),
-          description: 'sample_19m57s.mp3',
+          create_date: new Date().toISOString(), update_date: new Date().toISOString(),
+          description: 'sample_ru_120s.mp3',
         }],
       },
     }).as('mockTranscriptions');
@@ -79,9 +79,7 @@ describe('5️⃣ Ограничения аудио: короткий / длин
       body: {
         page: 1, pages: 1, size: 1, total: 1,
         transcriptions: [{
-          chunk_order: 0,
-          chunk_size_secs: 60,
-          id: 1,
+          chunk_order: 0, chunk_size_secs: 60, id: 1,
           transcription: 'Тестовый текст чанка',
         }],
       },
@@ -89,10 +87,10 @@ describe('5️⃣ Ограничения аудио: короткий / длин
 
     cy.intercept('POST', '**/upload-audiofile', {
       statusCode: 200,
-      body: { message: 'ok', task_id: 1, file: 'object_storage/sample_19m57s.mp3' },
+      body: { message: 'ok', task_id: 1, file: 'object_storage/sample_ru_120s.mp3' },
     }).as('uploadGood');
 
-    uploadFile('cypress/fixtures/sample_19m57s.mp3');
+    uploadFile('cypress/fixtures/sample_ru_120s.mp3');
     cy.contains('i', 'cloud_upload').click();
 
     cy.wait('@uploadGood');

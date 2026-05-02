@@ -1,5 +1,4 @@
-from typing import Any, AsyncGenerator, Tuple, Optional
-import contextlib
+from typing import AsyncGenerator, Tuple, Optional
 import pika
 import pika.channel
 
@@ -22,8 +21,7 @@ def get_pika_connection():
     return connection, channel, queue_name
 
 
-@contextlib.asynccontextmanager
-async def get_task_queue() -> AsyncGenerator[Tuple[Optional[pika.channel.Channel], str], Any]:
+async def get_task_queue() -> AsyncGenerator[Tuple[Optional[pika.channel.Channel], str], None]:
     """
     Если DISABLE_WORKER=true – возвращаем (None, '')
     иначе – настоящую очередь
