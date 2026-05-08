@@ -160,6 +160,10 @@ async def test_create_transcription_over_100_limit():
         mock_del.assert_called_once()  # проверяем, что удаление действительно вызывалось.
 
 
+# Техника тест-дизайна: #6 Диаграмма состояний
+# Автор: Никита Богданов
+# Описание:
+#   - Проверка обычного обновления состояния транскрипции (QUEUED -> IN_PROGRESS) без ошибок и без чанка.
 @pytest.mark.asyncio
 async def test_update_transcription_state_ok():
     """

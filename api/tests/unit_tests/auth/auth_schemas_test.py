@@ -22,11 +22,13 @@ def test_token_defaults():
 @pytest.mark.parametrize(
     "access_token, refresh_token, token_type",
     list(
-        AllPairs([
-            ["access123", "access456"],
-            ["refresh123", "refresh456"],
-            ["custom", "Bearer"],
-        ])
+        AllPairs(
+            [
+                ["access123", "access456"],
+                ["refresh123", "refresh456"],
+                ["custom", "Bearer"],
+            ]
+        )
     ),
 )
 # Техника тест-дизайна: #5 Попарное тестирование

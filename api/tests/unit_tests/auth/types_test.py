@@ -41,7 +41,6 @@ def test_validate_username_valid(username):
     ],
 )
 def test_validate_username_invalid(username):
-
     with pytest.raises(ValueError) as exc_info:
         validate_username(username)
     assert "Username must consist of Latin letters only and be between 5 and 64 characters long." in str(exc_info.value)
