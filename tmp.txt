@@ -1,0 +1,51 @@
+Unit tests
+
+- API
+
+python -m pytest --rootdir=. api/tests/unit_tests -v
+
+- worker
+
+copy /Y worker\sample_ru_120s.mp3 .
+set PYTHONPATH=%CD%\worker;%CD%
+python -m pytest --rootdir=. worker/tests/unit -v
+
+- bot
+
+set PYTHONPATH=%CD%\bot;%CD%
+python -m pytest --rootdir=. bot/tests -v
+
+- web-ui
+
+cd web-ui
+npm run test:unit:ci
+cd ..
+
+Интеграционные
+
+- API
+
+set PYTHONPATH=%CD%\api;%CD%
+python -m pytest --rootdir=. api/tests/integration_tests -v
+
+E2E
+
+Cypress
+
+docker compose --env-file .env up -d --build
+cd web-ui
+npx cypress run
+cd ..
+
+
+Web UI:        http://localhost:9000
+API Swagger:   http://localhost:8000/docs
+API base:      http://localhost:8000
+API health:    http://localhost:8000/
+Telegram bot:  https://t.me/LazyLectureBot
+RabbitMQ UI:   http://localhost:15672
+pgAdmin:       http://localhost:5050
+Grafana:       http://localhost:3000
+
+
+docker compose --env-file .env run --rm -v "%CD%\api\tests:/app/tests:ro" -v "%CD%\api\source:/app/source" -v "%CD%\api\htmlcov:/app/htmlcov" api pytest --rootdir=/app --cov=source --cov-report=term-missing --cov-report=html:/app/htmlcov tests/unit_tests
