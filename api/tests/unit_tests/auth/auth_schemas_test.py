@@ -5,7 +5,7 @@ from allpairspy import AllPairs
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности
-# Автор: Юлиана Мирончук
+# Автор: Никита Богданов
 # Описание:
 #   - Тест для модели Token.
 #   - Классы эквивалентности: корректные данные для access_token, refresh_token,
@@ -23,16 +23,16 @@ def test_token_defaults():
     "access_token, refresh_token, token_type",
     list(
         AllPairs(
-            {
-                "access_token": ["access123", "access456"],
-                "refresh_token": ["refresh123", "refresh456"],
-                "token_type": ["custom", "Bearer"],
-            }
+            [
+                ["access123", "access456"],
+                ["refresh123", "refresh456"],
+                ["custom", "Bearer"],
+            ]
         )
     ),
 )
 # Техника тест-дизайна: #5 Попарное тестирование
-# Автор: Юлиана Мирончук
+# Автор: Никита Богданов
 # Описание:
 #   - Тест для модели Token с попарным перебором значений token_type.
 def test_token_custom_token_type(access_token, refresh_token, token_type):
@@ -42,7 +42,7 @@ def test_token_custom_token_type(access_token, refresh_token, token_type):
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности
-# Автор: Юлиана Мирончук
+# Автор: Никита Богданов
 # Описание:
 #   - Тест для модели Credentials.
 #   - Классы эквивалентности: корректные значения для username (UsernameStr) и password (PasswordStr).
@@ -57,7 +57,7 @@ def test_credentials_valid():
 
 
 # Техника тест-дизайна: #4 Прогнозирование ошибок
-# Автор: Юлиана Мирончук
+# Автор: Никита Богданов
 # Описание:
 #   - Тест для модели Credentials.
 #   - Таблица: сценарии отсутствия обязательных полей (username или password).
@@ -69,7 +69,7 @@ def test_credentials_invalid():
 
 
 # Техника тест-дизайна: #1 Классы эквивалентности
-# Автор: Юлиана Мирончук
+# Автор: Никита Богданов
 # Описание:
 #   - Тест для модели Refresh.
 #   - Классы эквивалентности: корректное значение для refresh_token.
@@ -80,7 +80,7 @@ def test_refresh_valid():
 
 
 # Техника тест-дизайна: #4 Прогнозирование ошибок
-# Автор: Юлиана Мирончук
+# Автор: Никита Богданов
 # Описание:
 #   - Тест для модели Refresh.
 #   - Таблица: сценарий отсутствия обязательного поля refresh_token.

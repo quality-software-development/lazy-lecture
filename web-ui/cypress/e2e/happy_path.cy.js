@@ -1,23 +1,27 @@
 /* eslint-disable */
 /// <reference types="cypress" />
+//
+// E2E-002 — Happy-path: Web → API → Worker → Web
+// см. docs/Курсовая_работа_ТРКПО_E2E.docx.pdf, раздел 2.2
+//
 import { generateLatinUsername } from '../support/utils';
 
-const username = generateLatinUsername();
+const username      = generateLatinUsername();
 const password      = 'GoodP@ss123456#Aa';
-const fileName      = 'sample_19m57s.mp3';
+const fileName      = 'sample_ru_120s.mp3';
 const downloadName  = 'Транскрипция №1.txt';
 const taskId        = 1;
 const iso           = new Date().toISOString();
-const audioLenSecs  = 1197;
+const audioLenSecs  = 120;
 const mockChunks = [
-  { chunk_order: 0, chunk_size_secs: 900, id: 1, transcription: 'Здравствуйте, это пример транскрипции за первые 15 минут.' },
-  { chunk_order: 1, chunk_size_secs: 297, id: 2, transcription: 'Следующий фрагмент продолжается, и вот его текст.' },
+  { chunk_order: 0, chunk_size_secs: 60, id: 1, transcription: 'Здравствуйте, это пример транскрипции за первую минуту.' },
+  { chunk_order: 1, chunk_size_secs: 60, id: 2, transcription: 'Следующий фрагмент продолжается, и вот его текст.' },
 ];
 
-describe('2️⃣ Happy-path: Web → API → Worker → Web', () => {
-  const apiUrl     = Cypress.env('apiUrl');
-  const adminToken = Cypress.env('admin_secret_token');
+describe('E2E-002 2️⃣ Happy-path: Web → API → Worker → Web', () => {
+  const apiUrl = Cypress.env('apiUrl');
   let uid;
+
   before(() => {
     cy.registerAndPrepareUser(username, password).then(id => {
       uid = id;
@@ -25,8 +29,6 @@ describe('2️⃣ Happy-path: Web → API → Worker → Web', () => {
   });
 
   it('🧪 Полный happy-path', () => {
-    /* ─── Мокаем ВСЁ перед загрузкой страницы ───────────────────── */
-
     cy.log('🛠️ Настраиваем моки API');
 
     cy.intercept('GET', `${apiUrl}/transcriptions?page=1&size=100`, {
@@ -35,7 +37,7 @@ describe('2️⃣ Happy-path: Web → API → Worker → Web', () => {
         page: 1, pages: 1, size: 100, total: 1,
         transcriptions: [{
           id: taskId, creator_id: uid, audio_len_secs: audioLenSecs,
-          chunk_size_secs: 900, current_state: 'completed',
+          chunk_size_secs: 60, current_state: 'completed',
           create_date: iso, update_date: iso, description: fileName,
         }],
       },
@@ -52,8 +54,6 @@ describe('2️⃣ Happy-path: Web → API → Worker → Web', () => {
     }).as('uploadAudio');
     cy.intercept('POST', `${apiUrl}/transcriptions/*/start`, { statusCode: 200 }).as('startReq');
 
-    /* ─── UI: Логинимся ─────────────────────────────────────────── */
-
     cy.log('🌐 Открываем логин-страницу');
     cy.hashVisit('/log_in');
 
@@ -66,8 +66,6 @@ describe('2️⃣ Happy-path: Web → API → Worker → Web', () => {
     cy.wait('@listReq');
     cy.location('hash', { timeout: 10_000 }).should('include', '#/transcripts');
 
-    /* ─── UI: Загружаем файл ────────────────────────────────────── */
-
     cy.log('📤 Загружаем файл для транскрипции');
     cy.get('.q-uploader__input[type="file"]').selectFile(`cypress/fixtures/${fileName}`, { force: true });
 
@@ -78,8 +76,6 @@ describe('2️⃣ Happy-path: Web → API → Worker → Web', () => {
     cy.location('hash', { timeout: 10_000 }).should('include', `#/transcripts/${taskId}`);
     cy.wait('@chunksReq');
 
-    /* ─── Проверяем UI ───────────────────────────────────────────── */
-
     cy.log('✅ Проверяем, что прогресс-бар появился');
     cy.get('.ui-trancscript-page-progress-bar');
 
@@ -89,8 +85,6 @@ describe('2️⃣ Happy-path: Web → API → Worker → Web', () => {
       .each((chunkEl, idx) => {
         cy.wrap(chunkEl).should('contain.text', mockChunks[idx].transcription);
       });
-
-    /* ─── Проверяем Экспорт ─────────────────────────────────────── */
 
     cy.log('📄 Проверяем экспорт транскрипции в TXT');
     cy.get('[title="Экспорт в .txt"]').click();

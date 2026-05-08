@@ -124,10 +124,8 @@ async def create_upload_file(
             await out_file.write(chunk)  # Write each chunk
 
     audio_len_sec = get_audio_duration(out_file_path)
-    channel, q_name = task_q
-
     current_transcriptions: tp.List[Transcription] = await get_current_transcriptions(
-        user_id=user.id,
+        user_id=user_id,
         db=db,
     )
     if len(current_transcriptions) != 0:
@@ -137,7 +135,7 @@ async def create_upload_file(
 
     transcription = await create_transcription(
         TranscriptionRequest(
-            creator_id=user.id,
+            creator_id=user_id,
             audio_len_secs=audio_len_sec,
             chunk_size_secs=settings.DEFAULT_CHUNK_SIZE,
             current_state=(
@@ -167,7 +165,7 @@ async def create_upload_file(
 
     # ────────────────────── обычный путь с очередью ───────────────────────
     channel, q_name = task_q
-    send_transcription_job_to_queue(channel, q_name, transcription.id, user.id)
+    send_transcription_job_to_queue(channel, q_name, transcription.id, user_id)
     return {
         "message": "File uploaded successfully",
         "task_id": transcription.id,

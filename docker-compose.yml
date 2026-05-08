@@ -84,12 +84,14 @@ services:
       - ./api/mock:/app/mock
       - ./volumes/object_storage:/object_storage:rw
     depends_on:
-      - rabbitmq
-      - postgres
+      rabbitmq:
+        condition: service_started
+      postgres:
+        condition: service_healthy
 
   postgres:
     container_name: postgres
-    image: postgres
+    image: postgres:16
     restart: always
     ports:
       - "5432:5432"

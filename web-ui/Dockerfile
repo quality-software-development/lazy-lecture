@@ -1,8 +1,11 @@
+# syntax=docker/dockerfile:1
+
 FROM node:20.11.0 AS build
 
 WORKDIR /web-ui
 COPY package.json package-lock.json ./
-RUN npm i
+ENV CYPRESS_INSTALL_BINARY=0
+RUN --mount=type=cache,target=/root/.npm npm ci --legacy-peer-deps
 COPY . ./
 
 ARG API_URL

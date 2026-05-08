@@ -40,6 +40,7 @@ def test_user_create_validator(monkeypatch):
 
     user_create = UserCreate(**data)
     assert user_create.password == f"hashed_{raw_password}"
+    assert user_create.can_interact is True
     assert user_create.password_timestamp > 0
 
 

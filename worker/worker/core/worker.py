@@ -60,7 +60,7 @@ class LazyLectureWorker:
     def _get_audio_by_user_id(self, user_id):
         user_audio = self.object_storage.get_user_audio(user_id)
         if user_audio is None:
-            raise FileNotFoundError(f"User audio is not found in object storage {task_data.user_id=}")
+            raise FileNotFoundError(f"User audio is not found in object storage user_id={user_id}")
         self.logger.info(f"Found user audio at {str(user_audio)}")
         return user_audio
 
@@ -86,7 +86,7 @@ class LazyLectureWorker:
             self.logger.info(f"Received a task: {task_data.model_dump_json()}")
             self.logger.info(f"Transcription Info: {transcription_info.model_dump_json()}")
 
-            nacked = self._nack_for_state(message, transcription_info)
+            nacked = await self._nack_for_state(message, transcription_info, task_data)
             if nacked:
                 return
             if transcription_info.current_state == TranscriptionState.QUEUED:
@@ -108,6 +108,7 @@ class LazyLectureWorker:
                     self.logger.info("Task was cancelled, nacking")
                     await message.nack(requeue=False)
                     return
+                self.api_client.update_transcription_state(task_data.transcription_id, new_chunk=text_chunk)
             new_state = TranscriptionState.COMPLETED
             self.api_client.update_transcription_state(task_data.transcription_id, new_state=new_state)
             self.logger.info("Inference complete!")
@@ -140,9 +141,9 @@ class LazyLectureWorker:
                 await message.nack(requeue=False)
 
     def _infer_chunk(self, user_audio: Path, clip_timestamp: Union[str, List[float]], audio_len_secs: int) -> str:
-        chunk_start = time.time()
+        chunk_start = time.perf_counter()
         text = self.asr_predictor.transcribe_audio_file(user_audio, clip_timestamp)
-        chunk_time = time.time() - chunk_start
+        chunk_time = max(time.perf_counter() - chunk_start, 1e-9)
         clip_end = clip_timestamp[1] if len(clip_timestamp) == 2 else audio_len_secs
         clip_length = clip_end - clip_timestamp[0]
         speedup = clip_length / chunk_time

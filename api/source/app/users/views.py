@@ -56,4 +56,4 @@ async def user_update(
     user = await get_user_by_id(user_id, db)
     if updated_user := await update_user(user=user, request=request, db=db):
         return updated_user
-    return conflict(f"User '{request.username}' already exists")
+    return conflict(f"User '{user.username}' already exists")

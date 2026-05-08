@@ -85,6 +85,7 @@ async def test_create_user_success(fake_user_request, fake_db_session, monkeypat
     created_user = await create_user(user=fake_user_request, db=fake_db_session)
     assert isinstance(created_user, User)
     assert created_user.password == f"hashed_{fake_user_request.password}"
+    assert created_user.can_interact is True
 
 
 @pytest.mark.asyncio

@@ -15,10 +15,11 @@ services:
       - ./api/mock:/app/mock
       - ./volumes/object_storage:/object_storage:rw
     depends_on:
-      - mock_postgres
+      mock_postgres:
+        condition: service_healthy
 
   mock_postgres:
-    image: postgres
+    image: postgres:16
     container_name: mock_postgres
     environment:
       POSTGRES_USER: user

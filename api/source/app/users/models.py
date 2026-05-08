@@ -11,4 +11,4 @@ class User(Model):
     active = Column(name="active", type_=Boolean)
     role = Column(name="role", type_=String)
     password_timestamp = Column(name="password_timestamp", type_=Float)
-    can_interact = Column(name="can_interact", type_=Boolean, default=False)
+    can_interact = Column(name="can_interact", type_=Boolean, default=True)

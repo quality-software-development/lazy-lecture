@@ -40,8 +40,11 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python -m pip install -r requirements_torch.txt
 
 RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m pip install "setuptools<81" wheel
+
+RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=bind,source=requirements.txt,target=requirements.txt \
-    python -m pip install -r requirements.txt
+    python -m pip install --no-build-isolation -r requirements.txt
 
 # Copy the source code into the container.
 COPY . .
