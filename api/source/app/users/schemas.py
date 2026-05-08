@@ -16,6 +16,7 @@ UserRequest = Credentials
 
 class UserCreate(UserRequest):
     active: bool = True
+    can_interact: bool = True
     role: Roles = Roles.USER
     password_timestamp: float = Field(default_factory=lambda: datetime.now(timezone.utc).timestamp())
 
